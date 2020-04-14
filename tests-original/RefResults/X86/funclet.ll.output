@@ -1,0 +1,48 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:x-p:32:32-i64:64-f80:32-n8:16:32-a:0:32-S32"
+target triple = "i686-pc-windows-msvc18.0.0"
+
+define void @test1(double* %a, double* %b, double* %c) #0 personality i32 (...)* @__CxxFrameHandler3 {
+entry:
+  invoke void @_CxxThrowException(i8* null, i8* null)
+          to label %unreachable unwind label %catch.dispatch
+
+catch.dispatch:                                   ; preds = %entry
+  %0 = catchswitch within none [label %catch] unwind to caller
+
+catch:                                            ; preds = %catch.dispatch
+  %1 = catchpad within %0 [i8* null, i32 64, i8* null]
+  %arrayidx3 = getelementptr inbounds double, double* %a, i64 1
+  %2 = bitcast double* %a to <2 x double>*
+  %3 = load <2 x double>, <2 x double>* %2, align 8
+  %arrayidx4 = getelementptr inbounds double, double* %b, i64 1
+  %4 = bitcast double* %b to <2 x double>*
+  %5 = load <2 x double>, <2 x double>* %4, align 8
+  %6 = fmul <2 x double> %3, %5
+  %7 = call <2 x double> @llvm.floor.v2f64(<2 x double> %6) [ "funclet"(token %1) ]
+  %arrayidx5 = getelementptr inbounds double, double* %c, i64 1
+  %8 = bitcast double* %c to <2 x double>*
+  store <2 x double> %7, <2 x double>* %8, align 8
+  catchret from %1 to label %try.cont
+
+try.cont:                                         ; preds = %catch
+  ret void
+
+unreachable:                                      ; preds = %entry
+  unreachable
+}
+
+declare x86_stdcallcc void @_CxxThrowException(i8*, i8*)
+
+declare i32 @__CxxFrameHandler3(...)
+
+; Function Attrs: nounwind readnone
+declare double @floor(double) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.floor.v2f64(<2 x double>) #2
+
+attributes #0 = { "target-features"="+sse2" }
+attributes #1 = { nounwind readnone }
+attributes #2 = { nounwind readnone speculatable }

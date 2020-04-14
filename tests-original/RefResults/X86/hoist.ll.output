@@ -1,0 +1,29 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:32:64-f32:32:32-f64:32:64-v64:64:64-v128:128:128-a0:0:64-f80:128:128-n8:16:32-S128"
+target triple = "i386-apple-macosx10.8.0"
+
+define i32 @foo(i32* nocapture %A, i32 %n, i32 %k) #0 {
+entry:
+  %0 = insertelement <2 x i32> undef, i32 %n, i32 0
+  %1 = insertelement <2 x i32> %0, i32 %k, i32 1
+  %shuffle = shufflevector <2 x i32> %1, <2 x i32> undef, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+  br label %for.body
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.024 = phi i32 [ 0, %entry ], [ %add10, %for.body ]
+  %arrayidx = getelementptr inbounds i32, i32* %A, i32 %i.024
+  %2 = bitcast i32* %arrayidx to <4 x i32>*
+  %3 = load <4 x i32>, <4 x i32>* %2, align 4
+  %4 = add nsw <4 x i32> %shuffle, %3
+  %5 = bitcast i32* %arrayidx to <4 x i32>*
+  store <4 x i32> %4, <4 x i32>* %5, align 4
+  %add10 = add nsw i32 %i.024, 4
+  %cmp = icmp slt i32 %add10, 10000
+  br i1 %cmp, label %for.body, label %for.end
+
+for.end:                                          ; preds = %for.body
+  ret i32 undef
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

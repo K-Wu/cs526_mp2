@@ -1,0 +1,50 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-grtev3-linux-gnu"
+
+define void @test() #0 {
+bb279:
+  %0 = insertelement <2 x float> undef, float undef, i32 0
+  %1 = insertelement <2 x float> %0, float undef, i32 1
+  br label %bb283
+
+bb283:                                            ; preds = %exit, %bb279
+  %2 = phi <2 x float> [ undef, %bb279 ], [ %13, %exit ]
+  %3 = phi <2 x float> [ undef, %bb279 ], [ %1, %exit ]
+  br label %bb284
+
+bb284:                                            ; preds = %bb283
+  %4 = fpext <2 x float> %2 to <2 x double>
+  %5 = fsub <2 x double> %4, undef
+  %6 = fsub <2 x double> %5, undef
+  br label %bb21.i
+
+bb21.i:                                           ; preds = %bb32.i, %bb284
+  br i1 undef, label %bb22.i, label %exit
+
+bb22.i:                                           ; preds = %bb21.i
+  %7 = fadd <2 x double> undef, %6
+  br label %bb32.i
+
+bb32.i:                                           ; preds = %bb32.i, %bb22.i
+  %8 = phi <2 x double> [ %7, %bb22.i ], [ zeroinitializer, %bb32.i ]
+  br i1 undef, label %bb32.i, label %bb21.i
+
+exit:                                             ; preds = %bb21.i
+  %9 = fpext <2 x float> %3 to <2 x double>
+  %10 = fmul <2 x double> <double undef, double 0.000000e+00>, %9
+  %11 = fadd <2 x double> undef, %10
+  %12 = fadd <2 x double> undef, %11
+  %13 = fptrunc <2 x double> %12 to <2 x float>
+  br label %bb283
+}
+
+define <4 x double> @constant_folding() #0 {
+entry:
+  %i1 = insertelement <4 x double> undef, double 1.000000e+00, i32 1
+  %i2 = insertelement <4 x double> %i1, double 2.000000e+00, i32 0
+  ret <4 x double> %i2
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

@@ -1,0 +1,51 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown"
+
+define void @jumble1(i32* noalias nocapture readonly %A, i32* noalias nocapture %B) #0 {
+entry:
+  %arrayidx = getelementptr inbounds i32, i32* %A, i64 10
+  %arrayidx2 = getelementptr inbounds i32, i32* %A, i64 11
+  %arrayidx3 = getelementptr inbounds i32, i32* %A, i64 1
+  %arrayidx5 = getelementptr inbounds i32, i32* %A, i64 12
+  %arrayidx6 = getelementptr inbounds i32, i32* %A, i64 3
+  %arrayidx8 = getelementptr inbounds i32, i32* %A, i64 13
+  %0 = bitcast i32* %arrayidx to <4 x i32>*
+  %1 = load <4 x i32>, <4 x i32>* %0, align 4
+  %arrayidx9 = getelementptr inbounds i32, i32* %A, i64 2
+  %2 = bitcast i32* %A to <4 x i32>*
+  %3 = load <4 x i32>, <4 x i32>* %2, align 4
+  %reorder_shuffle = shufflevector <4 x i32> %3, <4 x i32> undef, <4 x i32> <i32 0, i32 1, i32 3, i32 2>
+  %4 = mul nsw <4 x i32> %1, %reorder_shuffle
+  %arrayidx12 = getelementptr inbounds i32, i32* %B, i64 1
+  %arrayidx13 = getelementptr inbounds i32, i32* %B, i64 2
+  %arrayidx14 = getelementptr inbounds i32, i32* %B, i64 3
+  %5 = bitcast i32* %B to <4 x i32>*
+  store <4 x i32> %4, <4 x i32>* %5, align 4
+  ret void
+}
+
+define void @jumble2(i32* noalias nocapture readonly %A, i32* noalias nocapture %B) #0 {
+entry:
+  %arrayidx = getelementptr inbounds i32, i32* %A, i64 10
+  %arrayidx2 = getelementptr inbounds i32, i32* %A, i64 11
+  %arrayidx3 = getelementptr inbounds i32, i32* %A, i64 1
+  %arrayidx5 = getelementptr inbounds i32, i32* %A, i64 12
+  %arrayidx6 = getelementptr inbounds i32, i32* %A, i64 3
+  %arrayidx8 = getelementptr inbounds i32, i32* %A, i64 13
+  %0 = bitcast i32* %arrayidx to <4 x i32>*
+  %1 = load <4 x i32>, <4 x i32>* %0, align 4
+  %arrayidx9 = getelementptr inbounds i32, i32* %A, i64 2
+  %2 = bitcast i32* %A to <4 x i32>*
+  %3 = load <4 x i32>, <4 x i32>* %2, align 4
+  %reorder_shuffle = shufflevector <4 x i32> %3, <4 x i32> undef, <4 x i32> <i32 0, i32 1, i32 3, i32 2>
+  %4 = mul nsw <4 x i32> %reorder_shuffle, %1
+  %arrayidx12 = getelementptr inbounds i32, i32* %B, i64 1
+  %arrayidx13 = getelementptr inbounds i32, i32* %B, i64 2
+  %arrayidx14 = getelementptr inbounds i32, i32* %B, i64 3
+  %5 = bitcast i32* %B to <4 x i32>*
+  store <4 x i32> %4, <4 x i32>* %5, align 4
+  ret void
+}
+
+attributes #0 = { "target-features"="+avx" }

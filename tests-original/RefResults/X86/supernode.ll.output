@@ -1,0 +1,137 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux"
+
+define void @test_supernode_add(double* %Aarray, double* %Barray, double* %Carray, double* %Sarray) #0 {
+entry:
+  %idxA0 = getelementptr inbounds double, double* %Aarray, i64 0
+  %idxA1 = getelementptr inbounds double, double* %Aarray, i64 1
+  %idxB0 = getelementptr inbounds double, double* %Barray, i64 0
+  %idxB1 = getelementptr inbounds double, double* %Barray, i64 1
+  %idxC0 = getelementptr inbounds double, double* %Carray, i64 0
+  %idxC1 = getelementptr inbounds double, double* %Carray, i64 1
+  %idxS0 = getelementptr inbounds double, double* %Sarray, i64 0
+  %idxS1 = getelementptr inbounds double, double* %Sarray, i64 1
+  %A0 = load double, double* %idxA0, align 8
+  %A1 = load double, double* %idxA1, align 8
+  %0 = bitcast double* %idxB0 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %C0 = load double, double* %idxC0, align 8
+  %C1 = load double, double* %idxC1, align 8
+  %2 = insertelement <2 x double> undef, double %A0, i32 0
+  %3 = insertelement <2 x double> %2, double %C1, i32 1
+  %4 = fadd fast <2 x double> %3, %1
+  %5 = insertelement <2 x double> undef, double %C0, i32 0
+  %6 = insertelement <2 x double> %5, double %A1, i32 1
+  %7 = fadd fast <2 x double> %4, %6
+  %8 = bitcast double* %idxS0 to <2 x double>*
+  store <2 x double> %7, <2 x double>* %8, align 8
+  ret void
+}
+
+define void @test_supernode_addsub(double* %Aarray, double* %Barray, double* %Carray, double* %Sarray) #0 {
+entry:
+  %idxA0 = getelementptr inbounds double, double* %Aarray, i64 0
+  %idxA1 = getelementptr inbounds double, double* %Aarray, i64 1
+  %idxB0 = getelementptr inbounds double, double* %Barray, i64 0
+  %idxB1 = getelementptr inbounds double, double* %Barray, i64 1
+  %idxC0 = getelementptr inbounds double, double* %Carray, i64 0
+  %idxC1 = getelementptr inbounds double, double* %Carray, i64 1
+  %idxS0 = getelementptr inbounds double, double* %Sarray, i64 0
+  %idxS1 = getelementptr inbounds double, double* %Sarray, i64 1
+  %A0 = load double, double* %idxA0, align 8
+  %A1 = load double, double* %idxA1, align 8
+  %0 = bitcast double* %idxB0 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %C0 = load double, double* %idxC0, align 8
+  %C1 = load double, double* %idxC1, align 8
+  %2 = insertelement <2 x double> undef, double %A0, i32 0
+  %3 = insertelement <2 x double> %2, double %C1, i32 1
+  %4 = fsub fast <2 x double> %3, %1
+  %5 = insertelement <2 x double> undef, double %C0, i32 0
+  %6 = insertelement <2 x double> %5, double %A1, i32 1
+  %7 = fadd fast <2 x double> %4, %6
+  %8 = bitcast double* %idxS0 to <2 x double>*
+  store <2 x double> %7, <2 x double>* %8, align 8
+  ret void
+}
+
+define void @test_supernode_addsub_alt(double* %Aarray, double* %Barray, double* %Carray, double* %Sarray) #0 {
+entry:
+  %idxA0 = getelementptr inbounds double, double* %Aarray, i64 0
+  %idxA1 = getelementptr inbounds double, double* %Aarray, i64 1
+  %idxB0 = getelementptr inbounds double, double* %Barray, i64 0
+  %idxB1 = getelementptr inbounds double, double* %Barray, i64 1
+  %idxC0 = getelementptr inbounds double, double* %Carray, i64 0
+  %idxC1 = getelementptr inbounds double, double* %Carray, i64 1
+  %idxS0 = getelementptr inbounds double, double* %Sarray, i64 0
+  %idxS1 = getelementptr inbounds double, double* %Sarray, i64 1
+  %A0 = load double, double* %idxA0, align 8
+  %A1 = load double, double* %idxA1, align 8
+  %B0 = load double, double* %idxB0, align 8
+  %B1 = load double, double* %idxB1, align 8
+  %C0 = load double, double* %idxC0, align 8
+  %C1 = load double, double* %idxC1, align 8
+  %subA0B0 = fsub fast double %A0, %B0
+  %addB1C1 = fadd fast double %B1, %C1
+  %sub0 = fsub fast double %subA0B0, %C0
+  %add1 = fadd fast double %addB1C1, %A1
+  store double %sub0, double* %idxS0, align 8
+  store double %add1, double* %idxS1, align 8
+  ret void
+}
+
+define void @supernode_scheduling(double* %Aarray, double* %Barray, double* %Carray, double* %Darray, double* %Sarray) #0 {
+entry:
+  %idxA0 = getelementptr inbounds double, double* %Aarray, i64 0
+  %idxA1 = getelementptr inbounds double, double* %Aarray, i64 1
+  %idxB0 = getelementptr inbounds double, double* %Barray, i64 0
+  %idxB1 = getelementptr inbounds double, double* %Barray, i64 1
+  %idxC = getelementptr inbounds double, double* %Carray, i64 0
+  %idxD = getelementptr inbounds double, double* %Darray, i64 0
+  %idxS0 = getelementptr inbounds double, double* %Sarray, i64 0
+  %idxS1 = getelementptr inbounds double, double* %Sarray, i64 1
+  %C = load double, double* %idxC, align 8
+  %B0 = load double, double* %idxB0, align 8
+  %0 = bitcast double* %idxA0 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %B1 = load double, double* %idxB1, align 8
+  %2 = insertelement <2 x double> undef, double %C, i32 0
+  %3 = insertelement <2 x double> %2, double %B1, i32 1
+  %4 = fadd fast <2 x double> %1, %3
+  %D = load double, double* %idxD, align 8
+  %5 = insertelement <2 x double> undef, double %B0, i32 0
+  %6 = insertelement <2 x double> %5, double %D, i32 1
+  %7 = fadd fast <2 x double> %4, %6
+  %8 = bitcast double* %idxS0 to <2 x double>*
+  store <2 x double> %7, <2 x double>* %8, align 8
+  ret void
+}
+
+define void @supernode_scheduling_cross_block(double* %Aarray, double* %Barray, double* %Sarray) #0 {
+entry:
+  %idxA0 = getelementptr inbounds double, double* %Aarray, i64 0
+  %idxA1 = getelementptr inbounds double, double* %Aarray, i64 1
+  %idxB0 = getelementptr inbounds double, double* %Barray, i64 0
+  %idxB1 = getelementptr inbounds double, double* %Barray, i64 1
+  %idxS0 = getelementptr inbounds double, double* %Sarray, i64 0
+  %idxS1 = getelementptr inbounds double, double* %Sarray, i64 1
+  %A0 = load double, double* %idxA0, align 8
+  %B1 = load double, double* %idxB1, align 8
+  %0 = insertelement <2 x double> undef, double %A0, i32 0
+  %1 = insertelement <2 x double> %0, double %B1, i32 1
+  %2 = fadd fast <2 x double> <double 2.000000e+00, double 2.000000e+00>, %1
+  br label %bb
+
+bb:                                               ; preds = %entry
+  %A1 = load double, double* %idxA1, align 8
+  %B0 = load double, double* %idxB0, align 8
+  %3 = insertelement <2 x double> undef, double %B0, i32 0
+  %4 = insertelement <2 x double> %3, double %A1, i32 1
+  %5 = fadd fast <2 x double> %2, %4
+  %6 = bitcast double* %idxS0 to <2 x double>*
+  store <2 x double> %5, <2 x double>* %6, align 8
+  ret void
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

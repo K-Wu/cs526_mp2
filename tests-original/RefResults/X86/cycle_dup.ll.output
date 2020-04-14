@@ -1,0 +1,30 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define i32 @foo(i32* nocapture %A) #0 {
+entry:
+  %0 = bitcast i32* %A to <4 x i32>*
+  %1 = load <4 x i32>, <4 x i32>* %0, align 4
+  %arrayidx4 = getelementptr inbounds i32, i32* %A, i64 13
+  %2 = load i32, i32* %arrayidx4, align 4
+  %cmp24 = icmp sgt i32 %2, 0
+  br i1 %cmp24, label %for.body, label %for.end
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.029 = phi i32 [ %inc, %for.body ], [ 0, %entry ]
+  %3 = phi <4 x i32> [ %4, %for.body ], [ %1, %entry ]
+  %4 = mul nsw <4 x i32> <i32 18, i32 19, i32 12, i32 9>, %3
+  %inc = add nsw i32 %i.029, 1
+  %cmp = icmp slt i32 %inc, %2
+  br i1 %cmp, label %for.body, label %for.end
+
+for.end:                                          ; preds = %for.body, %entry
+  %5 = phi <4 x i32> [ %1, %entry ], [ %4, %for.body ]
+  %6 = bitcast i32* %A to <4 x i32>*
+  store <4 x i32> %5, <4 x i32>* %6, align 4
+  ret i32 undef
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

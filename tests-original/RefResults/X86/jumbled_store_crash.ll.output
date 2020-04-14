@@ -1,0 +1,59 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux-gnu"
+
+@b = common dso_local global i32* null, align 8
+@e = common dso_local global float 0.000000e+00, align 4
+@c = common dso_local global float 0.000000e+00, align 4
+@g = common dso_local global float 0.000000e+00, align 4
+@d = common dso_local global float 0.000000e+00, align 4
+@f = common dso_local global float 0.000000e+00, align 4
+@a = common dso_local global i32 0, align 4
+@h = common dso_local global float 0.000000e+00, align 4
+
+define dso_local void @j() local_unnamed_addr {
+entry:
+  %0 = load i32*, i32** @b, align 8
+  %arrayidx = getelementptr inbounds i32, i32* %0, i64 4
+  %arrayidx1 = getelementptr inbounds i32, i32* %0, i64 12
+  %arrayidx2 = getelementptr inbounds i32, i32* %0, i64 5
+  %1 = bitcast i32* %arrayidx to <2 x i32>*
+  %2 = load <2 x i32>, <2 x i32>* %1, align 4
+  %reorder_shuffle1 = shufflevector <2 x i32> %2, <2 x i32> undef, <2 x i32> <i32 1, i32 0>
+  %arrayidx3 = getelementptr inbounds i32, i32* %0, i64 13
+  %3 = bitcast i32* %arrayidx1 to <2 x i32>*
+  %4 = load <2 x i32>, <2 x i32>* %3, align 4
+  %reorder_shuffle = shufflevector <2 x i32> %4, <2 x i32> undef, <2 x i32> <i32 1, i32 0>
+  %5 = add nsw <2 x i32> %reorder_shuffle, %reorder_shuffle1
+  %6 = sitofp <2 x i32> %5 to <2 x float>
+  %7 = fmul <2 x float> <float 1.000000e+01, float 1.000000e+01>, %6
+  %8 = fsub <2 x float> <float 0.000000e+00, float 1.000000e+00>, %7
+  %shuffle = shufflevector <2 x float> %8, <2 x float> undef, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+  %9 = extractelement <4 x float> %shuffle, i32 1
+  store float %9, float* @g, align 4
+  %10 = fadd <4 x float> <float -1.000000e+00, float -1.000000e+00, float 1.000000e+00, float 1.000000e+00>, %shuffle
+  %11 = extractelement <4 x float> %10, i32 2
+  store float %11, float* @c, align 4
+  %12 = extractelement <4 x float> %10, i32 0
+  store float %12, float* @d, align 4
+  %13 = extractelement <4 x float> %10, i32 3
+  store float %13, float* @e, align 4
+  %14 = extractelement <4 x float> %10, i32 1
+  store float %14, float* @f, align 4
+  %arrayidx15 = getelementptr inbounds i32, i32* %0, i64 14
+  %arrayidx18 = getelementptr inbounds i32, i32* %0, i64 15
+  %15 = load i32, i32* @a, align 4
+  %conv19 = sitofp i32 %15 to float
+  %16 = insertelement <4 x float> undef, float %conv19, i32 0
+  %17 = insertelement <4 x float> %16, float -1.000000e+00, i32 1
+  %18 = extractelement <4 x float> %shuffle, i32 0
+  %19 = insertelement <4 x float> %17, float %18, i32 2
+  %20 = insertelement <4 x float> %19, float -1.000000e+00, i32 3
+  %21 = fsub <4 x float> %10, %20
+  %22 = fadd <4 x float> %10, %20
+  %23 = shufflevector <4 x float> %21, <4 x float> %22, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  %24 = fptosi <4 x float> %23 to <4 x i32>
+  %25 = bitcast i32* %arrayidx1 to <4 x i32>*
+  store <4 x i32> %24, <4 x i32>* %25, align 4
+  ret void
+}

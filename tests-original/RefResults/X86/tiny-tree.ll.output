@@ -1,0 +1,142 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define void @tiny_tree_fully_vectorizable(double* noalias nocapture %dst, double* noalias nocapture readonly %src, i64 %count) #0 {
+entry:
+  %cmp12 = icmp eq i64 %count, 0
+  br i1 %cmp12, label %for.end, label %for.body
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.015 = phi i64 [ %inc, %for.body ], [ 0, %entry ]
+  %dst.addr.014 = phi double* [ %add.ptr4, %for.body ], [ %dst, %entry ]
+  %src.addr.013 = phi double* [ %add.ptr, %for.body ], [ %src, %entry ]
+  %arrayidx2 = getelementptr inbounds double, double* %src.addr.013, i64 1
+  %0 = bitcast double* %src.addr.013 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %arrayidx3 = getelementptr inbounds double, double* %dst.addr.014, i64 1
+  %2 = bitcast double* %dst.addr.014 to <2 x double>*
+  store <2 x double> %1, <2 x double>* %2, align 8
+  %add.ptr = getelementptr inbounds double, double* %src.addr.013, i64 %i.015
+  %add.ptr4 = getelementptr inbounds double, double* %dst.addr.014, i64 %i.015
+  %inc = add i64 %i.015, 1
+  %exitcond = icmp eq i64 %inc, %count
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:                                          ; preds = %for.body, %entry
+  ret void
+}
+
+define void @tiny_tree_fully_vectorizable2(float* noalias nocapture %dst, float* noalias nocapture readonly %src, i64 %count) #0 {
+entry:
+  %cmp20 = icmp eq i64 %count, 0
+  br i1 %cmp20, label %for.end, label %for.body
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.023 = phi i64 [ %inc, %for.body ], [ 0, %entry ]
+  %dst.addr.022 = phi float* [ %add.ptr8, %for.body ], [ %dst, %entry ]
+  %src.addr.021 = phi float* [ %add.ptr, %for.body ], [ %src, %entry ]
+  %arrayidx2 = getelementptr inbounds float, float* %src.addr.021, i64 1
+  %arrayidx3 = getelementptr inbounds float, float* %dst.addr.022, i64 1
+  %arrayidx4 = getelementptr inbounds float, float* %src.addr.021, i64 2
+  %arrayidx5 = getelementptr inbounds float, float* %dst.addr.022, i64 2
+  %arrayidx6 = getelementptr inbounds float, float* %src.addr.021, i64 3
+  %0 = bitcast float* %src.addr.021 to <4 x float>*
+  %1 = load <4 x float>, <4 x float>* %0, align 4
+  %arrayidx7 = getelementptr inbounds float, float* %dst.addr.022, i64 3
+  %2 = bitcast float* %dst.addr.022 to <4 x float>*
+  store <4 x float> %1, <4 x float>* %2, align 4
+  %add.ptr = getelementptr inbounds float, float* %src.addr.021, i64 %i.023
+  %add.ptr8 = getelementptr inbounds float, float* %dst.addr.022, i64 %i.023
+  %inc = add i64 %i.023, 1
+  %exitcond = icmp eq i64 %inc, %count
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:                                          ; preds = %for.body, %entry
+  ret void
+}
+
+define void @tiny_tree_not_fully_vectorizable(double* noalias nocapture %dst, double* noalias nocapture readonly %src, i64 %count) #0 {
+entry:
+  %cmp12 = icmp eq i64 %count, 0
+  br i1 %cmp12, label %for.end, label %for.body
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.015 = phi i64 [ %inc, %for.body ], [ 0, %entry ]
+  %dst.addr.014 = phi double* [ %add.ptr4, %for.body ], [ %dst, %entry ]
+  %src.addr.013 = phi double* [ %add.ptr, %for.body ], [ %src, %entry ]
+  %0 = load double, double* %src.addr.013, align 8
+  store double %0, double* %dst.addr.014, align 8
+  %arrayidx2 = getelementptr inbounds double, double* %src.addr.013, i64 2
+  %1 = load double, double* %arrayidx2, align 8
+  %arrayidx3 = getelementptr inbounds double, double* %dst.addr.014, i64 1
+  store double %1, double* %arrayidx3, align 8
+  %add.ptr = getelementptr inbounds double, double* %src.addr.013, i64 %i.015
+  %add.ptr4 = getelementptr inbounds double, double* %dst.addr.014, i64 %i.015
+  %inc = add i64 %i.015, 1
+  %exitcond = icmp eq i64 %inc, %count
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:                                          ; preds = %for.body, %entry
+  ret void
+}
+
+define void @tiny_tree_not_fully_vectorizable2(float* noalias nocapture %dst, float* noalias nocapture readonly %src, i64 %count) #0 {
+entry:
+  %cmp20 = icmp eq i64 %count, 0
+  br i1 %cmp20, label %for.end, label %for.body
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.023 = phi i64 [ %inc, %for.body ], [ 0, %entry ]
+  %dst.addr.022 = phi float* [ %add.ptr8, %for.body ], [ %dst, %entry ]
+  %src.addr.021 = phi float* [ %add.ptr, %for.body ], [ %src, %entry ]
+  %0 = load float, float* %src.addr.021, align 4
+  store float %0, float* %dst.addr.022, align 4
+  %arrayidx2 = getelementptr inbounds float, float* %src.addr.021, i64 4
+  %1 = load float, float* %arrayidx2, align 4
+  %arrayidx3 = getelementptr inbounds float, float* %dst.addr.022, i64 1
+  store float %1, float* %arrayidx3, align 4
+  %arrayidx4 = getelementptr inbounds float, float* %src.addr.021, i64 2
+  %2 = load float, float* %arrayidx4, align 4
+  %arrayidx5 = getelementptr inbounds float, float* %dst.addr.022, i64 2
+  store float %2, float* %arrayidx5, align 4
+  %arrayidx6 = getelementptr inbounds float, float* %src.addr.021, i64 3
+  %3 = load float, float* %arrayidx6, align 4
+  %arrayidx7 = getelementptr inbounds float, float* %dst.addr.022, i64 3
+  store float %3, float* %arrayidx7, align 4
+  %add.ptr = getelementptr inbounds float, float* %src.addr.021, i64 %i.023
+  %add.ptr8 = getelementptr inbounds float, float* %dst.addr.022, i64 %i.023
+  %inc = add i64 %i.023, 1
+  %exitcond = icmp eq i64 %inc, %count
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:                                          ; preds = %for.body, %entry
+  ret void
+}
+
+define void @store_splat(float*, float) #0 {
+  %3 = getelementptr inbounds float, float* %0, i64 0
+  %4 = getelementptr inbounds float, float* %0, i64 1
+  %5 = getelementptr inbounds float, float* %0, i64 2
+  %6 = getelementptr inbounds float, float* %0, i64 3
+  %7 = insertelement <4 x float> undef, float %1, i32 0
+  %8 = insertelement <4 x float> %7, float %1, i32 1
+  %9 = insertelement <4 x float> %8, float %1, i32 2
+  %10 = insertelement <4 x float> %9, float %1, i32 3
+  %11 = bitcast float* %3 to <4 x float>*
+  store <4 x float> %10, <4 x float>* %11, align 4
+  ret void
+}
+
+define void @store_const(i32* %a) #0 {
+entry:
+  %ptr0 = getelementptr inbounds i32, i32* %a, i64 0
+  %ptr1 = getelementptr inbounds i32, i32* %a, i64 1
+  %ptr2 = getelementptr inbounds i32, i32* %a, i64 2
+  %ptr3 = getelementptr inbounds i32, i32* %a, i64 3
+  %0 = bitcast i32* %ptr0 to <4 x i32>*
+  store <4 x i32> <i32 10, i32 30, i32 20, i32 40>, <4 x i32>* %0, align 4
+  ret void
+}
+
+attributes #0 = { "target-cpu"="corei7" }

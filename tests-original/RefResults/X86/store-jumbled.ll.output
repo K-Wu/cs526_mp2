@@ -1,0 +1,30 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown"
+
+define i32 @jumbled-load(i32* noalias nocapture %in, i32* noalias nocapture %inn, i32* noalias nocapture %out) #0 {
+  %in.addr = getelementptr inbounds i32, i32* %in, i64 0
+  %gep.1 = getelementptr inbounds i32, i32* %in.addr, i64 1
+  %gep.2 = getelementptr inbounds i32, i32* %in.addr, i64 2
+  %gep.3 = getelementptr inbounds i32, i32* %in.addr, i64 3
+  %1 = bitcast i32* %in.addr to <4 x i32>*
+  %2 = load <4 x i32>, <4 x i32>* %1, align 4
+  %reorder_shuffle = shufflevector <4 x i32> %2, <4 x i32> undef, <4 x i32> <i32 1, i32 3, i32 0, i32 2>
+  %inn.addr = getelementptr inbounds i32, i32* %inn, i64 0
+  %gep.4 = getelementptr inbounds i32, i32* %inn.addr, i64 1
+  %gep.5 = getelementptr inbounds i32, i32* %inn.addr, i64 2
+  %gep.6 = getelementptr inbounds i32, i32* %inn.addr, i64 3
+  %3 = bitcast i32* %inn.addr to <4 x i32>*
+  %4 = load <4 x i32>, <4 x i32>* %3, align 4
+  %reorder_shuffle1 = shufflevector <4 x i32> %4, <4 x i32> undef, <4 x i32> <i32 1, i32 3, i32 0, i32 2>
+  %5 = mul <4 x i32> %reorder_shuffle, %reorder_shuffle1
+  %gep.7 = getelementptr inbounds i32, i32* %out, i64 0
+  %gep.8 = getelementptr inbounds i32, i32* %out, i64 1
+  %gep.9 = getelementptr inbounds i32, i32* %out, i64 2
+  %gep.10 = getelementptr inbounds i32, i32* %out, i64 3
+  %6 = bitcast i32* %gep.7 to <4 x i32>*
+  store <4 x i32> %5, <4 x i32>* %6, align 4
+  ret i32 undef
+}
+
+attributes #0 = { "target-features"="+avx" }

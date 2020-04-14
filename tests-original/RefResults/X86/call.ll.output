@@ -1,0 +1,105 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+declare double @sin(double) #0
+
+declare double @cos(double) #0
+
+declare double @pow(double, double) #0
+
+declare double @exp2(double) #0
+
+declare double @sqrt(double) #0
+
+declare i64 @round(i64) #0
+
+define void @sin_libm(double* %a, double* %b) #0 {
+  %1 = bitcast double* %a to <2 x double>*
+  %2 = load <2 x double>, <2 x double>* %1, align 8
+  %3 = call <2 x double> @llvm.sin.v2f64(<2 x double> %2)
+  %4 = bitcast double* %b to <2 x double>*
+  store <2 x double> %3, <2 x double>* %4, align 8
+  ret void
+}
+
+define void @cos_libm(double* %a, double* %b) #0 {
+  %1 = bitcast double* %a to <2 x double>*
+  %2 = load <2 x double>, <2 x double>* %1, align 8
+  %3 = call <2 x double> @llvm.cos.v2f64(<2 x double> %2)
+  %4 = bitcast double* %b to <2 x double>*
+  store <2 x double> %3, <2 x double>* %4, align 8
+  ret void
+}
+
+define void @pow_libm(double* %a, double* %b) #0 {
+  %1 = bitcast double* %a to <2 x double>*
+  %2 = load <2 x double>, <2 x double>* %1, align 8
+  %3 = call <2 x double> @llvm.pow.v2f64(<2 x double> %2, <2 x double> %2)
+  %4 = bitcast double* %b to <2 x double>*
+  store <2 x double> %3, <2 x double>* %4, align 8
+  ret void
+}
+
+define void @exp_libm(double* %a, double* %b) #0 {
+  %1 = bitcast double* %a to <2 x double>*
+  %2 = load <2 x double>, <2 x double>* %1, align 8
+  %3 = call <2 x double> @llvm.exp2.v2f64(<2 x double> %2)
+  %4 = bitcast double* %b to <2 x double>*
+  store <2 x double> %3, <2 x double>* %4, align 8
+  ret void
+}
+
+define void @sqrt_libm_no_errno(double* %a, double* %b) #0 {
+  %1 = bitcast double* %a to <2 x double>*
+  %2 = load <2 x double>, <2 x double>* %1, align 8
+  %3 = call <2 x double> @llvm.sqrt.v2f64(<2 x double> %2)
+  %4 = bitcast double* %b to <2 x double>*
+  store <2 x double> %3, <2 x double>* %4, align 8
+  ret void
+}
+
+define void @sqrt_libm_errno(double* %a, double* %b) #0 {
+  %a0 = load double, double* %a, align 8
+  %idx1 = getelementptr inbounds double, double* %a, i64 1
+  %a1 = load double, double* %idx1, align 8
+  %sqrt1 = tail call nnan double @sqrt(double %a0) #2
+  %sqrt2 = tail call nnan double @sqrt(double %a1) #2
+  store double %sqrt1, double* %b, align 8
+  %idx2 = getelementptr inbounds double, double* %b, i64 1
+  store double %sqrt2, double* %idx2, align 8
+  ret void
+}
+
+define void @round_custom(i64* %a, i64* %b) #0 {
+  %a0 = load i64, i64* %a, align 8
+  %idx1 = getelementptr inbounds i64, i64* %a, i64 1
+  %a1 = load i64, i64* %idx1, align 8
+  %round1 = tail call i64 @round(i64 %a0) #3
+  %round2 = tail call i64 @round(i64 %a1) #3
+  store i64 %round1, i64* %b, align 8
+  %idx2 = getelementptr inbounds i64, i64* %b, i64 1
+  store i64 %round2, i64* %idx2, align 8
+  ret void
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.sin.v2f64(<2 x double>) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.cos.v2f64(<2 x double>) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.pow.v2f64(<2 x double>, <2 x double>) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.exp2.v2f64(<2 x double>) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.sqrt.v2f64(<2 x double>) #1
+
+attributes #0 = { "target-cpu"="corei7-avx" }
+attributes #1 = { nounwind readnone speculatable }
+attributes #2 = { nounwind }
+attributes #3 = { nounwind readnone }

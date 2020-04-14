@@ -1,0 +1,17 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux-gnu"
+
+define float @jacobi(float* %p, float %x, float %y, float %z) #0 {
+  %gep1 = getelementptr float, float* %p, i64 1
+  %gep2 = getelementptr float, float* %p, i64 2
+  %p1 = load float, float* %gep1
+  %p2 = load float, float* %gep2
+  %mul1 = fmul float %p1, %x
+  %mul2 = fmul float %p2, %y
+  %add1 = fadd float %mul1, %z
+  %add2 = fadd float %mul2, %add1
+  ret float %add2
+}
+
+attributes #0 = { "target-cpu"="bdver2" }

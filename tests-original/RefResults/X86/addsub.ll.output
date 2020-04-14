@@ -1,0 +1,151 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+@b = common global [4 x i32] zeroinitializer, align 16
+@c = common global [4 x i32] zeroinitializer, align 16
+@d = common global [4 x i32] zeroinitializer, align 16
+@e = common global [4 x i32] zeroinitializer, align 16
+@a = common global [4 x i32] zeroinitializer, align 16
+@fb = common global [4 x float] zeroinitializer, align 16
+@fc = common global [4 x float] zeroinitializer, align 16
+@fa = common global [4 x float] zeroinitializer, align 16
+@fd = common global [4 x float] zeroinitializer, align 16
+
+; Function Attrs: nounwind
+define void @addsub() #0 {
+entry:
+  %0 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @b to <4 x i32>*), align 4
+  %1 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @c to <4 x i32>*), align 4
+  %2 = add nsw <4 x i32> %0, %1
+  %3 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @d to <4 x i32>*), align 4
+  %4 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @e to <4 x i32>*), align 4
+  %5 = add nsw <4 x i32> %3, %4
+  %6 = add nsw <4 x i32> %2, %5
+  %7 = sub nsw <4 x i32> %2, %5
+  %8 = shufflevector <4 x i32> %6, <4 x i32> %7, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  store <4 x i32> %8, <4 x i32>* bitcast ([4 x i32]* @a to <4 x i32>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @subadd() #0 {
+entry:
+  %0 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @b to <4 x i32>*), align 4
+  %1 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @c to <4 x i32>*), align 4
+  %2 = add nsw <4 x i32> %0, %1
+  %3 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @d to <4 x i32>*), align 4
+  %4 = load <4 x i32>, <4 x i32>* bitcast ([4 x i32]* @e to <4 x i32>*), align 4
+  %5 = add nsw <4 x i32> %3, %4
+  %6 = sub nsw <4 x i32> %2, %5
+  %7 = add nsw <4 x i32> %2, %5
+  %8 = shufflevector <4 x i32> %6, <4 x i32> %7, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  store <4 x i32> %8, <4 x i32>* bitcast ([4 x i32]* @a to <4 x i32>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @faddfsub() #0 {
+entry:
+  %0 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fb to <4 x float>*), align 4
+  %1 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fc to <4 x float>*), align 4
+  %2 = fadd <4 x float> %0, %1
+  %3 = fsub <4 x float> %0, %1
+  %4 = shufflevector <4 x float> %2, <4 x float> %3, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  store <4 x float> %4, <4 x float>* bitcast ([4 x float]* @fa to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @fsubfadd() #0 {
+entry:
+  %0 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fb to <4 x float>*), align 4
+  %1 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fc to <4 x float>*), align 4
+  %2 = fsub <4 x float> %0, %1
+  %3 = fadd <4 x float> %0, %1
+  %4 = shufflevector <4 x float> %2, <4 x float> %3, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  store <4 x float> %4, <4 x float>* bitcast ([4 x float]* @fa to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @faddfsub_select() #0 {
+entry:
+  %0 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fb to <4 x float>*), align 4
+  %1 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fc to <4 x float>*), align 4
+  %2 = fadd <4 x float> %0, %1
+  %3 = fsub <4 x float> %0, %1
+  %4 = shufflevector <4 x float> %2, <4 x float> %3, <4 x i32> <i32 0, i32 1, i32 2, i32 7>
+  store <4 x float> %4, <4 x float>* bitcast ([4 x float]* @fa to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @reorder_alt() #0 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fa to <4 x float>*), align 4
+  %2 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fb to <4 x float>*), align 4
+  %3 = fadd <4 x float> %1, %2
+  %4 = fsub <4 x float> %1, %2
+  %5 = shufflevector <4 x float> %3, <4 x float> %4, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  store <4 x float> %5, <4 x float>* bitcast ([4 x float]* @fc to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @reorder_alt_subTree() #0 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fa to <4 x float>*), align 4
+  %2 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fd to <4 x float>*), align 4
+  %3 = load <4 x float>, <4 x float>* bitcast ([4 x float]* @fb to <4 x float>*), align 4
+  %4 = fsub <4 x float> %3, %2
+  %5 = fadd <4 x float> %3, %2
+  %6 = shufflevector <4 x float> %4, <4 x float> %5, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  %7 = fadd <4 x float> %1, %6
+  %8 = fsub <4 x float> %1, %6
+  %9 = shufflevector <4 x float> %7, <4 x float> %8, <4 x i32> <i32 0, i32 5, i32 2, i32 7>
+  store <4 x float> %9, <4 x float>* bitcast ([4 x float]* @fc to <4 x float>*), align 4
+  ret void
+}
+
+define void @reorder_alt_rightsubTree(double* nocapture %c, double* noalias nocapture readonly %a, double* noalias nocapture readonly %b, double* noalias nocapture readonly %d) {
+  %1 = getelementptr inbounds double, double* %d, i64 1
+  %2 = bitcast double* %d to <2 x double>*
+  %3 = load <2 x double>, <2 x double>* %2, align 8
+  %4 = getelementptr inbounds double, double* %a, i64 1
+  %5 = bitcast double* %a to <2 x double>*
+  %6 = load <2 x double>, <2 x double>* %5, align 8
+  %7 = getelementptr inbounds double, double* %b, i64 1
+  %8 = bitcast double* %b to <2 x double>*
+  %9 = load <2 x double>, <2 x double>* %8, align 8
+  %10 = fadd <2 x double> %6, %9
+  %11 = fsub <2 x double> %10, %3
+  %12 = fadd <2 x double> %10, %3
+  %13 = shufflevector <2 x double> %11, <2 x double> %12, <2 x i32> <i32 0, i32 3>
+  %14 = getelementptr inbounds double, double* %c, i64 1
+  %15 = bitcast double* %c to <2 x double>*
+  store <2 x double> %13, <2 x double>* %15, align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @no_vec_shuff_reorder() #0 {
+  %1 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fb, i32 0, i64 0), align 4
+  %2 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fa, i32 0, i64 0), align 4
+  %3 = fadd float %1, %2
+  store float %3, float* getelementptr inbounds ([4 x float], [4 x float]* @fc, i32 0, i64 0), align 4
+  %4 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fa, i32 0, i64 1), align 4
+  %5 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fb, i32 0, i64 1), align 4
+  %6 = fsub float %4, %5
+  store float %6, float* getelementptr inbounds ([4 x float], [4 x float]* @fc, i32 0, i64 1), align 4
+  %7 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fa, i32 0, i64 2), align 4
+  %8 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fb, i32 0, i64 2), align 4
+  %9 = fadd float %7, %8
+  store float %9, float* getelementptr inbounds ([4 x float], [4 x float]* @fc, i32 0, i64 2), align 4
+  %10 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fb, i32 0, i64 3), align 4
+  %11 = load float, float* getelementptr inbounds ([4 x float], [4 x float]* @fa, i32 0, i64 3), align 4
+  %12 = fsub float %10, %11
+  store float %12, float* getelementptr inbounds ([4 x float], [4 x float]* @fc, i32 0, i64 3), align 4
+  ret void
+}
+
+attributes #0 = { nounwind }

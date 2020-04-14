@@ -1,0 +1,59 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-pc-linux-gnu"
+
+define i32 @foo(i32* %diff) #0 {
+entry:
+  %m2 = alloca [8 x [8 x i32]], align 16
+  %0 = bitcast [8 x [8 x i32]]* %m2 to i8*
+  br label %for.body
+
+for.body:                                         ; preds = %for.body, %entry
+  %indvars.iv = phi i64 [ 0, %entry ], [ %indvars.iv.next, %for.body ]
+  %a.088 = phi i32 [ 0, %entry ], [ %op.extra, %for.body ]
+  %1 = shl i64 %indvars.iv, 3
+  %arrayidx = getelementptr inbounds i32, i32* %diff, i64 %1
+  %2 = or i64 %1, 4
+  %arrayidx2 = getelementptr inbounds i32, i32* %diff, i64 %2
+  %arrayidx6 = getelementptr inbounds [8 x [8 x i32]], [8 x [8 x i32]]* %m2, i64 0, i64 %indvars.iv, i64 0
+  %3 = or i64 %1, 1
+  %arrayidx13 = getelementptr inbounds i32, i32* %diff, i64 %3
+  %4 = or i64 %1, 5
+  %arrayidx16 = getelementptr inbounds i32, i32* %diff, i64 %4
+  %5 = or i64 %1, 2
+  %arrayidx27 = getelementptr inbounds i32, i32* %diff, i64 %5
+  %6 = or i64 %1, 6
+  %arrayidx30 = getelementptr inbounds i32, i32* %diff, i64 %6
+  %7 = or i64 %1, 3
+  %arrayidx41 = getelementptr inbounds i32, i32* %diff, i64 %7
+  %8 = bitcast i32* %arrayidx to <4 x i32>*
+  %9 = load <4 x i32>, <4 x i32>* %8, align 4
+  %10 = or i64 %1, 7
+  %arrayidx44 = getelementptr inbounds i32, i32* %diff, i64 %10
+  %11 = bitcast i32* %arrayidx2 to <4 x i32>*
+  %12 = load <4 x i32>, <4 x i32>* %11, align 4
+  %13 = add nsw <4 x i32> %12, %9
+  %add10 = add nsw i32 undef, %a.088
+  %arrayidx20 = getelementptr inbounds [8 x [8 x i32]], [8 x [8 x i32]]* %m2, i64 0, i64 %indvars.iv, i64 1
+  %add24 = add nsw i32 %add10, undef
+  %arrayidx34 = getelementptr inbounds [8 x [8 x i32]], [8 x [8 x i32]]* %m2, i64 0, i64 %indvars.iv, i64 2
+  %add38 = add nsw i32 %add24, undef
+  %arrayidx48 = getelementptr inbounds [8 x [8 x i32]], [8 x [8 x i32]]* %m2, i64 0, i64 %indvars.iv, i64 3
+  %14 = bitcast i32* %arrayidx6 to <4 x i32>*
+  store <4 x i32> %13, <4 x i32>* %14, align 16
+  %rdx.shuf = shufflevector <4 x i32> %13, <4 x i32> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = add nsw <4 x i32> %13, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x i32> %bin.rdx, <4 x i32> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = add nsw <4 x i32> %bin.rdx, %rdx.shuf1
+  %15 = extractelement <4 x i32> %bin.rdx2, i32 0
+  %op.extra = add nsw i32 %15, %a.088
+  %add52 = add nsw i32 %add38, undef
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %exitcond = icmp eq i64 %indvars.iv.next, 8
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:                                          ; preds = %for.body
+  ret i32 %op.extra
+}
+
+attributes #0 = { "target-cpu"="generic" }

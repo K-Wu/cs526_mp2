@@ -1,0 +1,98 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown"
+
+define void @phiUsingLoads(i32* noalias nocapture readonly %A, i32* noalias nocapture %B) local_unnamed_addr #0 {
+entry:
+  %0 = load i32, i32* %A, align 4
+  %cmp1 = icmp eq i32 %0, 0
+  %arrayidx12 = getelementptr inbounds i32, i32* %A, i64 25
+  %arrayidx28 = getelementptr inbounds i32, i32* %A, i64 50
+  %arrayidx44 = getelementptr inbounds i32, i32* %A, i64 75
+  br label %for.body
+
+for.cond.cleanup:                                 ; preds = %for.inc
+  %arrayidx64 = getelementptr inbounds i32, i32* %B, i64 1
+  %arrayidx65 = getelementptr inbounds i32, i32* %B, i64 2
+  %arrayidx66 = getelementptr inbounds i32, i32* %B, i64 3
+  %1 = bitcast i32* %B to <4 x i32>*
+  store <4 x i32> %26, <4 x i32>* %1, align 4
+  ret void
+
+for.body:                                         ; preds = %for.inc, %entry
+  %indvars.iv = phi i64 [ 0, %entry ], [ %indvars.iv.next, %for.inc ]
+  %2 = phi <4 x i32> [ undef, %entry ], [ %26, %for.inc ]
+  br i1 %cmp1, label %if.then, label %if.else
+
+if.then:                                          ; preds = %for.body
+  %arrayidx2 = getelementptr inbounds i32, i32* %A, i64 %indvars.iv
+  %3 = add nuw nsw i64 %indvars.iv, 1
+  %arrayidx5 = getelementptr inbounds i32, i32* %A, i64 %3
+  %4 = add nuw nsw i64 %indvars.iv, 2
+  %arrayidx8 = getelementptr inbounds i32, i32* %A, i64 %4
+  %5 = add nuw nsw i64 %indvars.iv, 3
+  %arrayidx11 = getelementptr inbounds i32, i32* %A, i64 %5
+  %6 = bitcast i32* %arrayidx2 to <4 x i32>*
+  %7 = load <4 x i32>, <4 x i32>* %6, align 4
+  br label %for.inc
+
+if.else:                                          ; preds = %for.body
+  %8 = load i32, i32* %arrayidx12, align 4
+  %cmp13 = icmp eq i32 %8, 0
+  br i1 %cmp13, label %if.then14, label %if.else27
+
+if.then14:                                        ; preds = %if.else
+  %arrayidx17 = getelementptr inbounds i32, i32* %A, i64 %indvars.iv
+  %9 = add nuw nsw i64 %indvars.iv, 1
+  %arrayidx20 = getelementptr inbounds i32, i32* %A, i64 %9
+  %10 = add nuw nsw i64 %indvars.iv, 2
+  %arrayidx23 = getelementptr inbounds i32, i32* %A, i64 %10
+  %11 = add nuw nsw i64 %indvars.iv, 3
+  %arrayidx26 = getelementptr inbounds i32, i32* %A, i64 %11
+  %12 = bitcast i32* %arrayidx17 to <4 x i32>*
+  %13 = load <4 x i32>, <4 x i32>* %12, align 4
+  br label %for.inc
+
+if.else27:                                        ; preds = %if.else
+  %14 = load i32, i32* %arrayidx28, align 4
+  %cmp29 = icmp eq i32 %14, 0
+  br i1 %cmp29, label %if.then30, label %if.else43
+
+if.then30:                                        ; preds = %if.else27
+  %arrayidx33 = getelementptr inbounds i32, i32* %A, i64 %indvars.iv
+  %15 = add nuw nsw i64 %indvars.iv, 1
+  %arrayidx36 = getelementptr inbounds i32, i32* %A, i64 %15
+  %16 = add nuw nsw i64 %indvars.iv, 2
+  %arrayidx39 = getelementptr inbounds i32, i32* %A, i64 %16
+  %17 = add nuw nsw i64 %indvars.iv, 3
+  %arrayidx42 = getelementptr inbounds i32, i32* %A, i64 %17
+  %18 = bitcast i32* %arrayidx33 to <4 x i32>*
+  %19 = load <4 x i32>, <4 x i32>* %18, align 4
+  br label %for.inc
+
+if.else43:                                        ; preds = %if.else27
+  %20 = load i32, i32* %arrayidx44, align 4
+  %cmp45 = icmp eq i32 %20, 0
+  br i1 %cmp45, label %if.then46, label %for.inc
+
+if.then46:                                        ; preds = %if.else43
+  %arrayidx49 = getelementptr inbounds i32, i32* %A, i64 %indvars.iv
+  %21 = add nuw nsw i64 %indvars.iv, 1
+  %arrayidx52 = getelementptr inbounds i32, i32* %A, i64 %21
+  %22 = add nuw nsw i64 %indvars.iv, 3
+  %arrayidx55 = getelementptr inbounds i32, i32* %A, i64 %22
+  %23 = add nuw nsw i64 %indvars.iv, 2
+  %arrayidx58 = getelementptr inbounds i32, i32* %A, i64 %23
+  %24 = bitcast i32* %arrayidx49 to <4 x i32>*
+  %25 = load <4 x i32>, <4 x i32>* %24, align 4
+  %reorder_shuffle = shufflevector <4 x i32> %25, <4 x i32> undef, <4 x i32> <i32 0, i32 1, i32 3, i32 2>
+  br label %for.inc
+
+for.inc:                                          ; preds = %if.then46, %if.else43, %if.then30, %if.then14, %if.then
+  %26 = phi <4 x i32> [ %7, %if.then ], [ %13, %if.then14 ], [ %19, %if.then30 ], [ %reorder_shuffle, %if.then46 ], [ %2, %if.else43 ]
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %exitcond = icmp eq i64 %indvars.iv.next, 100
+  br i1 %exitcond, label %for.cond.cleanup, label %for.body
+}
+
+attributes #0 = { "target-features"="+avx" }

@@ -1,0 +1,19 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define i32 @foo(double* noalias nocapture %A, double* noalias nocapture %B, double %G) #0 {
+entry:
+  %arrayidx = getelementptr inbounds double, double* %B, i64 10
+  %0 = bitcast double* %arrayidx to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %2 = fcmp une <2 x double> %1, zeroinitializer
+  %3 = insertelement <2 x double> undef, double %G, i32 0
+  %4 = insertelement <2 x double> %3, double %G, i32 1
+  %5 = select <2 x i1> %2, <2 x double> %4, <2 x double> <double 1.000000e+00, double 1.000000e+00>
+  %6 = bitcast double* %A to <2 x double>*
+  store <2 x double> %5, <2 x double>* %6, align 8
+  ret i32 undef
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

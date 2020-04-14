@@ -1,0 +1,94 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:32:64-f32:32:32-f64:32:64-v64:64:64-v128:128:128-a0:0:64-f80:128:128-n8:16:32-S128"
+target triple = "i386-apple-macosx10.8.0"
+
+define double @foo(double* nocapture %D) #0 {
+  br label %1
+
+; <label>:1:                                      ; preds = %1, %0
+  %i.02 = phi i32 [ 0, %0 ], [ %12, %1 ]
+  %sum.01 = phi double [ 0.000000e+00, %0 ], [ %11, %1 ]
+  %2 = shl nsw i32 %i.02, 1
+  %3 = getelementptr inbounds double, double* %D, i32 %2
+  %4 = bitcast double* %3 to <2 x double>*
+  %5 = load <2 x double>, <2 x double>* %4, align 4
+  %6 = fmul <2 x double> %5, %5
+  %7 = fmul <2 x double> %6, %6
+  %8 = extractelement <2 x double> %7, i32 0
+  %9 = extractelement <2 x double> %7, i32 1
+  %10 = fadd double %8, %9
+  %11 = fadd double %sum.01, %10
+  %12 = add nsw i32 %i.02, 1
+  %exitcond = icmp eq i32 %12, 100
+  br i1 %exitcond, label %13, label %1
+
+; <label>:13:                                     ; preds = %1
+  ret double %11
+}
+
+define i1 @two_wide_fcmp_reduction(<2 x double> %a0) #0 {
+  %a = fcmp ogt <2 x double> %a0, <double 1.000000e+00, double 1.000000e+00>
+  %b = extractelement <2 x i1> %a, i32 0
+  %c = extractelement <2 x i1> %a, i32 1
+  %d = and i1 %b, %c
+  ret i1 %d
+}
+
+define double @fadd_reduction(<2 x double> %a0) #0 {
+  %a = fadd fast <2 x double> %a0, <double 1.000000e+00, double 1.000000e+00>
+  %b = extractelement <2 x double> %a, i32 0
+  %c = extractelement <2 x double> %a, i32 1
+  %d = fadd fast double %b, %c
+  ret double %d
+}
+
+define i1 @fcmp_lt_gt(double %a, double %b, double %c) #0 {
+entry:
+  %fneg = fneg double %b
+  %mul = fmul double %a, 2.000000e+00
+  %0 = insertelement <2 x double> undef, double %fneg, i32 0
+  %1 = insertelement <2 x double> %0, double %c, i32 1
+  %2 = insertelement <2 x double> undef, double %c, i32 0
+  %3 = insertelement <2 x double> %2, double %b, i32 1
+  %4 = fsub <2 x double> %1, %3
+  %5 = insertelement <2 x double> undef, double %mul, i32 0
+  %6 = insertelement <2 x double> %5, double %mul, i32 1
+  %7 = fdiv <2 x double> %4, %6
+  %8 = extractelement <2 x double> %7, i32 1
+  %cmp = fcmp olt double %8, 0x3EB0C6F7A0B5ED8D
+  %9 = extractelement <2 x double> %7, i32 0
+  %cmp4 = fcmp olt double %9, 0x3EB0C6F7A0B5ED8D
+  %or.cond = and i1 %cmp, %cmp4
+  br i1 %or.cond, label %cleanup, label %lor.lhs.false
+
+lor.lhs.false:                                    ; preds = %entry
+  %10 = fcmp ule <2 x double> %7, <double 1.000000e+00, double 1.000000e+00>
+  %11 = extractelement <2 x i1> %10, i32 0
+  %12 = extractelement <2 x i1> %10, i32 1
+  %not.or.cond9 = or i1 %11, %12
+  ret i1 %not.or.cond9
+
+cleanup:                                          ; preds = %entry
+  ret i1 false
+}
+
+define i1 @fcmp_lt(double %a, double %b, double %c) #0 {
+  %fneg = fneg double %b
+  %mul = fmul double %a, 2.000000e+00
+  %1 = insertelement <2 x double> undef, double %fneg, i32 0
+  %2 = insertelement <2 x double> %1, double %c, i32 1
+  %3 = insertelement <2 x double> undef, double %c, i32 0
+  %4 = insertelement <2 x double> %3, double %b, i32 1
+  %5 = fsub <2 x double> %2, %4
+  %6 = insertelement <2 x double> undef, double %mul, i32 0
+  %7 = insertelement <2 x double> %6, double %mul, i32 1
+  %8 = fdiv <2 x double> %5, %7
+  %9 = fcmp uge <2 x double> %8, <double 0x3EB0C6F7A0B5ED8D, double 0x3EB0C6F7A0B5ED8D>
+  %10 = extractelement <2 x i1> %9, i32 0
+  %11 = extractelement <2 x i1> %9, i32 1
+  %not.or.cond = or i1 %10, %11
+  ret i1 %not.or.cond
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

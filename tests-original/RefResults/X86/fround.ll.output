@@ -1,0 +1,822 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown"
+
+@src64 = common global [8 x double] zeroinitializer, align 64
+@dst64 = common global [8 x double] zeroinitializer, align 64
+@src32 = common global [16 x float] zeroinitializer, align 64
+@dst32 = common global [16 x float] zeroinitializer, align 64
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.ceil.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.floor.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.nearbyint.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.rint.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.trunc.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.ceil.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.floor.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.nearbyint.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.rint.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.trunc.f32(float) #0
+
+; Function Attrs: nounwind
+define void @ceil_2f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ceil0 = call double @llvm.ceil.f64(double %ld0)
+  %ceil1 = call double @llvm.ceil.f64(double %ld1)
+  store double %ceil0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %ceil1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_4f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %ceil0 = call double @llvm.ceil.f64(double %ld0)
+  %ceil1 = call double @llvm.ceil.f64(double %ld1)
+  %ceil2 = call double @llvm.ceil.f64(double %ld2)
+  %ceil3 = call double @llvm.ceil.f64(double %ld3)
+  store double %ceil0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %ceil1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %ceil2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %ceil3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_8f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %ld4 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4), align 8
+  %ld5 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 5), align 8
+  %ld6 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 6), align 8
+  %ld7 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 7), align 8
+  %ceil0 = call double @llvm.ceil.f64(double %ld0)
+  %ceil1 = call double @llvm.ceil.f64(double %ld1)
+  %ceil2 = call double @llvm.ceil.f64(double %ld2)
+  %ceil3 = call double @llvm.ceil.f64(double %ld3)
+  %ceil4 = call double @llvm.ceil.f64(double %ld4)
+  %ceil5 = call double @llvm.ceil.f64(double %ld5)
+  %ceil6 = call double @llvm.ceil.f64(double %ld6)
+  %ceil7 = call double @llvm.ceil.f64(double %ld7)
+  store double %ceil0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %ceil1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %ceil2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %ceil3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  store double %ceil4, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4), align 8
+  store double %ceil5, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 5), align 8
+  store double %ceil6, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 6), align 8
+  store double %ceil7, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 7), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_2f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %floor0 = call double @llvm.floor.f64(double %ld0)
+  %floor1 = call double @llvm.floor.f64(double %ld1)
+  store double %floor0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %floor1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_4f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %floor0 = call double @llvm.floor.f64(double %ld0)
+  %floor1 = call double @llvm.floor.f64(double %ld1)
+  %floor2 = call double @llvm.floor.f64(double %ld2)
+  %floor3 = call double @llvm.floor.f64(double %ld3)
+  store double %floor0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %floor1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %floor2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %floor3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_8f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %ld4 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4), align 8
+  %ld5 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 5), align 8
+  %ld6 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 6), align 8
+  %ld7 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 7), align 8
+  %floor0 = call double @llvm.floor.f64(double %ld0)
+  %floor1 = call double @llvm.floor.f64(double %ld1)
+  %floor2 = call double @llvm.floor.f64(double %ld2)
+  %floor3 = call double @llvm.floor.f64(double %ld3)
+  %floor4 = call double @llvm.floor.f64(double %ld4)
+  %floor5 = call double @llvm.floor.f64(double %ld5)
+  %floor6 = call double @llvm.floor.f64(double %ld6)
+  %floor7 = call double @llvm.floor.f64(double %ld7)
+  store double %floor0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %floor1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %floor2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %floor3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  store double %floor4, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4), align 8
+  store double %floor5, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 5), align 8
+  store double %floor6, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 6), align 8
+  store double %floor7, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 7), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_2f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %nearbyint0 = call double @llvm.nearbyint.f64(double %ld0)
+  %nearbyint1 = call double @llvm.nearbyint.f64(double %ld1)
+  store double %nearbyint0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %nearbyint1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_4f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %nearbyint0 = call double @llvm.nearbyint.f64(double %ld0)
+  %nearbyint1 = call double @llvm.nearbyint.f64(double %ld1)
+  %nearbyint2 = call double @llvm.nearbyint.f64(double %ld2)
+  %nearbyint3 = call double @llvm.nearbyint.f64(double %ld3)
+  store double %nearbyint0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %nearbyint1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %nearbyint2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %nearbyint3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_8f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %ld4 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4), align 8
+  %ld5 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 5), align 8
+  %ld6 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 6), align 8
+  %ld7 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 7), align 8
+  %nearbyint0 = call double @llvm.nearbyint.f64(double %ld0)
+  %nearbyint1 = call double @llvm.nearbyint.f64(double %ld1)
+  %nearbyint2 = call double @llvm.nearbyint.f64(double %ld2)
+  %nearbyint3 = call double @llvm.nearbyint.f64(double %ld3)
+  %nearbyint4 = call double @llvm.nearbyint.f64(double %ld4)
+  %nearbyint5 = call double @llvm.nearbyint.f64(double %ld5)
+  %nearbyint6 = call double @llvm.nearbyint.f64(double %ld6)
+  %nearbyint7 = call double @llvm.nearbyint.f64(double %ld7)
+  store double %nearbyint0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %nearbyint1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %nearbyint2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %nearbyint3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  store double %nearbyint4, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4), align 8
+  store double %nearbyint5, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 5), align 8
+  store double %nearbyint6, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 6), align 8
+  store double %nearbyint7, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 7), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_2f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %rint0 = call double @llvm.rint.f64(double %ld0)
+  %rint1 = call double @llvm.rint.f64(double %ld1)
+  store double %rint0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %rint1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_4f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %rint0 = call double @llvm.rint.f64(double %ld0)
+  %rint1 = call double @llvm.rint.f64(double %ld1)
+  %rint2 = call double @llvm.rint.f64(double %ld2)
+  %rint3 = call double @llvm.rint.f64(double %ld3)
+  store double %rint0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %rint1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %rint2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %rint3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_8f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %ld4 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4), align 8
+  %ld5 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 5), align 8
+  %ld6 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 6), align 8
+  %ld7 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 7), align 8
+  %rint0 = call double @llvm.rint.f64(double %ld0)
+  %rint1 = call double @llvm.rint.f64(double %ld1)
+  %rint2 = call double @llvm.rint.f64(double %ld2)
+  %rint3 = call double @llvm.rint.f64(double %ld3)
+  %rint4 = call double @llvm.rint.f64(double %ld4)
+  %rint5 = call double @llvm.rint.f64(double %ld5)
+  %rint6 = call double @llvm.rint.f64(double %ld6)
+  %rint7 = call double @llvm.rint.f64(double %ld7)
+  store double %rint0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %rint1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %rint2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %rint3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  store double %rint4, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4), align 8
+  store double %rint5, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 5), align 8
+  store double %rint6, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 6), align 8
+  store double %rint7, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 7), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_2f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %trunc0 = call double @llvm.trunc.f64(double %ld0)
+  %trunc1 = call double @llvm.trunc.f64(double %ld1)
+  store double %trunc0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %trunc1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_4f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %trunc0 = call double @llvm.trunc.f64(double %ld0)
+  %trunc1 = call double @llvm.trunc.f64(double %ld1)
+  %trunc2 = call double @llvm.trunc.f64(double %ld2)
+  %trunc3 = call double @llvm.trunc.f64(double %ld3)
+  store double %trunc0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %trunc1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %trunc2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %trunc3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_8f64() #1 {
+  %ld0 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 0), align 8
+  %ld1 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 1), align 8
+  %ld2 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2), align 8
+  %ld3 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 3), align 8
+  %ld4 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4), align 8
+  %ld5 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 5), align 8
+  %ld6 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 6), align 8
+  %ld7 = load double, double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 7), align 8
+  %trunc0 = call double @llvm.trunc.f64(double %ld0)
+  %trunc1 = call double @llvm.trunc.f64(double %ld1)
+  %trunc2 = call double @llvm.trunc.f64(double %ld2)
+  %trunc3 = call double @llvm.trunc.f64(double %ld3)
+  %trunc4 = call double @llvm.trunc.f64(double %ld4)
+  %trunc5 = call double @llvm.trunc.f64(double %ld5)
+  %trunc6 = call double @llvm.trunc.f64(double %ld6)
+  %trunc7 = call double @llvm.trunc.f64(double %ld7)
+  store double %trunc0, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 0), align 8
+  store double %trunc1, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 1), align 8
+  store double %trunc2, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2), align 8
+  store double %trunc3, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 3), align 8
+  store double %trunc4, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4), align 8
+  store double %trunc5, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 5), align 8
+  store double %trunc6, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 6), align 8
+  store double %trunc7, double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 7), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_4f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ceil0 = call float @llvm.ceil.f32(float %ld0)
+  %ceil1 = call float @llvm.ceil.f32(float %ld1)
+  %ceil2 = call float @llvm.ceil.f32(float %ld2)
+  %ceil3 = call float @llvm.ceil.f32(float %ld3)
+  store float %ceil0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %ceil1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %ceil2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %ceil3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_8f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %ceil0 = call float @llvm.ceil.f32(float %ld0)
+  %ceil1 = call float @llvm.ceil.f32(float %ld1)
+  %ceil2 = call float @llvm.ceil.f32(float %ld2)
+  %ceil3 = call float @llvm.ceil.f32(float %ld3)
+  %ceil4 = call float @llvm.ceil.f32(float %ld4)
+  %ceil5 = call float @llvm.ceil.f32(float %ld5)
+  %ceil6 = call float @llvm.ceil.f32(float %ld6)
+  %ceil7 = call float @llvm.ceil.f32(float %ld7)
+  store float %ceil0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %ceil1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %ceil2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %ceil3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %ceil4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %ceil5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %ceil6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %ceil7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_16f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %ld8 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8), align 4
+  %ld9 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 9), align 4
+  %ld10 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 10), align 4
+  %ld11 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 11), align 4
+  %ld12 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 12), align 4
+  %ld13 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 13), align 4
+  %ld14 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 14), align 4
+  %ld15 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 15), align 4
+  %ceil0 = call float @llvm.ceil.f32(float %ld0)
+  %ceil1 = call float @llvm.ceil.f32(float %ld1)
+  %ceil2 = call float @llvm.ceil.f32(float %ld2)
+  %ceil3 = call float @llvm.ceil.f32(float %ld3)
+  %ceil4 = call float @llvm.ceil.f32(float %ld4)
+  %ceil5 = call float @llvm.ceil.f32(float %ld5)
+  %ceil6 = call float @llvm.ceil.f32(float %ld6)
+  %ceil7 = call float @llvm.ceil.f32(float %ld7)
+  %ceil8 = call float @llvm.ceil.f32(float %ld8)
+  %ceil9 = call float @llvm.ceil.f32(float %ld9)
+  %ceil10 = call float @llvm.ceil.f32(float %ld10)
+  %ceil11 = call float @llvm.ceil.f32(float %ld11)
+  %ceil12 = call float @llvm.ceil.f32(float %ld12)
+  %ceil13 = call float @llvm.ceil.f32(float %ld13)
+  %ceil14 = call float @llvm.ceil.f32(float %ld14)
+  %ceil15 = call float @llvm.ceil.f32(float %ld15)
+  store float %ceil0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %ceil1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %ceil2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %ceil3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %ceil4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %ceil5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %ceil6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %ceil7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  store float %ceil8, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8), align 4
+  store float %ceil9, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 9), align 4
+  store float %ceil10, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 10), align 4
+  store float %ceil11, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 11), align 4
+  store float %ceil12, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 12), align 4
+  store float %ceil13, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 13), align 4
+  store float %ceil14, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 14), align 4
+  store float %ceil15, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 15), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_4f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %floor0 = call float @llvm.floor.f32(float %ld0)
+  %floor1 = call float @llvm.floor.f32(float %ld1)
+  %floor2 = call float @llvm.floor.f32(float %ld2)
+  %floor3 = call float @llvm.floor.f32(float %ld3)
+  store float %floor0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %floor1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %floor2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %floor3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_8f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %floor0 = call float @llvm.floor.f32(float %ld0)
+  %floor1 = call float @llvm.floor.f32(float %ld1)
+  %floor2 = call float @llvm.floor.f32(float %ld2)
+  %floor3 = call float @llvm.floor.f32(float %ld3)
+  %floor4 = call float @llvm.floor.f32(float %ld4)
+  %floor5 = call float @llvm.floor.f32(float %ld5)
+  %floor6 = call float @llvm.floor.f32(float %ld6)
+  %floor7 = call float @llvm.floor.f32(float %ld7)
+  store float %floor0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %floor1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %floor2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %floor3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %floor4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %floor5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %floor6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %floor7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_16f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %ld8 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8), align 4
+  %ld9 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 9), align 4
+  %ld10 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 10), align 4
+  %ld11 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 11), align 4
+  %ld12 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 12), align 4
+  %ld13 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 13), align 4
+  %ld14 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 14), align 4
+  %ld15 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 15), align 4
+  %floor0 = call float @llvm.floor.f32(float %ld0)
+  %floor1 = call float @llvm.floor.f32(float %ld1)
+  %floor2 = call float @llvm.floor.f32(float %ld2)
+  %floor3 = call float @llvm.floor.f32(float %ld3)
+  %floor4 = call float @llvm.floor.f32(float %ld4)
+  %floor5 = call float @llvm.floor.f32(float %ld5)
+  %floor6 = call float @llvm.floor.f32(float %ld6)
+  %floor7 = call float @llvm.floor.f32(float %ld7)
+  %floor8 = call float @llvm.floor.f32(float %ld8)
+  %floor9 = call float @llvm.floor.f32(float %ld9)
+  %floor10 = call float @llvm.floor.f32(float %ld10)
+  %floor11 = call float @llvm.floor.f32(float %ld11)
+  %floor12 = call float @llvm.floor.f32(float %ld12)
+  %floor13 = call float @llvm.floor.f32(float %ld13)
+  %floor14 = call float @llvm.floor.f32(float %ld14)
+  %floor15 = call float @llvm.floor.f32(float %ld15)
+  store float %floor0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %floor1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %floor2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %floor3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %floor4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %floor5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %floor6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %floor7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  store float %floor8, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8), align 4
+  store float %floor9, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 9), align 4
+  store float %floor10, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 10), align 4
+  store float %floor11, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 11), align 4
+  store float %floor12, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 12), align 4
+  store float %floor13, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 13), align 4
+  store float %floor14, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 14), align 4
+  store float %floor15, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 15), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_4f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %nearbyint0 = call float @llvm.nearbyint.f32(float %ld0)
+  %nearbyint1 = call float @llvm.nearbyint.f32(float %ld1)
+  %nearbyint2 = call float @llvm.nearbyint.f32(float %ld2)
+  %nearbyint3 = call float @llvm.nearbyint.f32(float %ld3)
+  store float %nearbyint0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %nearbyint1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %nearbyint2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %nearbyint3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_8f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %nearbyint0 = call float @llvm.nearbyint.f32(float %ld0)
+  %nearbyint1 = call float @llvm.nearbyint.f32(float %ld1)
+  %nearbyint2 = call float @llvm.nearbyint.f32(float %ld2)
+  %nearbyint3 = call float @llvm.nearbyint.f32(float %ld3)
+  %nearbyint4 = call float @llvm.nearbyint.f32(float %ld4)
+  %nearbyint5 = call float @llvm.nearbyint.f32(float %ld5)
+  %nearbyint6 = call float @llvm.nearbyint.f32(float %ld6)
+  %nearbyint7 = call float @llvm.nearbyint.f32(float %ld7)
+  store float %nearbyint0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %nearbyint1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %nearbyint2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %nearbyint3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %nearbyint4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %nearbyint5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %nearbyint6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %nearbyint7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_16f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %ld8 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8), align 4
+  %ld9 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 9), align 4
+  %ld10 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 10), align 4
+  %ld11 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 11), align 4
+  %ld12 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 12), align 4
+  %ld13 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 13), align 4
+  %ld14 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 14), align 4
+  %ld15 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 15), align 4
+  %nearbyint0 = call float @llvm.nearbyint.f32(float %ld0)
+  %nearbyint1 = call float @llvm.nearbyint.f32(float %ld1)
+  %nearbyint2 = call float @llvm.nearbyint.f32(float %ld2)
+  %nearbyint3 = call float @llvm.nearbyint.f32(float %ld3)
+  %nearbyint4 = call float @llvm.nearbyint.f32(float %ld4)
+  %nearbyint5 = call float @llvm.nearbyint.f32(float %ld5)
+  %nearbyint6 = call float @llvm.nearbyint.f32(float %ld6)
+  %nearbyint7 = call float @llvm.nearbyint.f32(float %ld7)
+  %nearbyint8 = call float @llvm.nearbyint.f32(float %ld8)
+  %nearbyint9 = call float @llvm.nearbyint.f32(float %ld9)
+  %nearbyint10 = call float @llvm.nearbyint.f32(float %ld10)
+  %nearbyint11 = call float @llvm.nearbyint.f32(float %ld11)
+  %nearbyint12 = call float @llvm.nearbyint.f32(float %ld12)
+  %nearbyint13 = call float @llvm.nearbyint.f32(float %ld13)
+  %nearbyint14 = call float @llvm.nearbyint.f32(float %ld14)
+  %nearbyint15 = call float @llvm.nearbyint.f32(float %ld15)
+  store float %nearbyint0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %nearbyint1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %nearbyint2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %nearbyint3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %nearbyint4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %nearbyint5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %nearbyint6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %nearbyint7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  store float %nearbyint8, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8), align 4
+  store float %nearbyint9, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 9), align 4
+  store float %nearbyint10, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 10), align 4
+  store float %nearbyint11, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 11), align 4
+  store float %nearbyint12, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 12), align 4
+  store float %nearbyint13, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 13), align 4
+  store float %nearbyint14, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 14), align 4
+  store float %nearbyint15, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 15), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_4f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %rint0 = call float @llvm.rint.f32(float %ld0)
+  %rint1 = call float @llvm.rint.f32(float %ld1)
+  %rint2 = call float @llvm.rint.f32(float %ld2)
+  %rint3 = call float @llvm.rint.f32(float %ld3)
+  store float %rint0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %rint1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %rint2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %rint3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_8f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %rint0 = call float @llvm.rint.f32(float %ld0)
+  %rint1 = call float @llvm.rint.f32(float %ld1)
+  %rint2 = call float @llvm.rint.f32(float %ld2)
+  %rint3 = call float @llvm.rint.f32(float %ld3)
+  %rint4 = call float @llvm.rint.f32(float %ld4)
+  %rint5 = call float @llvm.rint.f32(float %ld5)
+  %rint6 = call float @llvm.rint.f32(float %ld6)
+  %rint7 = call float @llvm.rint.f32(float %ld7)
+  store float %rint0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %rint1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %rint2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %rint3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %rint4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %rint5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %rint6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %rint7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_16f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %ld8 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8), align 4
+  %ld9 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 9), align 4
+  %ld10 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 10), align 4
+  %ld11 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 11), align 4
+  %ld12 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 12), align 4
+  %ld13 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 13), align 4
+  %ld14 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 14), align 4
+  %ld15 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 15), align 4
+  %rint0 = call float @llvm.rint.f32(float %ld0)
+  %rint1 = call float @llvm.rint.f32(float %ld1)
+  %rint2 = call float @llvm.rint.f32(float %ld2)
+  %rint3 = call float @llvm.rint.f32(float %ld3)
+  %rint4 = call float @llvm.rint.f32(float %ld4)
+  %rint5 = call float @llvm.rint.f32(float %ld5)
+  %rint6 = call float @llvm.rint.f32(float %ld6)
+  %rint7 = call float @llvm.rint.f32(float %ld7)
+  %rint8 = call float @llvm.rint.f32(float %ld8)
+  %rint9 = call float @llvm.rint.f32(float %ld9)
+  %rint10 = call float @llvm.rint.f32(float %ld10)
+  %rint11 = call float @llvm.rint.f32(float %ld11)
+  %rint12 = call float @llvm.rint.f32(float %ld12)
+  %rint13 = call float @llvm.rint.f32(float %ld13)
+  %rint14 = call float @llvm.rint.f32(float %ld14)
+  %rint15 = call float @llvm.rint.f32(float %ld15)
+  store float %rint0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %rint1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %rint2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %rint3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %rint4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %rint5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %rint6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %rint7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  store float %rint8, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8), align 4
+  store float %rint9, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 9), align 4
+  store float %rint10, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 10), align 4
+  store float %rint11, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 11), align 4
+  store float %rint12, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 12), align 4
+  store float %rint13, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 13), align 4
+  store float %rint14, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 14), align 4
+  store float %rint15, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 15), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_4f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %trunc0 = call float @llvm.trunc.f32(float %ld0)
+  %trunc1 = call float @llvm.trunc.f32(float %ld1)
+  %trunc2 = call float @llvm.trunc.f32(float %ld2)
+  %trunc3 = call float @llvm.trunc.f32(float %ld3)
+  store float %trunc0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %trunc1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %trunc2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %trunc3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_8f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %trunc0 = call float @llvm.trunc.f32(float %ld0)
+  %trunc1 = call float @llvm.trunc.f32(float %ld1)
+  %trunc2 = call float @llvm.trunc.f32(float %ld2)
+  %trunc3 = call float @llvm.trunc.f32(float %ld3)
+  %trunc4 = call float @llvm.trunc.f32(float %ld4)
+  %trunc5 = call float @llvm.trunc.f32(float %ld5)
+  %trunc6 = call float @llvm.trunc.f32(float %ld6)
+  %trunc7 = call float @llvm.trunc.f32(float %ld7)
+  store float %trunc0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %trunc1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %trunc2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %trunc3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %trunc4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %trunc5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %trunc6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %trunc7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_16f32() #1 {
+  %ld0 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 0), align 4
+  %ld1 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 1), align 4
+  %ld2 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 2), align 4
+  %ld3 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 3), align 4
+  %ld4 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4), align 4
+  %ld5 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 5), align 4
+  %ld6 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 6), align 4
+  %ld7 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 7), align 4
+  %ld8 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8), align 4
+  %ld9 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 9), align 4
+  %ld10 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 10), align 4
+  %ld11 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 11), align 4
+  %ld12 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 12), align 4
+  %ld13 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 13), align 4
+  %ld14 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 14), align 4
+  %ld15 = load float, float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 15), align 4
+  %trunc0 = call float @llvm.trunc.f32(float %ld0)
+  %trunc1 = call float @llvm.trunc.f32(float %ld1)
+  %trunc2 = call float @llvm.trunc.f32(float %ld2)
+  %trunc3 = call float @llvm.trunc.f32(float %ld3)
+  %trunc4 = call float @llvm.trunc.f32(float %ld4)
+  %trunc5 = call float @llvm.trunc.f32(float %ld5)
+  %trunc6 = call float @llvm.trunc.f32(float %ld6)
+  %trunc7 = call float @llvm.trunc.f32(float %ld7)
+  %trunc8 = call float @llvm.trunc.f32(float %ld8)
+  %trunc9 = call float @llvm.trunc.f32(float %ld9)
+  %trunc10 = call float @llvm.trunc.f32(float %ld10)
+  %trunc11 = call float @llvm.trunc.f32(float %ld11)
+  %trunc12 = call float @llvm.trunc.f32(float %ld12)
+  %trunc13 = call float @llvm.trunc.f32(float %ld13)
+  %trunc14 = call float @llvm.trunc.f32(float %ld14)
+  %trunc15 = call float @llvm.trunc.f32(float %ld15)
+  store float %trunc0, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 0), align 4
+  store float %trunc1, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 1), align 4
+  store float %trunc2, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 2), align 4
+  store float %trunc3, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 3), align 4
+  store float %trunc4, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4), align 4
+  store float %trunc5, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 5), align 4
+  store float %trunc6, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 6), align 4
+  store float %trunc7, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 7), align 4
+  store float %trunc8, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8), align 4
+  store float %trunc9, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 9), align 4
+  store float %trunc10, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 10), align 4
+  store float %trunc11, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 11), align 4
+  store float %trunc12, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 12), align 4
+  store float %trunc13, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 13), align 4
+  store float %trunc14, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 14), align 4
+  store float %trunc15, float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 15), align 4
+  ret void
+}
+
+attributes #0 = { nounwind readnone speculatable }
+attributes #1 = { nounwind }

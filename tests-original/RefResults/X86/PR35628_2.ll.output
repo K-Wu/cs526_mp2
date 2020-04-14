@@ -1,0 +1,39 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128-ni:1"
+target triple = "x86_64-unknown-linux-gnu"
+
+define void @test() #0 {
+entry:
+  br label %loop
+
+loop:                                             ; preds = %loop, %entry
+  %dummy_phi = phi i64 [ 1, %entry ], [ %op.extra3, %loop ]
+  %0 = phi i64 [ 2, %entry ], [ %6, %loop ]
+  %dummy_add = add i16 0, 0
+  %1 = insertelement <4 x i64> undef, i64 %0, i32 0
+  %2 = insertelement <4 x i64> %1, i64 %0, i32 1
+  %3 = insertelement <4 x i64> %2, i64 %0, i32 2
+  %4 = insertelement <4 x i64> %3, i64 %0, i32 3
+  %5 = add <4 x i64> <i64 3, i64 2, i64 1, i64 0>, %4
+  %6 = extractelement <4 x i64> %5, i32 3
+  %7 = extractelement <4 x i64> %5, i32 0
+  %dummy_shl = shl i64 %7, 32
+  %8 = add <4 x i64> <i64 1, i64 1, i64 1, i64 1>, %5
+  %9 = ashr exact <4 x i64> %8, <i64 32, i64 32, i64 32, i64 32>
+  %sum1 = add i64 undef, undef
+  %sum2 = add i64 %sum1, undef
+  %zsum = add i64 %sum2, 0
+  %join = add i64 %6, %zsum
+  %rdx.shuf = shufflevector <4 x i64> %9, <4 x i64> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = add <4 x i64> %9, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x i64> %bin.rdx, <4 x i64> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = add <4 x i64> %bin.rdx, %rdx.shuf1
+  %10 = extractelement <4 x i64> %bin.rdx2, i32 0
+  %op.extra = add i64 %10, 0
+  %op.extra3 = add i64 %op.extra, %6
+  %last = add i64 %join, undef
+  br label %loop
+}
+
+attributes #0 = { "target-cpu"="haswell" }

@@ -1,0 +1,43 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define i32 @test_sext_4i8_to_4i32(i32* noalias nocapture %A, i8* noalias nocapture %B) #0 {
+entry:
+  %0 = bitcast i8* %B to <4 x i8>*
+  %1 = load <4 x i8>, <4 x i8>* %0, align 1
+  %2 = sext <4 x i8> %1 to <4 x i32>
+  %3 = bitcast i32* %A to <4 x i32>*
+  store <4 x i32> %2, <4 x i32>* %3, align 4
+  ret i32 undef
+}
+
+define i32 @test_zext_4i16_to_4i32(i32* noalias nocapture %A, i16* noalias nocapture %B) #0 {
+entry:
+  %0 = bitcast i16* %B to <4 x i16>*
+  %1 = load <4 x i16>, <4 x i16>* %0, align 1
+  %2 = zext <4 x i16> %1 to <4 x i32>
+  %3 = bitcast i32* %A to <4 x i32>*
+  store <4 x i32> %2, <4 x i32>* %3, align 4
+  ret i32 undef
+}
+
+define i64 @test_sext_4i16_to_4i64(i64* noalias nocapture %A, i16* noalias nocapture %B) #0 {
+entry:
+  %0 = bitcast i16* %B to <2 x i16>*
+  %1 = load <2 x i16>, <2 x i16>* %0, align 1
+  %2 = sext <2 x i16> %1 to <2 x i64>
+  %3 = bitcast i64* %A to <2 x i64>*
+  store <2 x i64> %2, <2 x i64>* %3, align 4
+  %arrayidx5 = getelementptr inbounds i16, i16* %B, i64 2
+  %arrayidx7 = getelementptr inbounds i64, i64* %A, i64 2
+  %4 = bitcast i16* %arrayidx5 to <2 x i16>*
+  %5 = load <2 x i16>, <2 x i16>* %4, align 1
+  %6 = sext <2 x i16> %5 to <2 x i64>
+  %7 = bitcast i64* %arrayidx7 to <2 x i64>*
+  store <2 x i64> %6, <2 x i64>* %7, align 4
+  ret i64 undef
+}
+
+attributes #0 = { "target-cpu"="corei7" }

@@ -1,0 +1,47 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux-gnu"
+
+define void @i64_simplified(i64* noalias %st, i64* noalias %ld) #0 {
+  %arrayidx1 = getelementptr inbounds i64, i64* %ld, i64 1
+  %1 = bitcast i64* %ld to <2 x i64>*
+  %2 = load <2 x i64>, <2 x i64>* %1, align 8
+  %shuffle = shufflevector <2 x i64> %2, <2 x i64> undef, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+  %arrayidx3 = getelementptr inbounds i64, i64* %st, i64 1
+  %arrayidx4 = getelementptr inbounds i64, i64* %st, i64 2
+  %arrayidx5 = getelementptr inbounds i64, i64* %st, i64 3
+  %3 = bitcast i64* %st to <4 x i64>*
+  store <4 x i64> %shuffle, <4 x i64>* %3, align 8
+  ret void
+}
+
+define void @i64_simplifiedi_reversed(i64* noalias %st, i64* noalias %ld) #0 {
+  %arrayidx1 = getelementptr inbounds i64, i64* %ld, i64 1
+  %1 = bitcast i64* %ld to <2 x i64>*
+  %2 = load <2 x i64>, <2 x i64>* %1, align 8
+  %reorder_shuffle = shufflevector <2 x i64> %2, <2 x i64> undef, <2 x i32> <i32 1, i32 0>
+  %shuffle = shufflevector <2 x i64> %reorder_shuffle, <2 x i64> undef, <4 x i32> <i32 0, i32 1, i32 0, i32 1>
+  %arrayidx3 = getelementptr inbounds i64, i64* %st, i64 1
+  %arrayidx4 = getelementptr inbounds i64, i64* %st, i64 2
+  %arrayidx5 = getelementptr inbounds i64, i64* %st, i64 3
+  %3 = bitcast i64* %st to <4 x i64>*
+  store <4 x i64> %shuffle, <4 x i64>* %3, align 8
+  ret void
+}
+
+define void @i64_simplifiedi_extract(i64* noalias %st, i64* noalias %ld) #0 {
+  %arrayidx1 = getelementptr inbounds i64, i64* %ld, i64 1
+  %1 = bitcast i64* %ld to <2 x i64>*
+  %2 = load <2 x i64>, <2 x i64>* %1, align 8
+  %shuffle = shufflevector <2 x i64> %2, <2 x i64> undef, <4 x i32> <i32 0, i32 0, i32 0, i32 1>
+  %arrayidx3 = getelementptr inbounds i64, i64* %st, i64 1
+  %arrayidx4 = getelementptr inbounds i64, i64* %st, i64 2
+  %arrayidx5 = getelementptr inbounds i64, i64* %st, i64 3
+  %3 = bitcast i64* %st to <4 x i64>*
+  store <4 x i64> %shuffle, <4 x i64>* %3, align 8
+  %4 = extractelement <4 x i64> %shuffle, i32 3
+  store i64 %4, i64* %ld, align 8
+  ret void
+}
+
+attributes #0 = { "target-cpu"="bdver2" }

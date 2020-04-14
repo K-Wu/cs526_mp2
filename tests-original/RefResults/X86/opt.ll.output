@@ -1,0 +1,19 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+; Function Attrs: norecurse nounwind
+define void @test1(double* nocapture readonly %a, double* nocapture readonly %b, double* nocapture %c) local_unnamed_addr #0 {
+entry:
+  %0 = bitcast double* %a to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %2 = bitcast double* %b to <2 x double>*
+  %3 = load <2 x double>, <2 x double>* %2, align 8
+  %4 = fmul <2 x double> %1, %3
+  %5 = bitcast double* %c to <2 x double>*
+  store <2 x double> %4, <2 x double>* %5, align 8
+  ret void
+}
+
+attributes #0 = { norecurse nounwind "target-cpu"="corei7-avx" }

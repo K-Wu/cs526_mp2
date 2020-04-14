@@ -1,0 +1,55 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux-gnu"
+
+define float @dotf(<4 x float> %x, <4 x float> %y) #0 {
+entry:
+  %0 = fmul fast <4 x float> %x, %y
+  %rdx.shuf = shufflevector <4 x float> %0, <4 x float> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = fadd fast <4 x float> %0, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x float> %bin.rdx, <4 x float> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = fadd fast <4 x float> %bin.rdx, %rdx.shuf1
+  %1 = extractelement <4 x float> %bin.rdx2, i32 0
+  ret float %1
+}
+
+define double @dotd(<4 x double>* byval nocapture readonly align 32, <4 x double>* byval nocapture readonly align 32) #0 {
+entry:
+  %x = load <4 x double>, <4 x double>* %0, align 32
+  %y = load <4 x double>, <4 x double>* %1, align 32
+  %2 = fmul fast <4 x double> %x, %y
+  %rdx.shuf = shufflevector <4 x double> %2, <4 x double> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = fadd fast <4 x double> %2, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x double> %bin.rdx, <4 x double> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = fadd fast <4 x double> %bin.rdx, %rdx.shuf1
+  %3 = extractelement <4 x double> %bin.rdx2, i32 0
+  ret double %3
+}
+
+define float @dotfq(<4 x float>* nocapture readonly %x, <4 x float>* nocapture readonly %y) #0 {
+entry:
+  %0 = load <4 x float>, <4 x float>* %x, align 16
+  %1 = load <4 x float>, <4 x float>* %y, align 16
+  %2 = fmul fast <4 x float> %1, %0
+  %rdx.shuf = shufflevector <4 x float> %2, <4 x float> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = fadd fast <4 x float> %2, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x float> %bin.rdx, <4 x float> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = fadd fast <4 x float> %bin.rdx, %rdx.shuf1
+  %3 = extractelement <4 x float> %bin.rdx2, i32 0
+  ret float %3
+}
+
+define double @dotdq(<4 x double>* nocapture readonly %x, <4 x double>* nocapture readonly %y) #0 {
+entry:
+  %0 = load <4 x double>, <4 x double>* %x, align 32
+  %1 = load <4 x double>, <4 x double>* %y, align 32
+  %2 = fmul fast <4 x double> %1, %0
+  %rdx.shuf = shufflevector <4 x double> %2, <4 x double> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = fadd fast <4 x double> %2, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x double> %bin.rdx, <4 x double> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = fadd fast <4 x double> %bin.rdx, %rdx.shuf1
+  %3 = extractelement <4 x double> %bin.rdx2, i32 0
+  ret double %3
+}
+
+attributes #0 = { "target-cpu"="corei7" }

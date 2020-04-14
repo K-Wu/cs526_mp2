@@ -1,0 +1,41 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define void @fextr(double* %ptr) #0 {
+entry:
+  %LD = load <2 x double>, <2 x double>* undef
+  %P0 = getelementptr inbounds double, double* %ptr, i64 0
+  %0 = fadd <2 x double> <double 0.000000e+00, double 1.100000e+00>, %LD
+  %1 = bitcast double* %P0 to <2 x double>*
+  store <2 x double> %0, <2 x double>* %1, align 4
+  ret void
+}
+
+define void @fextr1(double* %ptr) #0 {
+entry:
+  %LD = load <2 x double>, <2 x double>* undef
+  %reorder_shuffle = shufflevector <2 x double> %LD, <2 x double> undef, <2 x i32> <i32 1, i32 0>
+  %P1 = getelementptr inbounds double, double* %ptr, i64 0
+  %0 = fadd <2 x double> <double 3.400000e+00, double 1.200000e+00>, %reorder_shuffle
+  %1 = bitcast double* %P1 to <2 x double>*
+  store <2 x double> %0, <2 x double>* %1, align 4
+  ret void
+}
+
+define void @fextr2(double* %ptr) #0 {
+entry:
+  %LD = load <4 x double>, <4 x double>* undef
+  %V0 = extractelement <4 x double> %LD, i32 0
+  %V1 = extractelement <4 x double> %LD, i32 1
+  %P0 = getelementptr inbounds double, double* %ptr, i64 0
+  %0 = insertelement <2 x double> undef, double %V0, i32 0
+  %1 = insertelement <2 x double> %0, double %V1, i32 1
+  %2 = fadd <2 x double> <double 5.500000e+00, double 6.600000e+00>, %1
+  %3 = bitcast double* %P0 to <2 x double>*
+  store <2 x double> %2, <2 x double>* %3, align 4
+  ret void
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

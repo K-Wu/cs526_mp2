@@ -1,0 +1,50 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define i32 @foo(i32* nocapture %A, i32 %n) #0 {
+entry:
+  %cmp62 = icmp sgt i32 %n, 0
+  br i1 %cmp62, label %for.body, label %for.end
+
+for.body:                                         ; preds = %for.body, %entry
+  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]
+  %arrayidx = getelementptr inbounds i32, i32* %A, i64 %indvars.iv
+  %0 = or i64 %indvars.iv, 1
+  %arrayidx4 = getelementptr inbounds i32, i32* %A, i64 %0
+  %1 = or i64 %indvars.iv, 2
+  %arrayidx8 = getelementptr inbounds i32, i32* %A, i64 %1
+  %2 = or i64 %indvars.iv, 3
+  %arrayidx12 = getelementptr inbounds i32, i32* %A, i64 %2
+  %3 = or i64 %indvars.iv, 4
+  %arrayidx16 = getelementptr inbounds i32, i32* %A, i64 %3
+  %4 = or i64 %indvars.iv, 5
+  %arrayidx20 = getelementptr inbounds i32, i32* %A, i64 %4
+  %5 = or i64 %indvars.iv, 6
+  %arrayidx24 = getelementptr inbounds i32, i32* %A, i64 %5
+  %6 = or i64 %indvars.iv, 7
+  %arrayidx28 = getelementptr inbounds i32, i32* %A, i64 %6
+  %7 = bitcast i32* %arrayidx to <8 x i32>*
+  %8 = load <8 x i32>, <8 x i32>* %7, align 4
+  %9 = insertelement <8 x i32> undef, i32 %n, i32 0
+  %10 = insertelement <8 x i32> %9, i32 %n, i32 1
+  %11 = insertelement <8 x i32> %10, i32 %n, i32 2
+  %12 = insertelement <8 x i32> %11, i32 %n, i32 3
+  %13 = insertelement <8 x i32> %12, i32 %n, i32 4
+  %14 = insertelement <8 x i32> %13, i32 %n, i32 5
+  %15 = insertelement <8 x i32> %14, i32 %n, i32 6
+  %16 = insertelement <8 x i32> %15, i32 %n, i32 7
+  %17 = add nsw <8 x i32> %16, %8
+  %18 = bitcast i32* %arrayidx to <8 x i32>*
+  store <8 x i32> %17, <8 x i32>* %18, align 4
+  %indvars.iv.next = add i64 %indvars.iv, 8
+  %19 = trunc i64 %indvars.iv.next to i32
+  %cmp = icmp slt i32 %19, %n
+  br i1 %cmp, label %for.body, label %for.end
+
+for.end:                                          ; preds = %for.body, %entry
+  ret i32 undef
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

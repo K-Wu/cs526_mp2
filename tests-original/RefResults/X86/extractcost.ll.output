@@ -1,0 +1,25 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+define i32 @foo(i32* nocapture %A, i32 %n, i32 %m) #0 {
+entry:
+  %0 = insertelement <4 x i32> undef, i32 %n, i32 0
+  %1 = insertelement <4 x i32> %0, i32 %n, i32 1
+  %2 = insertelement <4 x i32> %1, i32 %n, i32 2
+  %3 = insertelement <4 x i32> %2, i32 %n, i32 3
+  %4 = mul nsw <4 x i32> %3, <i32 5, i32 9, i32 3, i32 10>
+  %5 = shl <4 x i32> %3, <i32 5, i32 9, i32 3, i32 10>
+  %6 = shufflevector <4 x i32> %4, <4 x i32> %5, <4 x i32> <i32 0, i32 1, i32 6, i32 3>
+  %7 = add nsw <4 x i32> <i32 9, i32 9, i32 9, i32 9>, %6
+  %8 = bitcast i32* %A to <4 x i32>*
+  store <4 x i32> %7, <4 x i32>* %8, align 4
+  %9 = extractelement <4 x i32> %7, i32 0
+  %externaluse1 = add nsw i32 %9, %m
+  %externaluse2 = mul nsw i32 %9, %m
+  %add10 = add nsw i32 %externaluse1, %externaluse2
+  ret i32 %add10
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

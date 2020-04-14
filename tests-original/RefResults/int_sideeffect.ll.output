@@ -1,0 +1,21 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+
+; Function Attrs: inaccessiblememonly nounwind
+declare void @llvm.sideeffect() #0
+
+define void @test(float* %p) {
+  %p0 = getelementptr float, float* %p, i64 0
+  %p1 = getelementptr float, float* %p, i64 1
+  %p2 = getelementptr float, float* %p, i64 2
+  %p3 = getelementptr float, float* %p, i64 3
+  call void @llvm.sideeffect()
+  %1 = bitcast float* %p0 to <4 x float>*
+  %2 = load <4 x float>, <4 x float>* %1, align 4
+  call void @llvm.sideeffect()
+  %3 = bitcast float* %p0 to <4 x float>*
+  store <4 x float> %2, <4 x float>* %3, align 4
+  ret void
+}
+
+attributes #0 = { inaccessiblememonly nounwind }

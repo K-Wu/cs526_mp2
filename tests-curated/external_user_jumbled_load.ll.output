@@ -1,0 +1,28 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown"
+
+@array = external global [20 x [13 x i32]]
+
+define void @hoge(i64 %idx, <4 x i32>* %sink) #0 {
+bb:
+  %0 = getelementptr inbounds [20 x [13 x i32]], [20 x [13 x i32]]* @array, i64 0, i64 %idx, i64 5
+  %1 = getelementptr inbounds [20 x [13 x i32]], [20 x [13 x i32]]* @array, i64 0, i64 %idx, i64 6
+  %2 = getelementptr inbounds [20 x [13 x i32]], [20 x [13 x i32]]* @array, i64 0, i64 %idx, i64 7
+  %3 = getelementptr inbounds [20 x [13 x i32]], [20 x [13 x i32]]* @array, i64 0, i64 %idx, i64 8
+  %4 = bitcast i32* %0 to <4 x i32>*
+  %5 = load <4 x i32>, <4 x i32>* %4, align 4
+  %reorder_shuffle = shufflevector <4 x i32> %5, <4 x i32> undef, <4 x i32> <i32 1, i32 2, i32 3, i32 0>
+  %6 = extractelement <4 x i32> %reorder_shuffle, i32 0
+  %7 = insertelement <4 x i32> undef, i32 %6, i32 0
+  %8 = extractelement <4 x i32> %reorder_shuffle, i32 1
+  %9 = insertelement <4 x i32> %7, i32 %8, i32 1
+  %10 = extractelement <4 x i32> %reorder_shuffle, i32 2
+  %11 = insertelement <4 x i32> %9, i32 %10, i32 2
+  %12 = extractelement <4 x i32> %reorder_shuffle, i32 3
+  %13 = insertelement <4 x i32> %11, i32 %12, i32 3
+  store <4 x i32> %13, <4 x i32>* %sink
+  ret void
+}
+
+attributes #0 = { "target-features"="+avx" }

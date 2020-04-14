@@ -1,0 +1,28 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "f64:64:64-v64:64:64"
+target triple = "x86_64-apple-macosx10.9.0"
+
+define void @test_phi_in_landingpad() personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*) {
+entry:
+  invoke void @foo()
+          to label %inner unwind label %lpad
+
+inner:                                            ; preds = %entry
+  invoke void @foo()
+          to label %done unwind label %lpad
+
+lpad:                                             ; preds = %inner, %entry
+  %0 = phi <2 x double> [ undef, %entry ], [ undef, %inner ]
+  %1 = landingpad { i8*, i32 }
+          catch i8* null
+  br label %done
+
+done:                                             ; preds = %lpad, %inner
+  %2 = phi <2 x double> [ undef, %inner ], [ %0, %lpad ]
+  ret void
+}
+
+declare void @foo()
+
+declare i32 @__gxx_personality_v0(...)

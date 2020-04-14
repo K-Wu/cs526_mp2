@@ -1,0 +1,1320 @@
+Args: opt -slp-vectorizer -slp-vectorize-hor -S -mtriple=x86_64-unknown-linux-gnu -mcpu=bdver2 -debug 
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+
+Features:+sse2
+CPU:bdver2
+
+Subtarget features: SSELevel 7, 3DNowLevel 1, 64bit 1
+G_ADD (opcode 34): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_SUB (opcode 35): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_MUL (opcode 36): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_SDIV (opcode 37): 1 type index
+.. opcode 37 is aliased to 89
+.. opcode 89 is aliased to 0
+.. the first uncovered type index: 1, OK
+G_UDIV (opcode 38): 1 type index
+.. opcode 38 is aliased to 89
+.. opcode 89 is aliased to 0
+.. the first uncovered type index: 1, OK
+G_SREM (opcode 39): 1 type index
+.. opcode 39 is aliased to 89
+.. opcode 89 is aliased to 0
+.. the first uncovered type index: 1, OK
+G_UREM (opcode 40): 1 type index
+.. opcode 40 is aliased to 89
+.. opcode 89 is aliased to 0
+.. the first uncovered type index: 1, OK
+G_AND (opcode 41): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_OR (opcode 42): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_XOR (opcode 43): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_IMPLICIT_DEF (opcode 44): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_PHI (opcode 45): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FRAME_INDEX (opcode 46): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_GLOBAL_VALUE (opcode 47): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_EXTRACT (opcode 48): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_UNMERGE_VALUES (opcode 49): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_INSERT (opcode 50): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_MERGE_VALUES (opcode 51): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_BUILD_VECTOR (opcode 52): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_BUILD_VECTOR_TRUNC (opcode 53): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_CONCAT_VECTORS (opcode 54): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_PTRTOINT (opcode 55): 2 type indices
+.. the first uncovered type index: 2, OK
+G_INTTOPTR (opcode 56): 2 type indices
+.. the first uncovered type index: 2, OK
+G_BITCAST (opcode 57): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_INTRINSIC_TRUNC (opcode 58): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_INTRINSIC_ROUND (opcode 59): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_LOAD (opcode 60): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SEXTLOAD (opcode 61): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ZEXTLOAD (opcode 62): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_STORE (opcode 63): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMIC_CMPXCHG_WITH_SUCCESS (opcode 64): 3 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMIC_CMPXCHG (opcode 65): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_XCHG (opcode 66): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_ADD (opcode 67): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_SUB (opcode 68): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_AND (opcode 69): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_NAND (opcode 70): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_OR (opcode 71): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_XOR (opcode 72): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_MAX (opcode 73): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_MIN (opcode 74): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_UMAX (opcode 75): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ATOMICRMW_UMIN (opcode 76): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_BRCOND (opcode 77): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_BRINDIRECT (opcode 78): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_INTRINSIC (opcode 79): 0 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_INTRINSIC_W_SIDE_EFFECTS (opcode 80): 0 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ANYEXT (opcode 81): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_TRUNC (opcode 82): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_CONSTANT (opcode 83): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FCONSTANT (opcode 84): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_VASTART (opcode 85): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_VAARG (opcode 86): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SEXT (opcode 87): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_ZEXT (opcode 88): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SHL (opcode 89): 1 type index
+.. the first uncovered type index: 1, OK
+G_LSHR (opcode 90): 1 type index
+.. opcode 90 is aliased to 89
+.. opcode 89 is aliased to 0
+.. the first uncovered type index: 1, OK
+G_ASHR (opcode 91): 1 type index
+.. opcode 91 is aliased to 89
+.. opcode 89 is aliased to 0
+.. the first uncovered type index: 1, OK
+G_ICMP (opcode 92): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_FCMP (opcode 93): 2 type indices
+.. the first uncovered type index: 2, OK
+G_SELECT (opcode 94): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_UADDO (opcode 95): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_UADDE (opcode 96): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_USUBO (opcode 97): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_USUBE (opcode 98): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SADDO (opcode 99): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SADDE (opcode 100): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SSUBO (opcode 101): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SSUBE (opcode 102): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_UMULO (opcode 103): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SMULO (opcode 104): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_UMULH (opcode 105): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_SMULH (opcode 106): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FADD (opcode 107): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FSUB (opcode 108): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FMUL (opcode 109): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FMA (opcode 110): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FDIV (opcode 111): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FREM (opcode 112): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FPOW (opcode 113): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FEXP (opcode 114): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FEXP2 (opcode 115): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FLOG (opcode 116): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FLOG2 (opcode 117): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FLOG10 (opcode 118): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FNEG (opcode 119): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FPEXT (opcode 120): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_FPTRUNC (opcode 121): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_FPTOSI (opcode 122): 2 type indices
+.. the first uncovered type index: 2, OK
+G_FPTOUI (opcode 123): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SITOFP (opcode 124): 2 type indices
+.. the first uncovered type index: 2, OK
+G_UITOFP (opcode 125): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_FABS (opcode 126): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_GEP (opcode 127): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_PTR_MASK (opcode 128): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_BR (opcode 129): 0 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_INSERT_VECTOR_ELT (opcode 130): 3 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_EXTRACT_VECTOR_ELT (opcode 131): 3 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_SHUFFLE_VECTOR (opcode 132): 3 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_CTTZ (opcode 133): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_CTTZ_ZERO_UNDEF (opcode 134): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_CTLZ (opcode 135): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_CTLZ_ZERO_UNDEF (opcode 136): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_CTPOP (opcode 137): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_BSWAP (opcode 138): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_FCEIL (opcode 139): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+G_ADDRSPACE_CAST (opcode 140): 2 type indices
+.. type index coverage check SKIPPED: no rules defined
+G_BLOCK_ADDR (opcode 141): 1 type index
+.. type index coverage check SKIPPED: no rules defined
+SLP: Analyzing blocks in test_add.
+SLP:  bundle:   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  initialize schedule region to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  extend schedule region start to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region start to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:       update deps of   %mul.18 = add i32 %1, %0
+SLP:       update deps of   %mul.29 = add i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = add i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = add i32 %4, %mul.310
+SLP:       update deps of   %mul.512 = add i32 %5, %mul.411
+SLP:       update deps of   %mul.613 = add i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = add i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = add i32 %6, %mul.512
+SLP:   schedule   %mul.613 = add i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = add i32 %5, %mul.411
+SLP:   schedule   %mul.512 = add i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = add i32 %4, %mul.310
+SLP:   schedule   %mul.411 = add i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = add i32 %3, %mul.29
+SLP:   schedule   %mul.310 = add i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = add i32 %2, %mul.18
+SLP:   schedule   %mul.29 = add i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = add i32 %1, %0
+SLP:   schedule   %mul.18 = add i32 %1, %0
+SLP:    gets ready (def): [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.714 = add i32 %7, %mul.613.
+SLP: Checking user:  %mul.613 = add i32 %6, %mul.512.
+SLP: Checking user:  %mul.512 = add i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = add i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = add i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = add i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = add i32 %1, %0.
+SLP: Checking user:  %mul.18 = add i32 %1, %0.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region end to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region end to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:       update deps of   %mul.613 = add i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = add i32 %6, %mul.512
+SLP:       update deps of   %mul.512 = add i32 %5, %mul.411
+SLP:       update deps of   %mul.411 = add i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = add i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = add i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = add i32 %1, %0
+SLP:   schedule   %mul.613 = add i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = add i32 %5, %mul.411
+SLP:   schedule   %mul.512 = add i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = add i32 %4, %mul.310
+SLP:   schedule   %mul.411 = add i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = add i32 %3, %mul.29
+SLP:   schedule   %mul.310 = add i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = add i32 %2, %mul.18
+SLP:   schedule   %mul.29 = add i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = add i32 %1, %0
+SLP:   schedule   %mul.18 = add i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = add i32 %1, %0.
+SLP: Checking user:  %mul.18 = add i32 %1, %0.
+SLP: Checking user:  %mul.29 = add i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = add i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = add i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = add i32 %5, %mul.411.
+SLP: Checking user:  %mul.613 = add i32 %6, %mul.512.
+SLP: Checking user:  %mul.714 = add i32 %7, %mul.613.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -7 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -7.
+SLP: Adding cost -2 for reduction that starts with   %7 = load i32, i32* %arrayidx.7, align 4 (It is a splitting reduction)
+SLP: Vectorizing horizontal reduction at cost:-9. (HorRdx)
+SLP: schedule block entry
+SLP:       update deps of   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:       update deps of   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:       update deps of   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:       update deps of   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:       update deps of   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:       update deps of   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:       update deps of   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:    initially in ready list:   %mul.613 = add i32 %6, %mul.512
+SLP:   schedule   %mul.613 = add i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = add i32 %5, %mul.411
+SLP:   schedule   %mul.512 = add i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = add i32 %4, %mul.310
+SLP:   schedule   %mul.411 = add i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = add i32 %3, %mul.29
+SLP:   schedule   %mul.310 = add i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = add i32 %2, %mul.18
+SLP:   schedule   %mul.29 = add i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = add i32 %1, %0
+SLP:   schedule   %mul.18 = add i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:   schedule [  %7 = load i32, i32* %p, align 4;  %6 = load i32, i32* %arrayidx.1, align 4;  %5 = load i32, i32* %arrayidx.2, align 4;  %4 = load i32, i32* %arrayidx.3, align 4;  %3 = load i32, i32* %arrayidx.4, align 4;  %2 = load i32, i32* %arrayidx.5, align 4;  %1 = load i32, i32* %arrayidx.6, align 4;  %0 = load i32, i32* %arrayidx.7, align 4]
+SLP:    gets ready (def):   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:    gets ready (def):   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:    gets ready (def):   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:    gets ready (def):   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:    gets ready (def):   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:    gets ready (def):   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:    gets ready (def):   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:   schedule   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:   schedule   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:   schedule   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:   schedule   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:   schedule   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP: Extracting 0 values .
+SLP: 	validating user:  %mul.18 = add i32 %8, %9.
+SLP: 	Erasing scalar:  %9 = load i32, i32* %p, align 4.
+SLP: 	validating user:  %mul.18 = add i32 %8, undef.
+SLP: 	Erasing scalar:  %8 = load i32, i32* %arrayidx.1, align 4.
+SLP: 	validating user:  %mul.29 = add i32 %7, %mul.18.
+SLP: 	Erasing scalar:  %7 = load i32, i32* %arrayidx.2, align 4.
+SLP: 	validating user:  %mul.310 = add i32 %6, %mul.29.
+SLP: 	Erasing scalar:  %6 = load i32, i32* %arrayidx.3, align 4.
+SLP: 	validating user:  %mul.411 = add i32 %5, %mul.310.
+SLP: 	Erasing scalar:  %5 = load i32, i32* %arrayidx.4, align 4.
+SLP: 	validating user:  %mul.512 = add i32 %4, %mul.411.
+SLP: 	Erasing scalar:  %4 = load i32, i32* %arrayidx.5, align 4.
+SLP: 	validating user:  %mul.613 = add i32 %3, %mul.512.
+SLP: 	Erasing scalar:  %3 = load i32, i32* %arrayidx.6, align 4.
+SLP: 	validating user:  %mul.714 = add i32 %0, %mul.613.
+SLP: 	Erasing scalar:  %0 = load i32, i32* %arrayidx.7, align 4.
+SLP: Optimizing 0 gather sequences instructions.
+SLP: vectorized "test_add"
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+SLP: Analyzing blocks in test_mul.
+SLP:  bundle:   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  initialize schedule region to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  extend schedule region start to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region start to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:       update deps of   %mul.18 = mul i32 %1, %0
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = mul i32 %4, %mul.310
+SLP:       update deps of   %mul.512 = mul i32 %5, %mul.411
+SLP:       update deps of   %mul.613 = mul i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = mul i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = mul i32 %6, %mul.512
+SLP:   schedule   %mul.613 = mul i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = mul i32 %5, %mul.411
+SLP:   schedule   %mul.512 = mul i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = mul i32 %4, %mul.310
+SLP:   schedule   %mul.411 = mul i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.18 = mul i32 %1, %0
+SLP:    gets ready (def): [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.714 = mul i32 %7, %mul.613.
+SLP: Checking user:  %mul.613 = mul i32 %6, %mul.512.
+SLP: Checking user:  %mul.512 = mul i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region end to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region end to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:       update deps of   %mul.613 = mul i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = mul i32 %6, %mul.512
+SLP:       update deps of   %mul.512 = mul i32 %5, %mul.411
+SLP:       update deps of   %mul.411 = mul i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.613 = mul i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = mul i32 %5, %mul.411
+SLP:   schedule   %mul.512 = mul i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = mul i32 %4, %mul.310
+SLP:   schedule   %mul.411 = mul i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.18 = mul i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = mul i32 %5, %mul.411.
+SLP: Checking user:  %mul.613 = mul i32 %6, %mul.512.
+SLP: Checking user:  %mul.714 = mul i32 %7, %mul.613.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -7 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -7.
+SLP: Adding cost 12 for reduction that starts with   %7 = load i32, i32* %arrayidx.7, align 4 (It is a splitting reduction)
+SLP: Trying to vectorize a list of length = 2.
+SLP:  bundle:   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  initialize schedule region to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region start to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP: try schedule bundle [  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4] in block entry
+SLP:       update deps of [  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4]
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = mul i32 %4, %mul.310
+SLP:       update deps of   %mul.512 = mul i32 %5, %mul.411
+SLP:     gets ready on update:   %mul.512 = mul i32 %5, %mul.411
+SLP:     gets ready on update:   %mul.512 = mul i32 %5, %mul.411
+SLP:   schedule   %mul.512 = mul i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = mul i32 %4, %mul.310
+SLP:   schedule   %mul.411 = mul i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def): [  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.613 = mul i32 %6, %mul.512.
+SLP: Checking user:  %mul.512 = mul i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP:  bundle:   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  initialize schedule region to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region end to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP: try schedule bundle [  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4] in block entry
+SLP:       update deps of [  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4]
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of   %mul.512 = mul i32 %5, %mul.411
+SLP:     gets ready on update:   %mul.512 = mul i32 %5, %mul.411
+SLP:       update deps of   %mul.411 = mul i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.512 = mul i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = mul i32 %4, %mul.310
+SLP:   schedule   %mul.411 = mul i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def): [  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = mul i32 %5, %mul.411.
+SLP: Checking user:  %mul.613 = mul i32 %6, %mul.512.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -3 for bundle that starts with   %3 = load i32, i32* %arrayidx.3, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -3.
+SLP: Adding cost 4 for reduction that starts with   %6 = load i32, i32* %arrayidx.6, align 4 (It is a splitting reduction)
+SLP: Trying to vectorize a list of length = 2.
+SLP:  bundle:   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  initialize schedule region to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP: try schedule bundle [  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4] in block entry
+SLP:       update deps of [  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4]
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = mul i32 %4, %mul.310
+SLP:     gets ready on update:   %mul.411 = mul i32 %4, %mul.310
+SLP:     gets ready on update:   %mul.411 = mul i32 %4, %mul.310
+SLP:   schedule   %mul.411 = mul i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def): [  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.512 = mul i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP:  bundle:   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  initialize schedule region to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP: try schedule bundle [  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4] in block entry
+SLP:       update deps of [  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4]
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of   %mul.411 = mul i32 %4, %mul.310
+SLP:     gets ready on update:   %mul.411 = mul i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.411 = mul i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def): [  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = mul i32 %5, %mul.411.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -3 for bundle that starts with   %2 = load i32, i32* %arrayidx.2, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -3.
+SLP: Adding cost 4 for reduction that starts with   %5 = load i32, i32* %arrayidx.5, align 4 (It is a splitting reduction)
+SLP: Trying to vectorize a list of length = 2.
+SLP:  bundle:   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  initialize schedule region to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP: try schedule bundle [  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4] in block entry
+SLP:       update deps of [  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4]
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of   %mul.18 = mul i32 %1, %0
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:     gets ready on update:   %mul.310 = mul i32 %3, %mul.29
+SLP:     gets ready on update:   %mul.310 = mul i32 %3, %mul.29
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.18 = mul i32 %1, %0
+SLP:    gets ready (def): [  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP:  bundle:   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  initialize schedule region to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP: try schedule bundle [  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4] in block entry
+SLP:       update deps of [  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4]
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of   %mul.310 = mul i32 %3, %mul.29
+SLP:     gets ready on update:   %mul.310 = mul i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.310 = mul i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.18 = mul i32 %1, %0
+SLP:    gets ready (def): [  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = mul i32 %4, %mul.310.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -3 for bundle that starts with   %1 = load i32, i32* %arrayidx.1, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -3.
+SLP: Adding cost 4 for reduction that starts with   %4 = load i32, i32* %arrayidx.4, align 4 (It is a splitting reduction)
+SLP: Trying to vectorize a list of length = 2.
+SLP:  bundle:   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  initialize schedule region to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:       update deps of   %mul.18 = mul i32 %1, %0
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:     gets ready on update:   %mul.29 = mul i32 %2, %mul.18
+SLP:     gets ready on update:   %mul.29 = mul i32 %2, %mul.18
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.18 = mul i32 %1, %0
+SLP:    gets ready (def): [  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of   %mul.29 = mul i32 %2, %mul.18
+SLP:     gets ready on update:   %mul.29 = mul i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.29 = mul i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = mul i32 %1, %0
+SLP:   schedule   %mul.18 = mul i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Checking user:  %mul.29 = mul i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = mul i32 %3, %mul.29.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -3 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -3.
+SLP: Adding cost 4 for reduction that starts with   %3 = load i32, i32* %arrayidx.3, align 4 (It is a splitting reduction)
+SLP: Trying to vectorize a list of length = 2.
+SLP: Trying to vectorize a list of length = 2.
+SLP: Trying to vectorize a list of length = 2.
+SLP: Analyzing 2 operations 
+SLP:  bundle:   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  initialize schedule region to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:     gets ready on update:   %1 = load i32, i32* %arrayidx.1, align 4
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Need to extract:  %mul.18 = mul i32 %1, %0 from lane 0 from   %1 = load i32, i32* %arrayidx.1, align 4.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Need to extract:  %mul.18 = mul i32 %1, %0 from lane 1 from   %0 = load i32, i32* %p, align 4.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:     gets ready on update:   %0 = load i32, i32* %p, align 4
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Need to extract:  %mul.18 = mul i32 %1, %0 from lane 0 from   %0 = load i32, i32* %p, align 4.
+SLP: Checking user:  %mul.18 = mul i32 %1, %0.
+SLP: Need to extract:  %mul.18 = mul i32 %1, %0 from lane 1 from   %1 = load i32, i32* %arrayidx.1, align 4.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -1 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 2.
+SLP: Total Cost = 1.
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+SLP: Analyzing blocks in test_and.
+SLP:  bundle:   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  initialize schedule region to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  extend schedule region start to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region start to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:       update deps of   %mul.18 = and i32 %1, %0
+SLP:       update deps of   %mul.29 = and i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = and i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = and i32 %4, %mul.310
+SLP:       update deps of   %mul.512 = and i32 %5, %mul.411
+SLP:       update deps of   %mul.613 = and i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = and i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = and i32 %6, %mul.512
+SLP:   schedule   %mul.613 = and i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = and i32 %5, %mul.411
+SLP:   schedule   %mul.512 = and i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = and i32 %4, %mul.310
+SLP:   schedule   %mul.411 = and i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = and i32 %3, %mul.29
+SLP:   schedule   %mul.310 = and i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = and i32 %2, %mul.18
+SLP:   schedule   %mul.29 = and i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = and i32 %1, %0
+SLP:   schedule   %mul.18 = and i32 %1, %0
+SLP:    gets ready (def): [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.714 = and i32 %7, %mul.613.
+SLP: Checking user:  %mul.613 = and i32 %6, %mul.512.
+SLP: Checking user:  %mul.512 = and i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = and i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = and i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = and i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = and i32 %1, %0.
+SLP: Checking user:  %mul.18 = and i32 %1, %0.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region end to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region end to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:       update deps of   %mul.613 = and i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = and i32 %6, %mul.512
+SLP:       update deps of   %mul.512 = and i32 %5, %mul.411
+SLP:       update deps of   %mul.411 = and i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = and i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = and i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = and i32 %1, %0
+SLP:   schedule   %mul.613 = and i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = and i32 %5, %mul.411
+SLP:   schedule   %mul.512 = and i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = and i32 %4, %mul.310
+SLP:   schedule   %mul.411 = and i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = and i32 %3, %mul.29
+SLP:   schedule   %mul.310 = and i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = and i32 %2, %mul.18
+SLP:   schedule   %mul.29 = and i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = and i32 %1, %0
+SLP:   schedule   %mul.18 = and i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = and i32 %1, %0.
+SLP: Checking user:  %mul.18 = and i32 %1, %0.
+SLP: Checking user:  %mul.29 = and i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = and i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = and i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = and i32 %5, %mul.411.
+SLP: Checking user:  %mul.613 = and i32 %6, %mul.512.
+SLP: Checking user:  %mul.714 = and i32 %7, %mul.613.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -7 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -7.
+SLP: Adding cost 3 for reduction that starts with   %7 = load i32, i32* %arrayidx.7, align 4 (It is a splitting reduction)
+SLP: Vectorizing horizontal reduction at cost:-4. (HorRdx)
+SLP: schedule block entry
+SLP:       update deps of   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:       update deps of   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:       update deps of   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:       update deps of   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:       update deps of   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:       update deps of   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:       update deps of   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:    initially in ready list:   %mul.613 = and i32 %6, %mul.512
+SLP:   schedule   %mul.613 = and i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = and i32 %5, %mul.411
+SLP:   schedule   %mul.512 = and i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = and i32 %4, %mul.310
+SLP:   schedule   %mul.411 = and i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = and i32 %3, %mul.29
+SLP:   schedule   %mul.310 = and i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = and i32 %2, %mul.18
+SLP:   schedule   %mul.29 = and i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = and i32 %1, %0
+SLP:   schedule   %mul.18 = and i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:   schedule [  %7 = load i32, i32* %p, align 4;  %6 = load i32, i32* %arrayidx.1, align 4;  %5 = load i32, i32* %arrayidx.2, align 4;  %4 = load i32, i32* %arrayidx.3, align 4;  %3 = load i32, i32* %arrayidx.4, align 4;  %2 = load i32, i32* %arrayidx.5, align 4;  %1 = load i32, i32* %arrayidx.6, align 4;  %0 = load i32, i32* %arrayidx.7, align 4]
+SLP:    gets ready (def):   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:    gets ready (def):   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:    gets ready (def):   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:    gets ready (def):   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:    gets ready (def):   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:    gets ready (def):   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:    gets ready (def):   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:   schedule   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:   schedule   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:   schedule   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:   schedule   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:   schedule   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP: Extracting 0 values .
+SLP: 	validating user:  %mul.18 = and i32 %8, %9.
+SLP: 	Erasing scalar:  %9 = load i32, i32* %p, align 4.
+SLP: 	validating user:  %mul.18 = and i32 %8, undef.
+SLP: 	Erasing scalar:  %8 = load i32, i32* %arrayidx.1, align 4.
+SLP: 	validating user:  %mul.29 = and i32 %7, %mul.18.
+SLP: 	Erasing scalar:  %7 = load i32, i32* %arrayidx.2, align 4.
+SLP: 	validating user:  %mul.310 = and i32 %6, %mul.29.
+SLP: 	Erasing scalar:  %6 = load i32, i32* %arrayidx.3, align 4.
+SLP: 	validating user:  %mul.411 = and i32 %5, %mul.310.
+SLP: 	Erasing scalar:  %5 = load i32, i32* %arrayidx.4, align 4.
+SLP: 	validating user:  %mul.512 = and i32 %4, %mul.411.
+SLP: 	Erasing scalar:  %4 = load i32, i32* %arrayidx.5, align 4.
+SLP: 	validating user:  %mul.613 = and i32 %3, %mul.512.
+SLP: 	Erasing scalar:  %3 = load i32, i32* %arrayidx.6, align 4.
+SLP: 	validating user:  %mul.714 = and i32 %0, %mul.613.
+SLP: 	Erasing scalar:  %0 = load i32, i32* %arrayidx.7, align 4.
+SLP: Optimizing 0 gather sequences instructions.
+SLP: vectorized "test_and"
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+SLP: Analyzing blocks in test_or.
+SLP:  bundle:   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  initialize schedule region to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  extend schedule region start to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region start to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:       update deps of   %mul.18 = or i32 %1, %0
+SLP:       update deps of   %mul.29 = or i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = or i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = or i32 %4, %mul.310
+SLP:       update deps of   %mul.512 = or i32 %5, %mul.411
+SLP:       update deps of   %mul.613 = or i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = or i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = or i32 %6, %mul.512
+SLP:   schedule   %mul.613 = or i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = or i32 %5, %mul.411
+SLP:   schedule   %mul.512 = or i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = or i32 %4, %mul.310
+SLP:   schedule   %mul.411 = or i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = or i32 %3, %mul.29
+SLP:   schedule   %mul.310 = or i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = or i32 %2, %mul.18
+SLP:   schedule   %mul.29 = or i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = or i32 %1, %0
+SLP:   schedule   %mul.18 = or i32 %1, %0
+SLP:    gets ready (def): [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.714 = or i32 %7, %mul.613.
+SLP: Checking user:  %mul.613 = or i32 %6, %mul.512.
+SLP: Checking user:  %mul.512 = or i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = or i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = or i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = or i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = or i32 %1, %0.
+SLP: Checking user:  %mul.18 = or i32 %1, %0.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region end to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region end to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:       update deps of   %mul.613 = or i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = or i32 %6, %mul.512
+SLP:       update deps of   %mul.512 = or i32 %5, %mul.411
+SLP:       update deps of   %mul.411 = or i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = or i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = or i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = or i32 %1, %0
+SLP:   schedule   %mul.613 = or i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = or i32 %5, %mul.411
+SLP:   schedule   %mul.512 = or i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = or i32 %4, %mul.310
+SLP:   schedule   %mul.411 = or i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = or i32 %3, %mul.29
+SLP:   schedule   %mul.310 = or i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = or i32 %2, %mul.18
+SLP:   schedule   %mul.29 = or i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = or i32 %1, %0
+SLP:   schedule   %mul.18 = or i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = or i32 %1, %0.
+SLP: Checking user:  %mul.18 = or i32 %1, %0.
+SLP: Checking user:  %mul.29 = or i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = or i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = or i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = or i32 %5, %mul.411.
+SLP: Checking user:  %mul.613 = or i32 %6, %mul.512.
+SLP: Checking user:  %mul.714 = or i32 %7, %mul.613.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -7 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -7.
+SLP: Adding cost 3 for reduction that starts with   %7 = load i32, i32* %arrayidx.7, align 4 (It is a splitting reduction)
+SLP: Vectorizing horizontal reduction at cost:-4. (HorRdx)
+SLP: schedule block entry
+SLP:       update deps of   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:       update deps of   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:       update deps of   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:       update deps of   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:       update deps of   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:       update deps of   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:       update deps of   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:    initially in ready list:   %mul.613 = or i32 %6, %mul.512
+SLP:   schedule   %mul.613 = or i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = or i32 %5, %mul.411
+SLP:   schedule   %mul.512 = or i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = or i32 %4, %mul.310
+SLP:   schedule   %mul.411 = or i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = or i32 %3, %mul.29
+SLP:   schedule   %mul.310 = or i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = or i32 %2, %mul.18
+SLP:   schedule   %mul.29 = or i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = or i32 %1, %0
+SLP:   schedule   %mul.18 = or i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:   schedule [  %7 = load i32, i32* %p, align 4;  %6 = load i32, i32* %arrayidx.1, align 4;  %5 = load i32, i32* %arrayidx.2, align 4;  %4 = load i32, i32* %arrayidx.3, align 4;  %3 = load i32, i32* %arrayidx.4, align 4;  %2 = load i32, i32* %arrayidx.5, align 4;  %1 = load i32, i32* %arrayidx.6, align 4;  %0 = load i32, i32* %arrayidx.7, align 4]
+SLP:    gets ready (def):   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:    gets ready (def):   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:    gets ready (def):   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:    gets ready (def):   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:    gets ready (def):   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:    gets ready (def):   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:    gets ready (def):   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:   schedule   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:   schedule   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:   schedule   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:   schedule   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:   schedule   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP: Extracting 0 values .
+SLP: 	validating user:  %mul.18 = or i32 %8, %9.
+SLP: 	Erasing scalar:  %9 = load i32, i32* %p, align 4.
+SLP: 	validating user:  %mul.18 = or i32 %8, undef.
+SLP: 	Erasing scalar:  %8 = load i32, i32* %arrayidx.1, align 4.
+SLP: 	validating user:  %mul.29 = or i32 %7, %mul.18.
+SLP: 	Erasing scalar:  %7 = load i32, i32* %arrayidx.2, align 4.
+SLP: 	validating user:  %mul.310 = or i32 %6, %mul.29.
+SLP: 	Erasing scalar:  %6 = load i32, i32* %arrayidx.3, align 4.
+SLP: 	validating user:  %mul.411 = or i32 %5, %mul.310.
+SLP: 	Erasing scalar:  %5 = load i32, i32* %arrayidx.4, align 4.
+SLP: 	validating user:  %mul.512 = or i32 %4, %mul.411.
+SLP: 	Erasing scalar:  %4 = load i32, i32* %arrayidx.5, align 4.
+SLP: 	validating user:  %mul.613 = or i32 %3, %mul.512.
+SLP: 	Erasing scalar:  %3 = load i32, i32* %arrayidx.6, align 4.
+SLP: 	validating user:  %mul.714 = or i32 %0, %mul.613.
+SLP: 	Erasing scalar:  %0 = load i32, i32* %arrayidx.7, align 4.
+SLP: Optimizing 0 gather sequences instructions.
+SLP: vectorized "test_or"
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+SLP: Analyzing blocks in test_xor.
+SLP:  bundle:   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  initialize schedule region to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:  extend schedule region start to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region start to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region start to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region start to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region start to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region start to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region start to   %0 = load i32, i32* %p, align 4
+SLP: try schedule bundle [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4] in block entry
+SLP:       update deps of [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %0 = load i32, i32* %p, align 4
+SLP:       update deps of   %mul.18 = xor i32 %1, %0
+SLP:       update deps of   %mul.29 = xor i32 %2, %mul.18
+SLP:       update deps of   %mul.310 = xor i32 %3, %mul.29
+SLP:       update deps of   %mul.411 = xor i32 %4, %mul.310
+SLP:       update deps of   %mul.512 = xor i32 %5, %mul.411
+SLP:       update deps of   %mul.613 = xor i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = xor i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = xor i32 %6, %mul.512
+SLP:   schedule   %mul.613 = xor i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = xor i32 %5, %mul.411
+SLP:   schedule   %mul.512 = xor i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = xor i32 %4, %mul.310
+SLP:   schedule   %mul.411 = xor i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = xor i32 %3, %mul.29
+SLP:   schedule   %mul.310 = xor i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = xor i32 %2, %mul.18
+SLP:   schedule   %mul.29 = xor i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = xor i32 %1, %0
+SLP:   schedule   %mul.18 = xor i32 %1, %0
+SLP:    gets ready (def): [  %7 = load i32, i32* %arrayidx.7, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %0 = load i32, i32* %p, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of jumbled loads.
+SLP: Checking user:  %mul.714 = xor i32 %7, %mul.613.
+SLP: Checking user:  %mul.613 = xor i32 %6, %mul.512.
+SLP: Checking user:  %mul.512 = xor i32 %5, %mul.411.
+SLP: Checking user:  %mul.411 = xor i32 %4, %mul.310.
+SLP: Checking user:  %mul.310 = xor i32 %3, %mul.29.
+SLP: Checking user:  %mul.29 = xor i32 %2, %mul.18.
+SLP: Checking user:  %mul.18 = xor i32 %1, %0.
+SLP: Checking user:  %mul.18 = xor i32 %1, %0.
+SLP:  bundle:   %0 = load i32, i32* %p, align 4
+SLP:  initialize schedule region to   %0 = load i32, i32* %p, align 4
+SLP:  extend schedule region end to   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:  extend schedule region end to   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:  extend schedule region end to   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:  extend schedule region end to   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:  extend schedule region end to   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:  extend schedule region end to   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:  extend schedule region end to   %7 = load i32, i32* %arrayidx.7, align 4
+SLP: try schedule bundle [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4] in block entry
+SLP:       update deps of [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:       update deps of /   %1 = load i32, i32* %arrayidx.1, align 4
+SLP:       update deps of /   %2 = load i32, i32* %arrayidx.2, align 4
+SLP:       update deps of /   %3 = load i32, i32* %arrayidx.3, align 4
+SLP:       update deps of /   %4 = load i32, i32* %arrayidx.4, align 4
+SLP:       update deps of /   %5 = load i32, i32* %arrayidx.5, align 4
+SLP:       update deps of /   %6 = load i32, i32* %arrayidx.6, align 4
+SLP:       update deps of /   %7 = load i32, i32* %arrayidx.7, align 4
+SLP:       update deps of   %mul.613 = xor i32 %6, %mul.512
+SLP:     gets ready on update:   %mul.613 = xor i32 %6, %mul.512
+SLP:       update deps of   %mul.512 = xor i32 %5, %mul.411
+SLP:       update deps of   %mul.411 = xor i32 %4, %mul.310
+SLP:       update deps of   %mul.310 = xor i32 %3, %mul.29
+SLP:       update deps of   %mul.29 = xor i32 %2, %mul.18
+SLP:       update deps of   %mul.18 = xor i32 %1, %0
+SLP:   schedule   %mul.613 = xor i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = xor i32 %5, %mul.411
+SLP:   schedule   %mul.512 = xor i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = xor i32 %4, %mul.310
+SLP:   schedule   %mul.411 = xor i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = xor i32 %3, %mul.29
+SLP:   schedule   %mul.310 = xor i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = xor i32 %2, %mul.18
+SLP:   schedule   %mul.29 = xor i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = xor i32 %1, %0
+SLP:   schedule   %mul.18 = xor i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP: We are able to schedule this bundle.
+SLP: added a vector of loads.
+SLP: Checking user:  %mul.18 = xor i32 %1, %0.
+SLP: Checking user:  %mul.18 = xor i32 %1, %0.
+SLP: Checking user:  %mul.29 = xor i32 %2, %mul.18.
+SLP: Checking user:  %mul.310 = xor i32 %3, %mul.29.
+SLP: Checking user:  %mul.411 = xor i32 %4, %mul.310.
+SLP: Checking user:  %mul.512 = xor i32 %5, %mul.411.
+SLP: Checking user:  %mul.613 = xor i32 %6, %mul.512.
+SLP: Checking user:  %mul.714 = xor i32 %7, %mul.613.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -7 for bundle that starts with   %0 = load i32, i32* %p, align 4.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -7.
+SLP: Adding cost 3 for reduction that starts with   %7 = load i32, i32* %arrayidx.7, align 4 (It is a splitting reduction)
+SLP: Vectorizing horizontal reduction at cost:-4. (HorRdx)
+SLP: schedule block entry
+SLP:       update deps of   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:       update deps of   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:       update deps of   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:       update deps of   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:       update deps of   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:       update deps of   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:       update deps of   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:    initially in ready list:   %mul.613 = xor i32 %6, %mul.512
+SLP:   schedule   %mul.613 = xor i32 %6, %mul.512
+SLP:    gets ready (def):   %mul.512 = xor i32 %5, %mul.411
+SLP:   schedule   %mul.512 = xor i32 %5, %mul.411
+SLP:    gets ready (def):   %mul.411 = xor i32 %4, %mul.310
+SLP:   schedule   %mul.411 = xor i32 %4, %mul.310
+SLP:    gets ready (def):   %mul.310 = xor i32 %3, %mul.29
+SLP:   schedule   %mul.310 = xor i32 %3, %mul.29
+SLP:    gets ready (def):   %mul.29 = xor i32 %2, %mul.18
+SLP:   schedule   %mul.29 = xor i32 %2, %mul.18
+SLP:    gets ready (def):   %mul.18 = xor i32 %1, %0
+SLP:   schedule   %mul.18 = xor i32 %1, %0
+SLP:    gets ready (def): [  %0 = load i32, i32* %p, align 4;  %1 = load i32, i32* %arrayidx.1, align 4;  %2 = load i32, i32* %arrayidx.2, align 4;  %3 = load i32, i32* %arrayidx.3, align 4;  %4 = load i32, i32* %arrayidx.4, align 4;  %5 = load i32, i32* %arrayidx.5, align 4;  %6 = load i32, i32* %arrayidx.6, align 4;  %7 = load i32, i32* %arrayidx.7, align 4]
+SLP:   schedule [  %7 = load i32, i32* %p, align 4;  %6 = load i32, i32* %arrayidx.1, align 4;  %5 = load i32, i32* %arrayidx.2, align 4;  %4 = load i32, i32* %arrayidx.3, align 4;  %3 = load i32, i32* %arrayidx.4, align 4;  %2 = load i32, i32* %arrayidx.5, align 4;  %1 = load i32, i32* %arrayidx.6, align 4;  %0 = load i32, i32* %arrayidx.7, align 4]
+SLP:    gets ready (def):   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP:    gets ready (def):   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:    gets ready (def):   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:    gets ready (def):   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:    gets ready (def):   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:    gets ready (def):   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:    gets ready (def):   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.7 = getelementptr inbounds i32, i32* %p, i64 7
+SLP:   schedule   %arrayidx.6 = getelementptr inbounds i32, i32* %p, i64 6
+SLP:   schedule   %arrayidx.5 = getelementptr inbounds i32, i32* %p, i64 5
+SLP:   schedule   %arrayidx.4 = getelementptr inbounds i32, i32* %p, i64 4
+SLP:   schedule   %arrayidx.3 = getelementptr inbounds i32, i32* %p, i64 3
+SLP:   schedule   %arrayidx.2 = getelementptr inbounds i32, i32* %p, i64 2
+SLP:   schedule   %arrayidx.1 = getelementptr inbounds i32, i32* %p, i64 1
+SLP: Extracting 0 values .
+SLP: 	validating user:  %mul.18 = xor i32 %8, %9.
+SLP: 	Erasing scalar:  %9 = load i32, i32* %p, align 4.
+SLP: 	validating user:  %mul.18 = xor i32 %8, undef.
+SLP: 	Erasing scalar:  %8 = load i32, i32* %arrayidx.1, align 4.
+SLP: 	validating user:  %mul.29 = xor i32 %7, %mul.18.
+SLP: 	Erasing scalar:  %7 = load i32, i32* %arrayidx.2, align 4.
+SLP: 	validating user:  %mul.310 = xor i32 %6, %mul.29.
+SLP: 	Erasing scalar:  %6 = load i32, i32* %arrayidx.3, align 4.
+SLP: 	validating user:  %mul.411 = xor i32 %5, %mul.310.
+SLP: 	Erasing scalar:  %5 = load i32, i32* %arrayidx.4, align 4.
+SLP: 	validating user:  %mul.512 = xor i32 %4, %mul.411.
+SLP: 	Erasing scalar:  %4 = load i32, i32* %arrayidx.5, align 4.
+SLP: 	validating user:  %mul.613 = xor i32 %3, %mul.512.
+SLP: 	Erasing scalar:  %3 = load i32, i32* %arrayidx.6, align 4.
+SLP: 	validating user:  %mul.714 = xor i32 %0, %mul.613.
+SLP: 	Erasing scalar:  %0 = load i32, i32* %arrayidx.7, align 4.
+SLP: Optimizing 0 gather sequences instructions.
+SLP: vectorized "test_xor"
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry
+SLP: Analyzing blocks in PR37731.
+SLP:  bundle:   %7 = extractelement <4 x i32> %6, i32 0
+SLP:  initialize schedule region to   %7 = extractelement <4 x i32> %6, i32 0
+SLP:  extend schedule region end to   %8 = extractelement <4 x i32> %6, i32 1
+SLP:  extend schedule region end to   %10 = extractelement <4 x i32> %6, i32 2
+SLP:  extend schedule region end to   %12 = extractelement <4 x i32> %6, i32 3
+SLP: try schedule bundle [  %7 = extractelement <4 x i32> %6, i32 0;  %8 = extractelement <4 x i32> %6, i32 1;  %10 = extractelement <4 x i32> %6, i32 2;  %12 = extractelement <4 x i32> %6, i32 3] in block entry
+SLP:       update deps of [  %7 = extractelement <4 x i32> %6, i32 0;  %8 = extractelement <4 x i32> %6, i32 1;  %10 = extractelement <4 x i32> %6, i32 2;  %12 = extractelement <4 x i32> %6, i32 3]
+SLP:       update deps of /   %8 = extractelement <4 x i32> %6, i32 1
+SLP:       update deps of /   %10 = extractelement <4 x i32> %6, i32 2
+SLP:       update deps of /   %12 = extractelement <4 x i32> %6, i32 3
+SLP:       update deps of   %11 = xor i32 %9, %10
+SLP:     gets ready on update:   %11 = xor i32 %9, %10
+SLP:       update deps of   %9 = xor i32 %7, %8
+SLP:   schedule   %11 = xor i32 %9, %10
+SLP:    gets ready (def):   %9 = xor i32 %7, %8
+SLP:   schedule   %9 = xor i32 %7, %8
+SLP:    gets ready (def): [  %7 = extractelement <4 x i32> %6, i32 0;  %8 = extractelement <4 x i32> %6, i32 1;  %10 = extractelement <4 x i32> %6, i32 2;  %12 = extractelement <4 x i32> %6, i32 3]
+SLP: We are able to schedule this bundle.
+SLP: Reusing or shuffling extract sequence.
+SLP: Checking user:  %9 = xor i32 %7, %8.
+SLP: Checking user:  %9 = xor i32 %7, %8.
+SLP: Checking user:  %11 = xor i32 %9, %10.
+SLP: Checking user:  %13 = xor i32 %11, %12.
+SLP: Check whether the tree with height 1 is fully vectorizable .
+SLP: Calculating cost for tree of size 1.
+SLP: Adding cost -4 for bundle that starts with   %7 = extractelement <4 x i32> %6, i32 0.
+SLP: Spill Cost = 0.
+SLP: Extract Cost = 0.
+SLP: Total Cost = -4.
+SLP: Adding cost 2 for reduction that starts with   %7 = extractelement <4 x i32> %6, i32 0 (It is a splitting reduction)
+SLP: Vectorizing horizontal reduction at cost:-2. (HorRdx)
+SLP: schedule block entry
+SLP:    initially in ready list:   %11 = xor i32 %9, %10
+SLP:   schedule   %12 = xor i32 %9, %10
+SLP:    gets ready (def):   %9 = xor i32 %7, %8
+SLP:   schedule   %11 = xor i32 %7, %8
+SLP:    gets ready (def): [  %7 = extractelement <4 x i32> %6, i32 0;  %8 = extractelement <4 x i32> %6, i32 1;  %9 = extractelement <4 x i32> %6, i32 2;  %10 = extractelement <4 x i32> %6, i32 3]
+SLP:   schedule [  %10 = extractelement <4 x i32> %6, i32 0;  %9 = extractelement <4 x i32> %6, i32 1;  %8 = extractelement <4 x i32> %6, i32 2;  %7 = extractelement <4 x i32> %6, i32 3]
+SLP: Extracting 0 values .
+SLP: 	validating user:  %11 = xor i32 %10, %9.
+SLP: 	Erasing scalar:  %10 = extractelement <4 x i32> %6, i32 0.
+SLP: 	validating user:  %10 = xor i32 undef, %9.
+SLP: 	Erasing scalar:  %9 = extractelement <4 x i32> %6, i32 1.
+SLP: 	validating user:  %10 = xor i32 %9, %8.
+SLP: 	Erasing scalar:  %8 = extractelement <4 x i32> %6, i32 2.
+SLP: 	validating user:  %10 = xor i32 %9, %7.
+SLP: 	Erasing scalar:  %7 = extractelement <4 x i32> %6, i32 3.
+SLP: Optimizing 0 gather sequences instructions.
+SLP: vectorized "PR37731"
+	discovered a new reachable node %entry
+	discovered a new reachable node %entry

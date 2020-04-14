@@ -1,0 +1,30 @@
+; ModuleID = 'tests-original/X86/fabs-cost-softfp.ll'
+source_filename = "tests-original/X86/fabs-cost-softfp.ll"
+target triple = "i686-unknown-linux-gnu"
+
+define void @vectorize_fp128(fp128 %c, fp128 %d) #0 {
+entry:
+  %0 = insertelement <2 x fp128> undef, fp128 %c, i32 0
+  %1 = insertelement <2 x fp128> %0, fp128 %d, i32 1
+  %2 = call <2 x fp128> @llvm.fabs.v2f128(<2 x fp128> %1)
+  %3 = fcmp oeq <2 x fp128> %2, <fp128 0xL00000000000000007FFF000000000000, fp128 0xL00000000000000007FFF000000000000>
+  %4 = extractelement <2 x i1> %3, i32 0
+  %5 = extractelement <2 x i1> %3, i32 1
+  %or.cond39 = or i1 %4, %5
+  br i1 %or.cond39, label %if.then13, label %if.end24
+
+if.then13:                                        ; preds = %entry
+  unreachable
+
+if.end24:                                         ; preds = %entry
+  ret void
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare fp128 @llvm.fabs.f128(fp128) #1
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x fp128> @llvm.fabs.v2f128(<2 x fp128>) #1
+
+attributes #0 = { "target-features"="+fxsr,+mmx,+sse,+sse2,+x87" }
+attributes #1 = { nounwind readnone speculatable }

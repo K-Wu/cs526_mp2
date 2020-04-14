@@ -1,0 +1,86 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux"
+
+define <2 x i8> @g(<2 x i8> %x, <2 x i8> %y) #0 {
+  %x0 = extractelement <2 x i8> %x, i32 0
+  %y1 = extractelement <2 x i8> %y, i32 1
+  %x0x0 = mul i8 %x0, %x0
+  %y1y1 = mul i8 %y1, %y1
+  %ins1 = insertelement <2 x i8> undef, i8 %x0x0, i32 0
+  %ins2 = insertelement <2 x i8> %ins1, i8 %y1y1, i32 1
+  ret <2 x i8> %ins2
+}
+
+define <4 x i8> @h(<4 x i8> %x, <4 x i8> %y) #0 {
+  %1 = shufflevector <4 x i8> %x, <4 x i8> %y, <4 x i32> <i32 0, i32 3, i32 5, i32 6>
+  %2 = mul <4 x i8> %1, %1
+  ret <4 x i8> %2
+}
+
+define <4 x i8> @h_undef(<4 x i8> %x, <4 x i8> %y) #0 {
+  %1 = shufflevector <4 x i8> %x, <4 x i8> %y, <4 x i32> <i32 undef, i32 3, i32 5, i32 6>
+  %2 = mul <4 x i8> %1, %1
+  ret <4 x i8> %2
+}
+
+define i8 @i(<4 x i8> %x, <4 x i8> %y) #0 {
+  %1 = shufflevector <4 x i8> %x, <4 x i8> %y, <4 x i32> <i32 0, i32 3, i32 5, i32 6>
+  %2 = mul <4 x i8> %1, %1
+  %rdx.shuf = shufflevector <4 x i8> %2, <4 x i8> undef, <4 x i32> <i32 2, i32 3, i32 undef, i32 undef>
+  %bin.rdx = add <4 x i8> %2, %rdx.shuf
+  %rdx.shuf1 = shufflevector <4 x i8> %bin.rdx, <4 x i8> undef, <4 x i32> <i32 1, i32 undef, i32 undef, i32 undef>
+  %bin.rdx2 = add <4 x i8> %bin.rdx, %rdx.shuf1
+  %3 = extractelement <4 x i8> %bin.rdx2, i32 0
+  ret i8 %3
+}
+
+define i8 @j(<4 x i8> %x, <4 x i8> %y) #0 {
+  %x0 = extractelement <4 x i8> %x, i32 0
+  %x3 = extractelement <4 x i8> %x, i32 3
+  %y1 = extractelement <4 x i8> %y, i32 1
+  %y2 = extractelement <4 x i8> %y, i32 2
+  %x0x0 = mul i8 %x0, %x0
+  %x3x3 = mul i8 %x3, %x3
+  %y1y1 = mul i8 %y1, %y1
+  %y2y2 = mul i8 %y2, %y2
+  %1 = add i8 %x0x0, %x3x3
+  %2 = add i8 %y1y1, %y2y2
+  %3 = sdiv i8 %1, %2
+  ret i8 %3
+}
+
+define i8 @k(<4 x i8> %x) #0 {
+  %x0 = extractelement <4 x i8> %x, i32 0
+  %x3 = extractelement <4 x i8> %x, i32 3
+  %x1 = extractelement <4 x i8> %x, i32 1
+  %x2 = extractelement <4 x i8> %x, i32 2
+  %x0x0 = mul i8 %x0, %x0
+  %x3x3 = mul i8 %x3, %x3
+  %x1x1 = mul i8 %x1, %x1
+  %x2x2 = mul i8 %x2, %x2
+  %1 = add i8 %x0x0, %x3x3
+  %2 = add i8 %x1x1, %x2x2
+  %3 = sdiv i8 %1, %2
+  ret i8 %3
+}
+
+define i8 @k_bb(<4 x i8> %x) #0 {
+  %x0 = extractelement <4 x i8> %x, i32 0
+  br label %bb1
+
+bb1:                                              ; preds = %0
+  %x3 = extractelement <4 x i8> %x, i32 3
+  %x1 = extractelement <4 x i8> %x, i32 1
+  %x2 = extractelement <4 x i8> %x, i32 2
+  %x0x0 = mul i8 %x0, %x0
+  %x3x3 = mul i8 %x3, %x3
+  %x1x1 = mul i8 %x1, %x1
+  %x2x2 = mul i8 %x2, %x2
+  %1 = add i8 %x0x0, %x3x3
+  %2 = add i8 %x1x1, %x2x2
+  %3 = sdiv i8 %1, %2
+  ret i8 %3
+}
+
+attributes #0 = { "target-cpu"="bdver2" }

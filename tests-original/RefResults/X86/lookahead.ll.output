@@ -1,0 +1,205 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux"
+
+%Class = type { i8 }
+
+define void @lookahead_basic(double* %array) #0 {
+entry:
+  %idx0 = getelementptr inbounds double, double* %array, i64 0
+  %idx1 = getelementptr inbounds double, double* %array, i64 1
+  %idx2 = getelementptr inbounds double, double* %array, i64 2
+  %idx3 = getelementptr inbounds double, double* %array, i64 3
+  %idx4 = getelementptr inbounds double, double* %array, i64 4
+  %idx5 = getelementptr inbounds double, double* %array, i64 5
+  %idx6 = getelementptr inbounds double, double* %array, i64 6
+  %idx7 = getelementptr inbounds double, double* %array, i64 7
+  %A_0 = load double, double* %idx0, align 8
+  %A_1 = load double, double* %idx1, align 8
+  %B_0 = load double, double* %idx2, align 8
+  %B_1 = load double, double* %idx3, align 8
+  %C_0 = load double, double* %idx4, align 8
+  %C_1 = load double, double* %idx5, align 8
+  %D_0 = load double, double* %idx6, align 8
+  %D_1 = load double, double* %idx7, align 8
+  %subAB_0 = fsub fast double %A_0, %B_0
+  %subCD_0 = fsub fast double %C_0, %D_0
+  %subAB_1 = fsub fast double %A_1, %B_1
+  %subCD_1 = fsub fast double %C_1, %D_1
+  %addABCD_0 = fadd fast double %subAB_0, %subCD_0
+  %addCDAB_1 = fadd fast double %subCD_1, %subAB_1
+  store double %addABCD_0, double* %idx0, align 8
+  store double %addCDAB_1, double* %idx1, align 8
+  ret void
+}
+
+define void @lookahead_alt1(double* %array) #0 {
+entry:
+  %idx0 = getelementptr inbounds double, double* %array, i64 0
+  %idx1 = getelementptr inbounds double, double* %array, i64 1
+  %idx2 = getelementptr inbounds double, double* %array, i64 2
+  %idx3 = getelementptr inbounds double, double* %array, i64 3
+  %idx4 = getelementptr inbounds double, double* %array, i64 4
+  %idx5 = getelementptr inbounds double, double* %array, i64 5
+  %idx6 = getelementptr inbounds double, double* %array, i64 6
+  %idx7 = getelementptr inbounds double, double* %array, i64 7
+  %0 = bitcast double* %idx0 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %2 = bitcast double* %idx2 to <2 x double>*
+  %3 = load <2 x double>, <2 x double>* %2, align 8
+  %4 = fsub fast <2 x double> %1, %3
+  %5 = fadd fast <2 x double> %1, %3
+  %6 = fadd fast <2 x double> %5, %4
+  %7 = bitcast double* %idx0 to <2 x double>*
+  store <2 x double> %6, <2 x double>* %7, align 8
+  ret void
+}
+
+define void @lookahead_alt2(double* %array) #0 {
+entry:
+  %idx0 = getelementptr inbounds double, double* %array, i64 0
+  %idx1 = getelementptr inbounds double, double* %array, i64 1
+  %idx2 = getelementptr inbounds double, double* %array, i64 2
+  %idx3 = getelementptr inbounds double, double* %array, i64 3
+  %idx4 = getelementptr inbounds double, double* %array, i64 4
+  %idx5 = getelementptr inbounds double, double* %array, i64 5
+  %idx6 = getelementptr inbounds double, double* %array, i64 6
+  %idx7 = getelementptr inbounds double, double* %array, i64 7
+  %A_0 = load double, double* %idx0, align 8
+  %A_1 = load double, double* %idx1, align 8
+  %B_0 = load double, double* %idx2, align 8
+  %B_1 = load double, double* %idx3, align 8
+  %C_0 = load double, double* %idx4, align 8
+  %C_1 = load double, double* %idx5, align 8
+  %D_0 = load double, double* %idx6, align 8
+  %D_1 = load double, double* %idx7, align 8
+  %addAB_0 = fadd fast double %A_0, %B_0
+  %subCD_0 = fsub fast double %C_0, %D_0
+  %addCD_1 = fadd fast double %C_1, %D_1
+  %subAB_1 = fsub fast double %A_1, %B_1
+  %addABCD_0 = fadd fast double %addAB_0, %subCD_0
+  %addCDAB_1 = fadd fast double %addCD_1, %subAB_1
+  store double %addABCD_0, double* %idx0, align 8
+  store double %addCDAB_1, double* %idx1, align 8
+  ret void
+}
+
+define void @lookahead_external_uses(double* %A, double* %B, double* %C, double* %D, double* %S, double* %Ext1, double* %Ext2) #0 {
+entry:
+  %IdxA0 = getelementptr inbounds double, double* %A, i64 0
+  %IdxB0 = getelementptr inbounds double, double* %B, i64 0
+  %IdxC0 = getelementptr inbounds double, double* %C, i64 0
+  %IdxD0 = getelementptr inbounds double, double* %D, i64 0
+  %IdxA1 = getelementptr inbounds double, double* %A, i64 1
+  %IdxB2 = getelementptr inbounds double, double* %B, i64 2
+  %IdxA2 = getelementptr inbounds double, double* %A, i64 2
+  %IdxB1 = getelementptr inbounds double, double* %B, i64 1
+  %B0 = load double, double* %IdxB0, align 8
+  %C0 = load double, double* %IdxC0, align 8
+  %D0 = load double, double* %IdxD0, align 8
+  %0 = bitcast double* %IdxA0 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %B2 = load double, double* %IdxB2, align 8
+  %A2 = load double, double* %IdxA2, align 8
+  %B1 = load double, double* %IdxB1, align 8
+  %2 = insertelement <2 x double> undef, double %B0, i32 0
+  %3 = insertelement <2 x double> %2, double %B2, i32 1
+  %4 = fsub fast <2 x double> %1, %3
+  %5 = insertelement <2 x double> undef, double %C0, i32 0
+  %6 = insertelement <2 x double> %5, double %A2, i32 1
+  %7 = insertelement <2 x double> undef, double %D0, i32 0
+  %8 = insertelement <2 x double> %7, double %B1, i32 1
+  %9 = fsub fast <2 x double> %6, %8
+  %10 = fadd fast <2 x double> %4, %9
+  %IdxS0 = getelementptr inbounds double, double* %S, i64 0
+  %IdxS1 = getelementptr inbounds double, double* %S, i64 1
+  %11 = bitcast double* %IdxS0 to <2 x double>*
+  store <2 x double> %10, <2 x double>* %11, align 8
+  %12 = extractelement <2 x double> %1, i32 1
+  store double %12, double* %Ext1, align 8
+  ret void
+}
+
+define void @lookahead_limit_users_budget(double* %A, double* %B, double* %C, double* %D, double* %S, double* %Ext1, double* %Ext2, double* %Ext3, double* %Ext4, double* %Ext5) #0 {
+entry:
+  %IdxA0 = getelementptr inbounds double, double* %A, i64 0
+  %IdxB0 = getelementptr inbounds double, double* %B, i64 0
+  %IdxC0 = getelementptr inbounds double, double* %C, i64 0
+  %IdxD0 = getelementptr inbounds double, double* %D, i64 0
+  %IdxA1 = getelementptr inbounds double, double* %A, i64 1
+  %IdxB2 = getelementptr inbounds double, double* %B, i64 2
+  %IdxA2 = getelementptr inbounds double, double* %A, i64 2
+  %IdxB1 = getelementptr inbounds double, double* %B, i64 1
+  %B0 = load double, double* %IdxB0, align 8
+  %C0 = load double, double* %IdxC0, align 8
+  %D0 = load double, double* %IdxD0, align 8
+  %0 = bitcast double* %IdxA0 to <2 x double>*
+  %1 = load <2 x double>, <2 x double>* %0, align 8
+  %B2 = load double, double* %IdxB2, align 8
+  %A2 = load double, double* %IdxA2, align 8
+  %B1 = load double, double* %IdxB1, align 8
+  %2 = insertelement <2 x double> undef, double %B0, i32 0
+  %3 = insertelement <2 x double> %2, double %B2, i32 1
+  %4 = fsub fast <2 x double> %1, %3
+  %5 = insertelement <2 x double> undef, double %C0, i32 0
+  %6 = insertelement <2 x double> %5, double %A2, i32 1
+  %7 = insertelement <2 x double> undef, double %D0, i32 0
+  %8 = insertelement <2 x double> %7, double %B1, i32 1
+  %9 = fsub fast <2 x double> %6, %8
+  %10 = fadd fast <2 x double> %4, %9
+  %IdxS0 = getelementptr inbounds double, double* %S, i64 0
+  %IdxS1 = getelementptr inbounds double, double* %S, i64 1
+  %11 = bitcast double* %IdxS0 to <2 x double>*
+  store <2 x double> %10, <2 x double>* %11, align 8
+  %12 = extractelement <2 x double> %1, i32 1
+  store double %12, double* %Ext1, align 8
+  store double %12, double* %Ext2, align 8
+  store double %12, double* %Ext3, align 8
+  store double %B1, double* %Ext4, align 8
+  store double %B1, double* %Ext5, align 8
+  ret void
+}
+
+declare double @_ZN1i2ayEv(%Class*) #0
+
+declare double @_ZN1i2axEv() #0
+
+define void @lookahead_crash(double* %A, double* %S, %Class* %Arg0) #0 {
+  %IdxA0 = getelementptr inbounds double, double* %A, i64 0
+  %IdxA1 = getelementptr inbounds double, double* %A, i64 1
+  %1 = bitcast double* %IdxA0 to <2 x double>*
+  %2 = load <2 x double>, <2 x double>* %1, align 8
+  %C0 = call double @_ZN1i2ayEv(%Class* %Arg0)
+  %C1 = call double @_ZN1i2axEv()
+  %3 = insertelement <2 x double> undef, double %C0, i32 0
+  %4 = insertelement <2 x double> %3, double %C1, i32 1
+  %5 = fadd fast <2 x double> %2, %4
+  %IdxS0 = getelementptr inbounds double, double* %S, i64 0
+  %IdxS1 = getelementptr inbounds double, double* %S, i64 1
+  %6 = bitcast double* %IdxS0 to <2 x double>*
+  store <2 x double> %5, <2 x double>* %6, align 8
+  ret void
+}
+
+define void @ChecksExtractScores(double* %storeArray, double* %array, <2 x double>* %vecPtr1, <2 x double>* %vecPtr2) #0 {
+  %idx0 = getelementptr inbounds double, double* %array, i64 0
+  %idx1 = getelementptr inbounds double, double* %array, i64 1
+  %loadA0 = load double, double* %idx0, align 4
+  %loadA1 = load double, double* %idx1, align 4
+  %loadVec = load <2 x double>, <2 x double>* %vecPtr1, align 4
+  %loadVec2 = load <2 x double>, <2 x double>* %vecPtr2, align 4
+  %1 = insertelement <2 x double> undef, double %loadA0, i32 0
+  %2 = insertelement <2 x double> %1, double %loadA0, i32 1
+  %3 = fmul <2 x double> %loadVec, %2
+  %4 = insertelement <2 x double> undef, double %loadA1, i32 0
+  %5 = insertelement <2 x double> %4, double %loadA1, i32 1
+  %6 = fmul <2 x double> %loadVec2, %5
+  %7 = fadd <2 x double> %3, %6
+  %sidx0 = getelementptr inbounds double, double* %storeArray, i64 0
+  %sidx1 = getelementptr inbounds double, double* %storeArray, i64 1
+  %8 = bitcast double* %sidx0 to <2 x double>*
+  store <2 x double> %7, <2 x double>* %8, align 8
+  ret void
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

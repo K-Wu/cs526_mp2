@@ -1,0 +1,39 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+define void @store_chains(double* %x) #0 {
+  %1 = getelementptr inbounds double, double* %x, i64 1
+  %2 = getelementptr inbounds double, double* %x, i64 2
+  %3 = getelementptr inbounds double, double* %x, i64 3
+  %4 = bitcast double* %x to <4 x double>*
+  %5 = load <4 x double>, <4 x double>* %4, align 8
+  %6 = fadd <4 x double> %5, %5
+  %7 = fadd <4 x double> %6, %5
+  %8 = bitcast double* %x to <4 x double>*
+  store <4 x double> %7, <4 x double>* %8, align 8
+  ret void
+}
+
+define void @store_chains_prefer_width_attr(double* %x) #1 {
+  %1 = getelementptr inbounds double, double* %x, i64 1
+  %2 = bitcast double* %x to <2 x double>*
+  %3 = load <2 x double>, <2 x double>* %2, align 8
+  %4 = fadd <2 x double> %3, %3
+  %5 = fadd <2 x double> %4, %3
+  %6 = bitcast double* %x to <2 x double>*
+  store <2 x double> %5, <2 x double>* %6, align 8
+  %7 = getelementptr inbounds double, double* %x, i64 2
+  %8 = getelementptr inbounds double, double* %x, i64 3
+  %9 = bitcast double* %7 to <2 x double>*
+  %10 = load <2 x double>, <2 x double>* %9, align 8
+  %11 = fadd <2 x double> %10, %10
+  %12 = fadd <2 x double> %11, %10
+  %13 = bitcast double* %7 to <2 x double>*
+  store <2 x double> %12, <2 x double>* %13, align 8
+  ret void
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }
+attributes #1 = { "prefer-vector-width"="128" "target-cpu"="corei7-avx" }

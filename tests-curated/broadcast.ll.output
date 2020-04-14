@@ -1,0 +1,56 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux"
+
+define void @bcast_vals(i64* %A, i64* %B, i64* %S) #0 {
+entry:
+  %A0 = load i64, i64* %A, align 8
+  %B0 = load i64, i64* %B, align 8
+  %v1 = sub i64 %A0, 1
+  %v2 = sub i64 %B0, 1
+  %0 = insertelement <4 x i64> undef, i64 %v1, i32 0
+  %1 = insertelement <4 x i64> %0, i64 %v1, i32 1
+  %2 = insertelement <4 x i64> %1, i64 %v1, i32 2
+  %3 = insertelement <4 x i64> %2, i64 %v1, i32 3
+  %4 = insertelement <4 x i64> undef, i64 %v2, i32 0
+  %5 = insertelement <4 x i64> %4, i64 %v2, i32 1
+  %6 = insertelement <4 x i64> %5, i64 %v2, i32 2
+  %7 = insertelement <4 x i64> %6, i64 %v2, i32 3
+  %8 = add <4 x i64> %3, %7
+  %idxS0 = getelementptr inbounds i64, i64* %S, i64 0
+  %idxS1 = getelementptr inbounds i64, i64* %S, i64 1
+  %idxS2 = getelementptr inbounds i64, i64* %S, i64 2
+  %idxS3 = getelementptr inbounds i64, i64* %S, i64 3
+  %9 = bitcast i64* %idxS0 to <4 x i64>*
+  store <4 x i64> %8, <4 x i64>* %9, align 8
+  ret void
+}
+
+define void @bcast_vals2(i16* %A, i16* %B, i16* %C, i16* %D, i16* %E, i32* %S) #0 {
+entry:
+  %A0 = load i16, i16* %A, align 8
+  %B0 = load i16, i16* %B, align 8
+  %C0 = load i16, i16* %C, align 8
+  %D0 = load i16, i16* %D, align 8
+  %E0 = load i16, i16* %E, align 8
+  %v1 = sext i16 %A0 to i32
+  %0 = insertelement <4 x i16> undef, i16 %B0, i32 0
+  %1 = insertelement <4 x i16> %0, i16 %C0, i32 1
+  %2 = insertelement <4 x i16> %1, i16 %E0, i32 2
+  %3 = insertelement <4 x i16> %2, i16 %D0, i32 3
+  %4 = sext <4 x i16> %3 to <4 x i32>
+  %5 = insertelement <4 x i32> undef, i32 %v1, i32 0
+  %6 = insertelement <4 x i32> %5, i32 %v1, i32 1
+  %7 = insertelement <4 x i32> %6, i32 %v1, i32 2
+  %8 = insertelement <4 x i32> %7, i32 %v1, i32 3
+  %9 = add <4 x i32> %8, %4
+  %idxS0 = getelementptr inbounds i32, i32* %S, i64 0
+  %idxS1 = getelementptr inbounds i32, i32* %S, i64 1
+  %idxS2 = getelementptr inbounds i32, i32* %S, i64 2
+  %idxS3 = getelementptr inbounds i32, i32* %S, i64 3
+  %10 = bitcast i32* %idxS0 to <4 x i32>*
+  store <4 x i32> %9, <4 x i32>* %10, align 8
+  ret void
+}
+
+attributes #0 = { "target-cpu"="corei7-avx" }

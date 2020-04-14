@@ -24,6 +24,12 @@ Be sure to use the following as `opt` option:
 opt < tests/simpletest.ll  -passes="slpvect-kdw" -load-pass-plugin=tests-ourpass/../build/pass/libSLPVectorizer-kdw.so -S >tests/Output/simpletest.ll.output 2>tests/Output/simpletest.ll.output2
 ```
 
+## Result of SLPVectorizer in LLVM 8.0.1
+```
+[kunwu2@sp20-cs526-10 cs526_mp2]$ bash tests-original/opt-commands-with-redirection.txt 
+tests-original/opt-commands-with-redirection.txt: line 57:  6401 Aborted                 (core dumped) opt -basicaa -slp-vectorizer -dce -S -mtriple=x86_64-unknown-linux-gnu < tests-original/X86/crash_gep.ll > tests-original/RefResults/X86/crash_gep.ll.output 2> tests-original/RefResults/X86/crash_gep.ll.output2
+```
+
 ## Tests
 See make-and-test.sh for test command.
 
@@ -39,6 +45,30 @@ PASS: ???
 Testing Time: ???s
   Expected Passes    : ???
 ```
+
+## A Curated Set of Tests
+X86/arith-sub.ll
+X86/broadcast.ll
+X86/cmp_sel.ll
+X86/commutativity.ll
+X86/extract-shuffle.ll
+X86/extract.ll
+X86/external_user.ll
+X86/external_user_jumbled_load.ll
+X86/different-vec-widths.ll
+X86/jumbled-load-shuffle-placement.ll
+X86/jumbled-load-multiuse.ll
+X86/jumbled-load-used-in-phi.ll
+X86/load-bitcast-vec.ll
+X86/load-merge.ll
+X86/long_chains.ll
+X86/multi_user.ll
+X86/multi_block.ll
+X86/phi.ll
+X86/phi3.ll
+X86/odd_store.ll
+X86/extractelement.ll
+X86/cast.ll
 
 ## External Test Cases
 /tests-original/ and its derivation /tests-ourpass/ are from the llvm-project github repo \[13\], specifically at <https://github.com/llvm/llvm-project/tree/master/llvm/test/Transforms/SLPVectorizer>.
@@ -96,3 +126,5 @@ According to the external test cases result, ??? is necessary to make our ??? pa
 \[15\] LLVM, in Greater Detail <http://www.cs.cmu.edu/afs/cs/academic/class/15745-s13/public/lectures/L6-LLVM-Detail.pdf>
 
 \[16\] LLVM Language Reference Manual <https://llvm.org/docs/LangRef.html>
+
+\[17\] Vasileios Porpodas et al. Look-Ahead SLP: Auto-Vectorization in the Presence of Commutative Operations.  <http://vporpo.me/papers/vwslp_pact2018_slides.pdf>

@@ -1,0 +1,23 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux-gnu"
+
+define dso_local void @rftbsub(double* %a) local_unnamed_addr #0 {
+entry:
+  %arrayidx6 = getelementptr inbounds double, double* %a, i64 2
+  %0 = load double, double* %arrayidx6, align 8
+  %1 = or i64 2, 1
+  %arrayidx12 = getelementptr inbounds double, double* %a, i64 %1
+  %2 = load double, double* %arrayidx12, align 8
+  %add16 = fadd double %2, undef
+  %mul18 = fmul double undef, %add16
+  %add19 = fadd double undef, %mul18
+  %sub22 = fsub double undef, undef
+  %sub25 = fsub double %0, %add19
+  store double %sub25, double* %arrayidx6, align 8
+  %sub29 = fsub double %2, %sub22
+  store double %sub29, double* %arrayidx12, align 8
+  unreachable
+}
+
+attributes #0 = { "target-cpu"="bdver2" }

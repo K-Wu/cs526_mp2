@@ -1,0 +1,18 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-apple-macosx10.10.0"
+
+define void @_Z10fooConvertPDv4_xS0_S0_PKS_() #0 {
+entry:
+  %0 = extractelement <16 x half> undef, i32 4
+  %conv.i.4.i = fpext half %0 to float
+  %1 = bitcast float %conv.i.4.i to i32
+  %vecins.i.4.i = insertelement <8 x i32> undef, i32 %1, i32 4
+  %2 = extractelement <16 x half> undef, i32 5
+  %conv.i.5.i = fpext half %2 to float
+  %3 = bitcast float %conv.i.5.i to i32
+  %vecins.i.5.i = insertelement <8 x i32> %vecins.i.4.i, i32 %3, i32 5
+  ret void
+}
+
+attributes #0 = { "target-cpu"="core2" }

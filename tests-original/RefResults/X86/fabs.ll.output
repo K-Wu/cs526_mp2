@@ -1,0 +1,96 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown"
+
+@src64 = common global [8 x double] zeroinitializer, align 64
+@src32 = common global [16 x float] zeroinitializer, align 64
+@dst64 = common global [8 x double] zeroinitializer, align 64
+@dst32 = common global [16 x float] zeroinitializer, align 64
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.fabs.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.fabs.f64(double) #0
+
+; Function Attrs: nounwind
+define void @fabs_2f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %1)
+  store <2 x double> %2, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @fabs_4f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = load <2 x double>, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2) to <2 x double>*), align 8
+  %3 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %1)
+  %4 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %2)
+  store <2 x double> %3, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  store <2 x double> %4, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2) to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @fabs_8f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 4
+  %2 = load <2 x double>, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 2) to <2 x double>*), align 4
+  %3 = load <2 x double>, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4) to <2 x double>*), align 4
+  %4 = load <2 x double>, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 6) to <2 x double>*), align 4
+  %5 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %1)
+  %6 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %2)
+  %7 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %3)
+  %8 = call <2 x double> @llvm.fabs.v2f64(<2 x double> %4)
+  store <2 x double> %5, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 4
+  store <2 x double> %6, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 2) to <2 x double>*), align 4
+  store <2 x double> %7, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4) to <2 x double>*), align 4
+  store <2 x double> %8, <2 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 6) to <2 x double>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @fabs_4f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %1)
+  store <4 x float> %2, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @fabs_8f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = load <4 x float>, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4) to <4 x float>*), align 4
+  %3 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %1)
+  %4 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %2)
+  store <4 x float> %3, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  store <4 x float> %4, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4) to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @fabs_16f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = load <4 x float>, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 4) to <4 x float>*), align 4
+  %3 = load <4 x float>, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8) to <4 x float>*), align 4
+  %4 = load <4 x float>, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 12) to <4 x float>*), align 4
+  %5 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %1)
+  %6 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %2)
+  %7 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %3)
+  %8 = call <4 x float> @llvm.fabs.v4f32(<4 x float> %4)
+  store <4 x float> %5, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  store <4 x float> %6, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 4) to <4 x float>*), align 4
+  store <4 x float> %7, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8) to <4 x float>*), align 4
+  store <4 x float> %8, <4 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 12) to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.fabs.v2f64(<2 x double>) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x float> @llvm.fabs.v4f32(<4 x float>) #0
+
+attributes #0 = { nounwind readnone speculatable }
+attributes #1 = { nounwind }

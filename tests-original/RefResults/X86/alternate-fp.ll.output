@@ -1,0 +1,22 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown"
+
+define <8 x float> @fadd_fsub_v8f32(<8 x float> %a, <8 x float> %b) {
+  %1 = fadd <8 x float> %a, %b
+  %2 = fsub <8 x float> %a, %b
+  %r7 = shufflevector <8 x float> %2, <8 x float> %1, <8 x i32> <i32 8, i32 1, i32 2, i32 11, i32 12, i32 5, i32 6, i32 15>
+  ret <8 x float> %r7
+}
+
+define <8 x float> @fmul_fdiv_v8f32(<8 x float> %a, <8 x float> %b) {
+  %1 = fmul <8 x float> %a, %b
+  %2 = fdiv <8 x float> %a, %b
+  %r7 = shufflevector <8 x float> %2, <8 x float> %1, <8 x i32> <i32 8, i32 1, i32 2, i32 11, i32 12, i32 5, i32 6, i32 15>
+  ret <8 x float> %r7
+}
+
+define <4 x float> @fmul_fdiv_v4f32_const(<4 x float> %a) {
+  %1 = fmul <4 x float> %a, <float 2.000000e+00, float 1.000000e+00, float 1.000000e+00, float 2.000000e+00>
+  ret <4 x float> %1
+}
