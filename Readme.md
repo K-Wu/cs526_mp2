@@ -28,6 +28,12 @@ opt < tests/simpletest.ll  -passes="slpvect-kdw" -load-pass-plugin=tests-ourpass
 ```
 [kunwu2@sp20-cs526-10 cs526_mp2]$ bash tests-original/opt-commands-with-redirection.txt 
 tests-original/opt-commands-with-redirection.txt: line 57:  6401 Aborted                 (core dumped) opt -basicaa -slp-vectorizer -dce -S -mtriple=x86_64-unknown-linux-gnu < tests-original/X86/crash_gep.ll > tests-original/RefResults/X86/crash_gep.ll.output 2> tests-original/RefResults/X86/crash_gep.ll.output2
+[kunwu2@sp20-cs526-10 cs526_mp2]$
+```
+
+```
+[kunwu2@sp20-cs526-10 cs526_mp2]$ bash tests-original/opt-commands-with-redirection-avx2.txt 
+[kunwu2@sp20-cs526-10 cs526_mp2]$
 ```
 
 ## Tests

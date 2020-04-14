@@ -1,0 +1,74 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown"
+
+@a64 = common global [8 x i64] zeroinitializer, align 64
+@b64 = common global [8 x i64] zeroinitializer, align 64
+@c64 = common global [8 x i64] zeroinitializer, align 64
+@a32 = common global [16 x i32] zeroinitializer, align 64
+@b32 = common global [16 x i32] zeroinitializer, align 64
+@c32 = common global [16 x i32] zeroinitializer, align 64
+@a16 = common global [32 x i16] zeroinitializer, align 64
+@b16 = common global [32 x i16] zeroinitializer, align 64
+@c16 = common global [32 x i16] zeroinitializer, align 64
+@a8 = common global [64 x i8] zeroinitializer, align 64
+@b8 = common global [64 x i8] zeroinitializer, align 64
+@c8 = common global [64 x i8] zeroinitializer, align 64
+
+define void @sub_v8i64() #0 {
+  %1 = load <4 x i64>, <4 x i64>* bitcast ([8 x i64]* @a64 to <4 x i64>*), align 8
+  %2 = load <4 x i64>, <4 x i64>* bitcast (i64* getelementptr inbounds ([8 x i64], [8 x i64]* @a64, i32 0, i64 4) to <4 x i64>*), align 8
+  %3 = load <4 x i64>, <4 x i64>* bitcast ([8 x i64]* @b64 to <4 x i64>*), align 8
+  %4 = load <4 x i64>, <4 x i64>* bitcast (i64* getelementptr inbounds ([8 x i64], [8 x i64]* @b64, i32 0, i64 4) to <4 x i64>*), align 8
+  %5 = sub <4 x i64> %1, %3
+  %6 = sub <4 x i64> %2, %4
+  store <4 x i64> %5, <4 x i64>* bitcast ([8 x i64]* @c64 to <4 x i64>*), align 8
+  store <4 x i64> %6, <4 x i64>* bitcast (i64* getelementptr inbounds ([8 x i64], [8 x i64]* @c64, i32 0, i64 4) to <4 x i64>*), align 8
+  ret void
+}
+
+define void @sub_v16i32() #0 {
+  %1 = load <8 x i32>, <8 x i32>* bitcast ([16 x i32]* @a32 to <8 x i32>*), align 4
+  %2 = load <8 x i32>, <8 x i32>* bitcast (i32* getelementptr inbounds ([16 x i32], [16 x i32]* @a32, i32 0, i64 8) to <8 x i32>*), align 4
+  %3 = load <8 x i32>, <8 x i32>* bitcast ([16 x i32]* @b32 to <8 x i32>*), align 4
+  %4 = load <8 x i32>, <8 x i32>* bitcast (i32* getelementptr inbounds ([16 x i32], [16 x i32]* @b32, i32 0, i64 8) to <8 x i32>*), align 4
+  %5 = sub <8 x i32> %1, %3
+  %6 = sub <8 x i32> %2, %4
+  store <8 x i32> %5, <8 x i32>* bitcast ([16 x i32]* @c32 to <8 x i32>*), align 4
+  store <8 x i32> %6, <8 x i32>* bitcast (i32* getelementptr inbounds ([16 x i32], [16 x i32]* @c32, i32 0, i64 8) to <8 x i32>*), align 4
+  ret void
+}
+
+define void @sub_v32i16() #0 {
+  %1 = load <16 x i16>, <16 x i16>* bitcast ([32 x i16]* @a16 to <16 x i16>*), align 2
+  %2 = load <16 x i16>, <16 x i16>* bitcast (i16* getelementptr inbounds ([32 x i16], [32 x i16]* @a16, i32 0, i64 16) to <16 x i16>*), align 2
+  %3 = load <16 x i16>, <16 x i16>* bitcast ([32 x i16]* @b16 to <16 x i16>*), align 2
+  %4 = load <16 x i16>, <16 x i16>* bitcast (i16* getelementptr inbounds ([32 x i16], [32 x i16]* @b16, i32 0, i64 16) to <16 x i16>*), align 2
+  %5 = sub <16 x i16> %1, %3
+  %6 = sub <16 x i16> %2, %4
+  store <16 x i16> %5, <16 x i16>* bitcast ([32 x i16]* @c16 to <16 x i16>*), align 2
+  store <16 x i16> %6, <16 x i16>* bitcast (i16* getelementptr inbounds ([32 x i16], [32 x i16]* @c16, i32 0, i64 16) to <16 x i16>*), align 2
+  ret void
+}
+
+define void @sub_v64i8() #0 {
+  %1 = load <16 x i8>, <16 x i8>* bitcast ([64 x i8]* @a8 to <16 x i8>*), align 1
+  %2 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @a8, i32 0, i64 16) to <16 x i8>*), align 1
+  %3 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @a8, i32 0, i64 32) to <16 x i8>*), align 1
+  %4 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @a8, i32 0, i64 48) to <16 x i8>*), align 1
+  %5 = load <16 x i8>, <16 x i8>* bitcast ([64 x i8]* @b8 to <16 x i8>*), align 1
+  %6 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @b8, i32 0, i64 16) to <16 x i8>*), align 1
+  %7 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @b8, i32 0, i64 32) to <16 x i8>*), align 1
+  %8 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @b8, i32 0, i64 48) to <16 x i8>*), align 1
+  %9 = sub <16 x i8> %1, %5
+  %10 = sub <16 x i8> %2, %6
+  %11 = sub <16 x i8> %3, %7
+  %12 = sub <16 x i8> %4, %8
+  store <16 x i8> %9, <16 x i8>* bitcast ([64 x i8]* @c8 to <16 x i8>*), align 1
+  store <16 x i8> %10, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @c8, i32 0, i64 16) to <16 x i8>*), align 1
+  store <16 x i8> %11, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @c8, i32 0, i64 32) to <16 x i8>*), align 1
+  store <16 x i8> %12, <16 x i8>* bitcast (i8* getelementptr inbounds ([64 x i8], [64 x i8]* @c8, i32 0, i64 48) to <16 x i8>*), align 1
+  ret void
+}
+
+attributes #0 = { "target-cpu"="core-avx2" "target-features"="-prefer-128-bit" }

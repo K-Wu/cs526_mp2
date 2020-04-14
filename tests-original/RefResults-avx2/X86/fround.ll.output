@@ -1,0 +1,373 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown"
+
+@src64 = common global [8 x double] zeroinitializer, align 64
+@dst64 = common global [8 x double] zeroinitializer, align 64
+@src32 = common global [16 x float] zeroinitializer, align 64
+@dst32 = common global [16 x float] zeroinitializer, align 64
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.ceil.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.floor.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.nearbyint.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.rint.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare double @llvm.trunc.f64(double) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.ceil.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.floor.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.nearbyint.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.rint.f32(float) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare float @llvm.trunc.f32(float) #0
+
+; Function Attrs: nounwind
+define void @ceil_2f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = call <2 x double> @llvm.ceil.v2f64(<2 x double> %1)
+  store <2 x double> %2, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_4f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = call <4 x double> @llvm.ceil.v4f64(<4 x double> %1)
+  store <4 x double> %2, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_8f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = load <4 x double>, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4) to <4 x double>*), align 8
+  %3 = call <4 x double> @llvm.ceil.v4f64(<4 x double> %1)
+  %4 = call <4 x double> @llvm.ceil.v4f64(<4 x double> %2)
+  store <4 x double> %3, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  store <4 x double> %4, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4) to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_2f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = call <2 x double> @llvm.floor.v2f64(<2 x double> %1)
+  store <2 x double> %2, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_4f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = call <4 x double> @llvm.floor.v4f64(<4 x double> %1)
+  store <4 x double> %2, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_8f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = load <4 x double>, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4) to <4 x double>*), align 8
+  %3 = call <4 x double> @llvm.floor.v4f64(<4 x double> %1)
+  %4 = call <4 x double> @llvm.floor.v4f64(<4 x double> %2)
+  store <4 x double> %3, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  store <4 x double> %4, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4) to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_2f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = call <2 x double> @llvm.nearbyint.v2f64(<2 x double> %1)
+  store <2 x double> %2, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_4f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = call <4 x double> @llvm.nearbyint.v4f64(<4 x double> %1)
+  store <4 x double> %2, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_8f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = load <4 x double>, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4) to <4 x double>*), align 8
+  %3 = call <4 x double> @llvm.nearbyint.v4f64(<4 x double> %1)
+  %4 = call <4 x double> @llvm.nearbyint.v4f64(<4 x double> %2)
+  store <4 x double> %3, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  store <4 x double> %4, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4) to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_2f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = call <2 x double> @llvm.rint.v2f64(<2 x double> %1)
+  store <2 x double> %2, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_4f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = call <4 x double> @llvm.rint.v4f64(<4 x double> %1)
+  store <4 x double> %2, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_8f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = load <4 x double>, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4) to <4 x double>*), align 8
+  %3 = call <4 x double> @llvm.rint.v4f64(<4 x double> %1)
+  %4 = call <4 x double> @llvm.rint.v4f64(<4 x double> %2)
+  store <4 x double> %3, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  store <4 x double> %4, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4) to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_2f64() #1 {
+  %1 = load <2 x double>, <2 x double>* bitcast ([8 x double]* @src64 to <2 x double>*), align 8
+  %2 = call <2 x double> @llvm.trunc.v2f64(<2 x double> %1)
+  store <2 x double> %2, <2 x double>* bitcast ([8 x double]* @dst64 to <2 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_4f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = call <4 x double> @llvm.trunc.v4f64(<4 x double> %1)
+  store <4 x double> %2, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_8f64() #1 {
+  %1 = load <4 x double>, <4 x double>* bitcast ([8 x double]* @src64 to <4 x double>*), align 8
+  %2 = load <4 x double>, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @src64, i32 0, i64 4) to <4 x double>*), align 8
+  %3 = call <4 x double> @llvm.trunc.v4f64(<4 x double> %1)
+  %4 = call <4 x double> @llvm.trunc.v4f64(<4 x double> %2)
+  store <4 x double> %3, <4 x double>* bitcast ([8 x double]* @dst64 to <4 x double>*), align 8
+  store <4 x double> %4, <4 x double>* bitcast (double* getelementptr inbounds ([8 x double], [8 x double]* @dst64, i32 0, i64 4) to <4 x double>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_4f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = call <4 x float> @llvm.ceil.v4f32(<4 x float> %1)
+  store <4 x float> %2, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_8f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = call <8 x float> @llvm.ceil.v8f32(<8 x float> %1)
+  store <8 x float> %2, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @ceil_16f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = load <8 x float>, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8) to <8 x float>*), align 4
+  %3 = call <8 x float> @llvm.ceil.v8f32(<8 x float> %1)
+  %4 = call <8 x float> @llvm.ceil.v8f32(<8 x float> %2)
+  store <8 x float> %3, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  store <8 x float> %4, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8) to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_4f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = call <4 x float> @llvm.floor.v4f32(<4 x float> %1)
+  store <4 x float> %2, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_8f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = call <8 x float> @llvm.floor.v8f32(<8 x float> %1)
+  store <8 x float> %2, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @floor_16f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = load <8 x float>, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8) to <8 x float>*), align 4
+  %3 = call <8 x float> @llvm.floor.v8f32(<8 x float> %1)
+  %4 = call <8 x float> @llvm.floor.v8f32(<8 x float> %2)
+  store <8 x float> %3, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  store <8 x float> %4, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8) to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_4f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = call <4 x float> @llvm.nearbyint.v4f32(<4 x float> %1)
+  store <4 x float> %2, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_8f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = call <8 x float> @llvm.nearbyint.v8f32(<8 x float> %1)
+  store <8 x float> %2, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @nearbyint_16f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = load <8 x float>, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8) to <8 x float>*), align 4
+  %3 = call <8 x float> @llvm.nearbyint.v8f32(<8 x float> %1)
+  %4 = call <8 x float> @llvm.nearbyint.v8f32(<8 x float> %2)
+  store <8 x float> %3, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  store <8 x float> %4, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8) to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_4f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = call <4 x float> @llvm.rint.v4f32(<4 x float> %1)
+  store <4 x float> %2, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_8f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = call <8 x float> @llvm.rint.v8f32(<8 x float> %1)
+  store <8 x float> %2, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @rint_16f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = load <8 x float>, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8) to <8 x float>*), align 4
+  %3 = call <8 x float> @llvm.rint.v8f32(<8 x float> %1)
+  %4 = call <8 x float> @llvm.rint.v8f32(<8 x float> %2)
+  store <8 x float> %3, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  store <8 x float> %4, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8) to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_4f32() #1 {
+  %1 = load <4 x float>, <4 x float>* bitcast ([16 x float]* @src32 to <4 x float>*), align 4
+  %2 = call <4 x float> @llvm.trunc.v4f32(<4 x float> %1)
+  store <4 x float> %2, <4 x float>* bitcast ([16 x float]* @dst32 to <4 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_8f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = call <8 x float> @llvm.trunc.v8f32(<8 x float> %1)
+  store <8 x float> %2, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @trunc_16f32() #1 {
+  %1 = load <8 x float>, <8 x float>* bitcast ([16 x float]* @src32 to <8 x float>*), align 4
+  %2 = load <8 x float>, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @src32, i32 0, i64 8) to <8 x float>*), align 4
+  %3 = call <8 x float> @llvm.trunc.v8f32(<8 x float> %1)
+  %4 = call <8 x float> @llvm.trunc.v8f32(<8 x float> %2)
+  store <8 x float> %3, <8 x float>* bitcast ([16 x float]* @dst32 to <8 x float>*), align 4
+  store <8 x float> %4, <8 x float>* bitcast (float* getelementptr inbounds ([16 x float], [16 x float]* @dst32, i32 0, i64 8) to <8 x float>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.ceil.v2f64(<2 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x double> @llvm.ceil.v4f64(<4 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.floor.v2f64(<2 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x double> @llvm.floor.v4f64(<4 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.nearbyint.v2f64(<2 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x double> @llvm.nearbyint.v4f64(<4 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.rint.v2f64(<2 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x double> @llvm.rint.v4f64(<4 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x double> @llvm.trunc.v2f64(<2 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x double> @llvm.trunc.v4f64(<4 x double>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x float> @llvm.ceil.v4f32(<4 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x float> @llvm.ceil.v8f32(<8 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x float> @llvm.floor.v4f32(<4 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x float> @llvm.floor.v8f32(<8 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x float> @llvm.nearbyint.v4f32(<4 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x float> @llvm.nearbyint.v8f32(<8 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x float> @llvm.rint.v4f32(<4 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x float> @llvm.rint.v8f32(<8 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x float> @llvm.trunc.v4f32(<4 x float>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x float> @llvm.trunc.v8f32(<8 x float>) #2
+
+attributes #0 = { nounwind readnone speculatable "target-cpu"="core-avx2" }
+attributes #1 = { nounwind "target-cpu"="core-avx2" }
+attributes #2 = { nounwind readnone speculatable }

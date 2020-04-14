@@ -1,0 +1,1 @@
+opt < tests-curated-multiple-commands/cast.ll -mtriple=x86_64-apple-macosx10.8.0 -mcpu=corei7-avx -basicaa -slp-vectorizer -dce -S >tests-curated-multiple-commands/cast.ll.output  2>tests-curated-multiple-commands/cast.ll.output2

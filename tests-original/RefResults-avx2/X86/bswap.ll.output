@@ -1,0 +1,90 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown"
+
+@src64 = common global [4 x i64] zeroinitializer, align 32
+@dst64 = common global [4 x i64] zeroinitializer, align 32
+@src32 = common global [8 x i32] zeroinitializer, align 32
+@dst32 = common global [8 x i32] zeroinitializer, align 32
+@src16 = common global [16 x i16] zeroinitializer, align 32
+@dst16 = common global [16 x i16] zeroinitializer, align 32
+
+; Function Attrs: nounwind readnone speculatable
+declare i64 @llvm.bswap.i64(i64) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare i32 @llvm.bswap.i32(i32) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare i16 @llvm.bswap.i16(i16) #0
+
+; Function Attrs: nounwind
+define void @bswap_2i64() #1 {
+  %1 = load <2 x i64>, <2 x i64>* bitcast ([4 x i64]* @src64 to <2 x i64>*), align 8
+  %2 = call <2 x i64> @llvm.bswap.v2i64(<2 x i64> %1)
+  store <2 x i64> %2, <2 x i64>* bitcast ([4 x i64]* @dst64 to <2 x i64>*), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @bswap_4i64() #1 {
+  %1 = load <4 x i64>, <4 x i64>* bitcast ([4 x i64]* @src64 to <4 x i64>*), align 4
+  %2 = call <4 x i64> @llvm.bswap.v4i64(<4 x i64> %1)
+  store <4 x i64> %2, <4 x i64>* bitcast ([4 x i64]* @dst64 to <4 x i64>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @bswap_4i32() #1 {
+  %1 = load <4 x i32>, <4 x i32>* bitcast ([8 x i32]* @src32 to <4 x i32>*), align 4
+  %2 = call <4 x i32> @llvm.bswap.v4i32(<4 x i32> %1)
+  store <4 x i32> %2, <4 x i32>* bitcast ([8 x i32]* @dst32 to <4 x i32>*), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @bswap_8i32() #1 {
+  %1 = load <8 x i32>, <8 x i32>* bitcast ([8 x i32]* @src32 to <8 x i32>*), align 2
+  %2 = call <8 x i32> @llvm.bswap.v8i32(<8 x i32> %1)
+  store <8 x i32> %2, <8 x i32>* bitcast ([8 x i32]* @dst32 to <8 x i32>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @bswap_8i16() #1 {
+  %1 = load <8 x i16>, <8 x i16>* bitcast ([16 x i16]* @src16 to <8 x i16>*), align 2
+  %2 = call <8 x i16> @llvm.bswap.v8i16(<8 x i16> %1)
+  store <8 x i16> %2, <8 x i16>* bitcast ([16 x i16]* @dst16 to <8 x i16>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @bswap_16i16() #1 {
+  %1 = load <16 x i16>, <16 x i16>* bitcast ([16 x i16]* @src16 to <16 x i16>*), align 2
+  %2 = call <16 x i16> @llvm.bswap.v16i16(<16 x i16> %1)
+  store <16 x i16> %2, <16 x i16>* bitcast ([16 x i16]* @dst16 to <16 x i16>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare <2 x i64> @llvm.bswap.v2i64(<2 x i64>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x i64> @llvm.bswap.v4i64(<4 x i64>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <4 x i32> @llvm.bswap.v4i32(<4 x i32>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x i32> @llvm.bswap.v8i32(<8 x i32>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x i16> @llvm.bswap.v8i16(<8 x i16>) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <16 x i16> @llvm.bswap.v16i16(<16 x i16>) #2
+
+attributes #0 = { nounwind readnone speculatable "target-cpu"="core-avx2" }
+attributes #1 = { nounwind "target-cpu"="core-avx2" }
+attributes #2 = { nounwind readnone speculatable }

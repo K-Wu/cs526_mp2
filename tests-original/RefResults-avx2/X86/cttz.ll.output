@@ -1,0 +1,217 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown"
+
+@src64 = common global [4 x i64] zeroinitializer, align 32
+@dst64 = common global [4 x i64] zeroinitializer, align 32
+@src32 = common global [8 x i32] zeroinitializer, align 32
+@dst32 = common global [8 x i32] zeroinitializer, align 32
+@src16 = common global [16 x i16] zeroinitializer, align 32
+@dst16 = common global [16 x i16] zeroinitializer, align 32
+@src8 = common global [32 x i8] zeroinitializer, align 32
+@dst8 = common global [32 x i8] zeroinitializer, align 32
+
+; Function Attrs: nounwind readnone speculatable
+declare i64 @llvm.cttz.i64(i64, i1) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare i32 @llvm.cttz.i32(i32, i1) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare i16 @llvm.cttz.i16(i16, i1) #0
+
+; Function Attrs: nounwind readnone speculatable
+declare i8 @llvm.cttz.i8(i8, i1) #0
+
+; Function Attrs: nounwind
+define void @cttz_2i64() #1 {
+  %ld0 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i32 0, i64 0), align 8
+  %ld1 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i32 0, i64 1), align 8
+  %cttz0 = call i64 @llvm.cttz.i64(i64 %ld0, i1 false)
+  %cttz1 = call i64 @llvm.cttz.i64(i64 %ld1, i1 false)
+  store i64 %cttz0, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i32 0, i64 0), align 8
+  store i64 %cttz1, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_4i64() #1 {
+  %ld0 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 0), align 4
+  %ld1 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 1), align 4
+  %ld2 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 2), align 4
+  %ld3 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 3), align 4
+  %cttz0 = call i64 @llvm.cttz.i64(i64 %ld0, i1 false)
+  %cttz1 = call i64 @llvm.cttz.i64(i64 %ld1, i1 false)
+  %cttz2 = call i64 @llvm.cttz.i64(i64 %ld2, i1 false)
+  %cttz3 = call i64 @llvm.cttz.i64(i64 %ld3, i1 false)
+  store i64 %cttz0, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 0), align 4
+  store i64 %cttz1, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 1), align 4
+  store i64 %cttz2, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 2), align 4
+  store i64 %cttz3, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_4i32() #1 {
+  %ld0 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 0), align 4
+  %ld1 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 1), align 4
+  %ld2 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 2), align 4
+  %ld3 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 3), align 4
+  %cttz0 = call i32 @llvm.cttz.i32(i32 %ld0, i1 false)
+  %cttz1 = call i32 @llvm.cttz.i32(i32 %ld1, i1 false)
+  %cttz2 = call i32 @llvm.cttz.i32(i32 %ld2, i1 false)
+  %cttz3 = call i32 @llvm.cttz.i32(i32 %ld3, i1 false)
+  store i32 %cttz0, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 0), align 4
+  store i32 %cttz1, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 1), align 4
+  store i32 %cttz2, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 2), align 4
+  store i32 %cttz3, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_8i32() #1 {
+  %1 = load <8 x i32>, <8 x i32>* bitcast ([8 x i32]* @src32 to <8 x i32>*), align 2
+  %2 = call <8 x i32> @llvm.cttz.v8i32(<8 x i32> %1, i1 false)
+  store <8 x i32> %2, <8 x i32>* bitcast ([8 x i32]* @dst32 to <8 x i32>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_8i16() #1 {
+  %1 = load <8 x i16>, <8 x i16>* bitcast ([16 x i16]* @src16 to <8 x i16>*), align 2
+  %2 = call <8 x i16> @llvm.cttz.v8i16(<8 x i16> %1, i1 false)
+  store <8 x i16> %2, <8 x i16>* bitcast ([16 x i16]* @dst16 to <8 x i16>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_16i16() #1 {
+  %1 = load <16 x i16>, <16 x i16>* bitcast ([16 x i16]* @src16 to <16 x i16>*), align 2
+  %2 = call <16 x i16> @llvm.cttz.v16i16(<16 x i16> %1, i1 false)
+  store <16 x i16> %2, <16 x i16>* bitcast ([16 x i16]* @dst16 to <16 x i16>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_16i8() #1 {
+  %1 = load <16 x i8>, <16 x i8>* bitcast ([32 x i8]* @src8 to <16 x i8>*), align 1
+  %2 = call <16 x i8> @llvm.cttz.v16i8(<16 x i8> %1, i1 false)
+  store <16 x i8> %2, <16 x i8>* bitcast ([32 x i8]* @dst8 to <16 x i8>*), align 1
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_32i8() #1 {
+  %1 = load <16 x i8>, <16 x i8>* bitcast ([32 x i8]* @src8 to <16 x i8>*), align 1
+  %2 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([32 x i8], [32 x i8]* @src8, i8 0, i64 16) to <16 x i8>*), align 1
+  %3 = call <16 x i8> @llvm.cttz.v16i8(<16 x i8> %1, i1 false)
+  %4 = call <16 x i8> @llvm.cttz.v16i8(<16 x i8> %2, i1 false)
+  store <16 x i8> %3, <16 x i8>* bitcast ([32 x i8]* @dst8 to <16 x i8>*), align 1
+  store <16 x i8> %4, <16 x i8>* bitcast (i8* getelementptr inbounds ([32 x i8], [32 x i8]* @dst8, i8 0, i64 16) to <16 x i8>*), align 1
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_2i64() #1 {
+  %ld0 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i32 0, i64 0), align 8
+  %ld1 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i32 0, i64 1), align 8
+  %cttz0 = call i64 @llvm.cttz.i64(i64 %ld0, i1 true)
+  %cttz1 = call i64 @llvm.cttz.i64(i64 %ld1, i1 true)
+  store i64 %cttz0, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i32 0, i64 0), align 8
+  store i64 %cttz1, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i32 0, i64 1), align 8
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_4i64() #1 {
+  %ld0 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 0), align 4
+  %ld1 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 1), align 4
+  %ld2 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 2), align 4
+  %ld3 = load i64, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @src64, i64 0, i64 3), align 4
+  %cttz0 = call i64 @llvm.cttz.i64(i64 %ld0, i1 true)
+  %cttz1 = call i64 @llvm.cttz.i64(i64 %ld1, i1 true)
+  %cttz2 = call i64 @llvm.cttz.i64(i64 %ld2, i1 true)
+  %cttz3 = call i64 @llvm.cttz.i64(i64 %ld3, i1 true)
+  store i64 %cttz0, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 0), align 4
+  store i64 %cttz1, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 1), align 4
+  store i64 %cttz2, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 2), align 4
+  store i64 %cttz3, i64* getelementptr inbounds ([4 x i64], [4 x i64]* @dst64, i64 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_4i32() #1 {
+  %ld0 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 0), align 4
+  %ld1 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 1), align 4
+  %ld2 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 2), align 4
+  %ld3 = load i32, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @src32, i32 0, i64 3), align 4
+  %cttz0 = call i32 @llvm.cttz.i32(i32 %ld0, i1 true)
+  %cttz1 = call i32 @llvm.cttz.i32(i32 %ld1, i1 true)
+  %cttz2 = call i32 @llvm.cttz.i32(i32 %ld2, i1 true)
+  %cttz3 = call i32 @llvm.cttz.i32(i32 %ld3, i1 true)
+  store i32 %cttz0, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 0), align 4
+  store i32 %cttz1, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 1), align 4
+  store i32 %cttz2, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 2), align 4
+  store i32 %cttz3, i32* getelementptr inbounds ([8 x i32], [8 x i32]* @dst32, i32 0, i64 3), align 4
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_8i32() #1 {
+  %1 = load <8 x i32>, <8 x i32>* bitcast ([8 x i32]* @src32 to <8 x i32>*), align 2
+  %2 = call <8 x i32> @llvm.cttz.v8i32(<8 x i32> %1, i1 true)
+  store <8 x i32> %2, <8 x i32>* bitcast ([8 x i32]* @dst32 to <8 x i32>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_8i16() #1 {
+  %1 = load <8 x i16>, <8 x i16>* bitcast ([16 x i16]* @src16 to <8 x i16>*), align 2
+  %2 = call <8 x i16> @llvm.cttz.v8i16(<8 x i16> %1, i1 true)
+  store <8 x i16> %2, <8 x i16>* bitcast ([16 x i16]* @dst16 to <8 x i16>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_16i16() #1 {
+  %1 = load <16 x i16>, <16 x i16>* bitcast ([16 x i16]* @src16 to <16 x i16>*), align 2
+  %2 = call <16 x i16> @llvm.cttz.v16i16(<16 x i16> %1, i1 true)
+  store <16 x i16> %2, <16 x i16>* bitcast ([16 x i16]* @dst16 to <16 x i16>*), align 2
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_16i8() #1 {
+  %1 = load <16 x i8>, <16 x i8>* bitcast ([32 x i8]* @src8 to <16 x i8>*), align 1
+  %2 = call <16 x i8> @llvm.cttz.v16i8(<16 x i8> %1, i1 true)
+  store <16 x i8> %2, <16 x i8>* bitcast ([32 x i8]* @dst8 to <16 x i8>*), align 1
+  ret void
+}
+
+; Function Attrs: nounwind
+define void @cttz_undef_32i8() #1 {
+  %1 = load <16 x i8>, <16 x i8>* bitcast ([32 x i8]* @src8 to <16 x i8>*), align 1
+  %2 = load <16 x i8>, <16 x i8>* bitcast (i8* getelementptr inbounds ([32 x i8], [32 x i8]* @src8, i8 0, i64 16) to <16 x i8>*), align 1
+  %3 = call <16 x i8> @llvm.cttz.v16i8(<16 x i8> %1, i1 true)
+  %4 = call <16 x i8> @llvm.cttz.v16i8(<16 x i8> %2, i1 true)
+  store <16 x i8> %3, <16 x i8>* bitcast ([32 x i8]* @dst8 to <16 x i8>*), align 1
+  store <16 x i8> %4, <16 x i8>* bitcast (i8* getelementptr inbounds ([32 x i8], [32 x i8]* @dst8, i8 0, i64 16) to <16 x i8>*), align 1
+  ret void
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x i32> @llvm.cttz.v8i32(<8 x i32>, i1) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <8 x i16> @llvm.cttz.v8i16(<8 x i16>, i1) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <16 x i16> @llvm.cttz.v16i16(<16 x i16>, i1) #2
+
+; Function Attrs: nounwind readnone speculatable
+declare <16 x i8> @llvm.cttz.v16i8(<16 x i8>, i1) #2
+
+attributes #0 = { nounwind readnone speculatable "target-cpu"="core-avx2" }
+attributes #1 = { nounwind "target-cpu"="core-avx2" }
+attributes #2 = { nounwind readnone speculatable }

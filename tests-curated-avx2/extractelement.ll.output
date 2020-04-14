@@ -1,0 +1,32 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target triple = "x86_64-unknown-linux"
+
+@a = global float 0.000000e+00, align 4
+
+define float @f(<2 x float> %x) {
+  %1 = fmul <2 x float> %x, %x
+  %2 = extractelement <2 x float> %1, i32 0
+  %3 = extractelement <2 x float> %1, i32 1
+  %add = fadd float %2, %3
+  ret float %add
+}
+
+define float @f_used_out_of_tree(<2 x float> %x) {
+  %x0 = extractelement <2 x float> %x, i32 0
+  %x1 = extractelement <2 x float> %x, i32 1
+  %x0x0 = fmul float %x0, %x0
+  %x1x1 = fmul float %x1, %x1
+  %add = fadd float %x0x0, %x1x1
+  store float %add, float* @a
+  ret float %x0
+}
+
+define float @f_used_twice_in_tree(<2 x float> %x) {
+  %x0 = extractelement <2 x float> %x, i32 0
+  %x1 = extractelement <2 x float> %x, i32 1
+  %x0x0 = fmul float %x0, %x1
+  %x1x1 = fmul float %x1, %x1
+  %add = fadd float %x0x0, %x1x1
+  ret float %add
+}

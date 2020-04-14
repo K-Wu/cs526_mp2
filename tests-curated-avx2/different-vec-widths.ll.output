@@ -1,0 +1,33 @@
+; ModuleID = '<stdin>'
+source_filename = "<stdin>"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+define void @PR28457(double* noalias nocapture align 32 %q, double* noalias nocapture readonly align 32 %p) #0 {
+  %p0 = getelementptr inbounds double, double* %p, i64 0
+  %p1 = getelementptr inbounds double, double* %p, i64 1
+  %p2 = getelementptr inbounds double, double* %p, i64 2
+  %p3 = getelementptr inbounds double, double* %p, i64 3
+  %p4 = getelementptr inbounds double, double* %p, i64 4
+  %p5 = getelementptr inbounds double, double* %p, i64 5
+  %q0 = getelementptr inbounds double, double* %q, i64 0
+  %q1 = getelementptr inbounds double, double* %q, i64 1
+  %q2 = getelementptr inbounds double, double* %q, i64 2
+  %q3 = getelementptr inbounds double, double* %q, i64 3
+  %q4 = getelementptr inbounds double, double* %q, i64 4
+  %q5 = getelementptr inbounds double, double* %q, i64 5
+  %1 = bitcast double* %p0 to <4 x double>*
+  %2 = load <4 x double>, <4 x double>* %1, align 8
+  %d4 = load double, double* %p4
+  %d5 = load double, double* %p5
+  %3 = fadd <4 x double> <double 1.000000e+00, double 1.000000e+00, double 1.000000e+00, double 1.000000e+00>, %2
+  %a4 = fadd double %d4, 1.000000e+00
+  %a5 = fadd double %d5, 1.000000e+00
+  %4 = bitcast double* %q0 to <4 x double>*
+  store <4 x double> %3, <4 x double>* %4, align 8
+  store double %a4, double* %q4
+  store double %a5, double* %q5
+  ret void
+}
+
+attributes #0 = { "target-features"="+avx2" }
