@@ -83,13 +83,18 @@ public:
     MustGather.clear();
     ExternalUses.clear();
     MemBarrierIgnoreList.clear();
+    
+    for (auto &Iter : BlocksSchedules) {
+      BlockScheduling *BS = Iter.second.get();
+      BS->clear();
+    }
   }
 
   /// \returns true if the memory operations A and B are consecutive.
   bool isConsecutiveAccess(Value *A, Value *B);
 
   /// \brief Perform LICM and CSE on the newly generated gather sequences.
-  void optimizeGatherSequence();
+  //void optimizeGatherSequence();
 
 private:
   struct TreeEntry;
@@ -130,13 +135,13 @@ private:
   /// \brief Checks if it is possible to sink an instruction from
   /// \p Src to \p Dst.
   /// \returns the pointer to the barrier instruction if we can't sink.
-  Value *getSinkBarrier(Instruction *Src, Instruction *Dst);
+  //Value *getSinkBarrier(Instruction *Src, Instruction *Dst); //removed in rl214494
 
   /// \returns the index of the last instruction in the BB from \p VL.
-  int getLastIndex(ArrayRef<Value *> VL);
+  //int getLastIndex(ArrayRef<Value *> VL); //removed in rl214494
 
   /// \returns the Instruction in the bundle \p VL.
-  Instruction *getLastInstruction(ArrayRef<Value *> VL);
+  //Instruction *getLastInstruction(ArrayRef<Value *> VL); //removed in rl214494
 
   /// \brief Set the Builder insert point to one after the last instruction in
   /// the bundle
@@ -150,7 +155,7 @@ private:
   bool isFullyVectorizableTinyTree();
 
   struct TreeEntry {
-    TreeEntry() : Scalars(), VectorizedValue(nullptr), LastScalarIndex(0),
+    TreeEntry() : Scalars(), VectorizedValue(nullptr), 
     NeedToGather(0) {}
 
     /// \returns true if the scalars in VL are equal to this entry.
@@ -166,7 +171,7 @@ private:
     Value *VectorizedValue;
 
     /// The index in the basic block of the last scalar.
-    int LastScalarIndex;
+    //int LastScalarIndex; //removed in rl214494
 
     /// Do we need to gather this sequence ?
     bool NeedToGather;
@@ -179,13 +184,11 @@ private:
     Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
     Last->NeedToGather = !Vectorized;
     if (Vectorized) {
-      Last->LastScalarIndex = getLastIndex(VL);
       for (int i = 0, e = VL.size(); i != e; ++i) {
         assert(!ScalarToTreeEntry.count(VL[i]) && "Scalar already in tree!");
         ScalarToTreeEntry[VL[i]] = idx;
       }
     } else {
-      Last->LastScalarIndex = 0;
       MustGather.insert(VL.begin(), VL.end());
     }
     return Last;
@@ -223,9 +226,10 @@ private:
   ValueSet MemBarrierIgnoreList;
 
   /// Holds all of the instructions that we gathered.
-  SetVector<Instruction *> GatherSeq;
+  //SetVector<Instruction *> GatherSeq; //don't need as we don't optimize gather seq
   /// A list of blocks that we are going to CSE.
-  SetVector<BasicBlock *> CSEBlocks;
+  //SetVector<BasicBlock *> CSEBlocks; //don't need as we don't optimize gather seq
+  
  /// Contains all scheduling relevant data for an instruction.
   /// A ScheduleData either represents a single instruction or a member of an
   /// instruction bundle (= a group of instructions which is combined into a
