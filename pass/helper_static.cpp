@@ -188,3 +188,133 @@ static Instruction *propagateMetadata(Instruction *I, ArrayRef<Value *> VL) {
   }
   return I;
 }
+
+/// \returns True if the ExtractElement instructions in VL can be vectorized
+/// to use the original vector.
+static bool CanReuseExtract(ArrayRef<Value *> VL) {
+  assert(Instruction::ExtractElement == getSameOpcode(VL) && "Invalid opcode");
+  // Check if all of the extracts come from the same vector and from the
+  // correct offset.
+  Value *VL0 = VL[0];
+  ExtractElementInst *E0 = cast<ExtractElementInst>(VL0);
+  Value *Vec = E0->getOperand(0);
+
+  // We have to extract from the same vector type.
+  unsigned NElts = Vec->getType()->getVectorNumElements();
+
+  if (NElts != VL.size())
+    return false;
+
+  // Check that all of the indices extract from the correct offset.
+  ConstantInt *CI = dyn_cast<ConstantInt>(E0->getOperand(1));
+  if (!CI || CI->getZExtValue())
+    return false;
+
+  for (unsigned i = 1, e = VL.size(); i < e; ++i) {
+    ExtractElementInst *E = cast<ExtractElementInst>(VL[i]);
+    ConstantInt *CI = dyn_cast<ConstantInt>(E->getOperand(1));
+
+    if (!CI || CI->getZExtValue() != i || E->getOperand(0) != Vec)
+      return false;
+  }
+
+  return true;
+}
+
+static void reorderInputsAccordingToOpcode(ArrayRef<Value *> VL,
+                                           SmallVectorImpl<Value *> &Left,
+                                           SmallVectorImpl<Value *> &Right) {
+
+  SmallVector<Value *, 16> OrigLeft, OrigRight;
+
+  bool AllSameOpcodeLeft = true;
+  bool AllSameOpcodeRight = true;
+  for (unsigned i = 0, e = VL.size(); i != e; ++i) {
+    Instruction *I = cast<Instruction>(VL[i]);
+    Value *V0 = I->getOperand(0);
+    Value *V1 = I->getOperand(1);
+
+    OrigLeft.push_back(V0);
+    OrigRight.push_back(V1);
+
+    Instruction *I0 = dyn_cast<Instruction>(V0);
+    Instruction *I1 = dyn_cast<Instruction>(V1);
+
+    // Check whether all operands on one side have the same opcode. In this case
+    // we want to preserve the original order and not make things worse by
+    // reordering.
+    AllSameOpcodeLeft = I0;
+    AllSameOpcodeRight = I1;
+
+    if (i && AllSameOpcodeLeft) {
+      if(Instruction *P0 = dyn_cast<Instruction>(OrigLeft[i-1])) {
+        if(P0->getOpcode() != I0->getOpcode())
+          AllSameOpcodeLeft = false;
+      } else
+        AllSameOpcodeLeft = false;
+    }
+    if (i && AllSameOpcodeRight) {
+      if(Instruction *P1 = dyn_cast<Instruction>(OrigRight[i-1])) {
+        if(P1->getOpcode() != I1->getOpcode())
+          AllSameOpcodeRight = false;
+      } else
+        AllSameOpcodeRight = false;
+    }
+
+    // Sort two opcodes. In the code below we try to preserve the ability to use
+    // broadcast of values instead of individual inserts.
+    // vl1 = load
+    // vl2 = phi
+    // vr1 = load
+    // vr2 = vr2
+    //    = vl1 x vr1
+    //    = vl2 x vr2
+    // If we just sorted according to opcode we would leave the first line in
+    // tact but we would swap vl2 with vr2 because opcode(phi) > opcode(load).
+    //    = vl1 x vr1
+    //    = vr2 x vl2
+    // Because vr2 and vr1 are from the same load we loose the opportunity of a
+    // broadcast for the packed right side in the backend: we have [vr1, vl2]
+    // instead of [vr1, vr2=vr1].
+    if (I0 && I1) {
+       if(!i && I0->getOpcode() > I1->getOpcode()) {
+         Left.push_back(I1);
+         Right.push_back(I0);
+       } else if (i && I0->getOpcode() > I1->getOpcode() && Right[i-1] != I1) {
+         // Try not to destroy a broad cast for no apparent benefit.
+         Left.push_back(I1);
+         Right.push_back(I0);
+       } else if (i && I0->getOpcode() == I1->getOpcode() && Right[i-1] ==  I0) {
+         // Try preserve broadcasts.
+         Left.push_back(I1);
+         Right.push_back(I0);
+       } else if (i && I0->getOpcode() == I1->getOpcode() && Left[i-1] == I1) {
+         // Try preserve broadcasts.
+         Left.push_back(I1);
+         Right.push_back(I0);
+       } else {
+         Left.push_back(I0);
+         Right.push_back(I1);
+       }
+       continue;
+    }
+    // One opcode, put the instruction on the right.
+    if (I0) {
+      Left.push_back(V1);
+      Right.push_back(I0);
+      continue;
+    }
+    Left.push_back(V0);
+    Right.push_back(V1);
+  }
+
+  bool LeftBroadcast = isSplat(Left);
+  bool RightBroadcast = isSplat(Right);
+
+  // Don't reorder if the operands where good to begin with.
+  if (!(LeftBroadcast || RightBroadcast) &&
+      (AllSameOpcodeRight || AllSameOpcodeLeft)) {
+    Left = OrigLeft;
+    Right = OrigRight;
+  }
+}
