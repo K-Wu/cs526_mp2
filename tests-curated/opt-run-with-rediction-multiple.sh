@@ -1,0 +1,1 @@
+opt < tests-curated/cast.ll -load build/pass/libSLPVectorizer-kdw.so -mtriple=x86_64-apple-macosx10.8.0 -mcpu=corei7-avx -basicaa -slpvect-kdw -dce -S >tests-curated/Output/MultipleCommand/cast.ll.output  2>tests-curated/Output/MultipleCommand/cast.ll.output2
