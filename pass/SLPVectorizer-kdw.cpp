@@ -180,7 +180,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
           return;
         }
         if (idx_vl!=VL.size()-1){
-          if (!isConsecutiveAccess(VL[idx_vl],VL[idx_vl])){
+          if (!isConsecutiveAccess(VL[idx_vl],VL[idx_vl+1])){
             dbg_executes(errs()<<"MySLP: not vectorized due to LoadInst does not satisfy isConsecutiveAccess\n";);
             BS.cancelScheduling(VL);
             newTreeEntry(VL, false);
