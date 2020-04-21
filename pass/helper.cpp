@@ -135,13 +135,13 @@ private:
   /// \brief Checks if it is possible to sink an instruction from
   /// \p Src to \p Dst.
   /// \returns the pointer to the barrier instruction if we can't sink.
-  Value *getSinkBarrier(Instruction *Src, Instruction *Dst); //removed in rl214494
+  // Value *getSinkBarrier(Instruction *Src, Instruction *Dst); //removed in rl214494
 
   /// \returns the index of the last instruction in the BB from \p VL.
-  int getLastIndex(ArrayRef<Value *> VL); //removed in rl214494
+  // int getLastIndex(ArrayRef<Value *> VL); //removed in rl214494
 
   /// \returns the Instruction in the bundle \p VL.
-  Instruction *getLastInstruction(ArrayRef<Value *> VL); //removed in rl214494
+  // Instruction *getLastInstruction(ArrayRef<Value *> VL); //removed in rl214494
 
   /// \brief Set the Builder insert point to one after the last instruction in
   /// the bundle
@@ -601,55 +601,6 @@ bool BoUpSLP::isConsecutiveAccess(Value *A, Value *B) {
   const SCEV *C = SE->getConstant(BaseDelta);
   const SCEV *X = SE->getAddExpr(PtrSCEVA, C);
   return X == PtrSCEVB;
-}
-
-Value *BoUpSLP::getSinkBarrier(Instruction *Src, Instruction *Dst) {
-  assert(Src->getParent() == Dst->getParent() && "Not the same BB");
-  BasicBlock::iterator I = Src, E = Dst;
-  /// Scan all of the instruction from SRC to DST and check if
-  /// the source may alias.
-  for (++I; I != E; ++I) {
-    // Ignore store instructions that are marked as 'ignore'.
-    if (MemBarrierIgnoreList.count(I))
-      continue;
-    if (Src->mayWriteToMemory()) /* Write */ {
-      if (!I->mayReadOrWriteMemory())
-        continue;
-    } else /* Read */ {
-      if (!I->mayWriteToMemory())
-        continue;
-    }
-    AliasAnalysis::Location A = getLocation(&*I);
-    AliasAnalysis::Location B = getLocation(Src);
-
-    if (!A.Ptr || !B.Ptr || AA->alias(A, B))
-      return I;
-  }
-  return nullptr;
-}
-
-int BoUpSLP::getLastIndex(ArrayRef<Value *> VL) {
-  BasicBlock *BB = cast<Instruction>(VL[0])->getParent();
-  assert(BB == getSameBlock(VL) && "Invalid block");
-  BlockNumbering &BN = getBlockNumbering(BB);
-
-  int MaxIdx = BN.getIndex(BB->getFirstNonPHI());
-  for (unsigned i = 0, e = VL.size(); i < e; ++i)
-    MaxIdx = std::max(MaxIdx, BN.getIndex(cast<Instruction>(VL[i])));
-  return MaxIdx;
-}
-
-Instruction *BoUpSLP::getLastInstruction(ArrayRef<Value *> VL) {
-  BasicBlock *BB = cast<Instruction>(VL[0])->getParent();
-  assert(BB == getSameBlock(VL) && "Invalid block");
-  BlockNumbering &BN = getBlockNumbering(BB);
-
-  int MaxIdx = BN.getIndex(cast<Instruction>(VL[0]));
-  for (unsigned i = 1, e = VL.size(); i < e; ++i)
-    MaxIdx = std::max(MaxIdx, BN.getIndex(cast<Instruction>(VL[i])));
-  Instruction *I = BN.getInstruction(MaxIdx);
-  assert(I && "bad location");
-  return I;
 }
 
 Value *BoUpSLP::alreadyVectorized(ArrayRef<Value *> VL) const {

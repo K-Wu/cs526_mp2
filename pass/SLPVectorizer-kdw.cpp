@@ -347,10 +347,17 @@ void BoUpSLP::buildTree(ArrayRef<Value *> Roots)
 
 // Set insert point for IRBuilder
 // after a list of instructions
+// void BoUpSLP::setInsertPointAfterBundle(ArrayRef<Value *> VL) {
+//   Instruction *VL0 = cast<Instruction>(VL[0]);
+//   Instruction *LastInst = getLastInstruction(VL);
+//   BasicBlock::iterator NextInst = LastInst;
+//   ++NextInst;
+//   Builder.SetInsertPoint(VL0->getParent(), NextInst);
+//   Builder.SetCurrentDebugLocation(VL0->getDebugLoc());
+// }
 void BoUpSLP::setInsertPointAfterBundle(ArrayRef<Value *> VL) {
   Instruction *VL0 = cast<Instruction>(VL[0]);
-  Instruction *LastInst = getLastInstruction(VL);
-  BasicBlock::iterator NextInst = LastInst;
+  BasicBlock::iterator NextInst = VL0;
   ++NextInst;
   Builder.SetInsertPoint(VL0->getParent(), NextInst);
   Builder.SetCurrentDebugLocation(VL0->getDebugLoc());
