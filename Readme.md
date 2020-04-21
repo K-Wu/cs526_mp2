@@ -1,7 +1,7 @@
 
 # CS526 SP20 MP1
 Kun Wu \<netid: kunwu2, UIN: 676032253\>
-Dawei Sun \<netid: , UIN: \>
+Dawei Sun \<netid: daweis2, UIN: \>
 ## Build
 This project uses another skeleton code from one online tutorial \[1\] than the one provided by CS 526 Spring 2020, in order to enable building this project as a shared library. It uses cmake as its build management system, and adopts the new PassManager. The provided skeleton code mandates the project building with llvm-8.0.1 source tree as long as built-in passes are called in the legacy pass manager, which forbids quick development.
 

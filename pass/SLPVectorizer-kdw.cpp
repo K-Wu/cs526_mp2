@@ -22,10 +22,15 @@
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/DemandedBits.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
+
+#include "llvm/Transforms/Vectorize/LoopVectorize.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include <vector>
 #include <unordered_map>
 #include <list>
@@ -46,23 +51,31 @@ using namespace llvm;
 #endif
 
 #define DEBUG_TYPE "slpvect-kdw"
+#define SV_NAME "slpvect-kdw"
 
 #include "helper_static.cpp"
-namespace
-{
+//namespace
+//{
 #include "helper.cpp"
 
 void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
 {
+    dbg_executes(errs()<<"MySLP buildtree_rec entry bundle: ";);
+    for (int idx=0;idx<VL.size();idx++){
+      dbg_executes(errs()<<" , "<<*(VL[idx]););
+    }
+    dbg_executes(errs()<<"\n";);
   //if recursion reaches max depth, stop
   if (Depth == RecursionMaxDepth)
   {
+    dbg_executes(errs()<<"MySLP: buildTree max depth\n";);
     newTreeEntry(VL, false);
     return;
   }
 
   //if not the same type or invalid vector element type, stop
   if (!getSameType(VL)){
+    dbg_executes(errs()<<"MySLP: buildTree not same type\n";);
     newTreeEntry(VL, false);
     return;
   }
@@ -73,6 +86,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
       //store instruction needs and only needs to check its store pointer
       if (!isValidElementType(SI->getPointerOperand()->getType()))
       {
+        dbg_executes(errs()<<"MySLP: buildTree store not valid type\n";);
         newTreeEntry(VL, false);
         return;
       }
@@ -81,6 +95,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
     {
       if (!isValidElementType(VL[idx_vl]->getType()))
       {
+        dbg_executes(errs()<<"MySLP: buildTree not valid type\n";);
         newTreeEntry(VL, false);
         return;
       }
@@ -92,6 +107,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
   BasicBlock *BB = getSameBlock(VL);
   if (!OpCode || !BB)
   {
+    dbg_executes(errs()<<"MySLP: buildTree not same block or same opcode\n";);
     newTreeEntry(VL, false);
     return;
   }
@@ -114,6 +130,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
 
   // check block reachability
   if (!DT->isReachableFromEntry(BB)){
+    dbg_executes(errs()<<"MySLP: buildTree not reachable block\n";);
     newTreeEntry(VL,false);
     return;
   }
@@ -122,6 +139,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
   std::set<Value*> uniqueVLElement;
   for(int idx_vl=0;idx_vl<VL.size();idx_vl++){
     if (uniqueVLElement.count(VL[idx_vl])){
+      dbg_executes(errs()<<"MySLP: buildTree duplicate item in bundle\n";);
       newTreeEntry(VL, false);
       return;
     }
@@ -134,9 +152,11 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
   }
  auto& BSRef=BlocksSchedules[BB];
  auto& BS = *BSRef.get();
+ 
  dbg_executes(errs()<<"WARNING: BS "<<BS.BB<<"\n";);
-  if(!BS.tryScheduleBundle(VL,AA)){
-    BS.cancelScheduling(VL);
+  if(!BS.tryScheduleBundle(VL,this)){
+    //BS.cancelScheduling(VL);
+    dbg_executes(errs()<<"MySLP: buildTree cannot schedule\n";);
     newTreeEntry(VL,false);//cannot schedule
     return;
   }
@@ -162,7 +182,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
           return;
         }
         if (idx_vl!=VL.size()-1){
-          if (!isConsecutiveAccess(VL[idx_vl],VL[idx_vl])){
+          if (!isConsecutiveAccess(VL[idx_vl],VL[idx_vl+1])){
             dbg_executes(errs()<<"MySLP: not vectorized due to LoadInst does not satisfy isConsecutiveAccess\n";);
             BS.cancelScheduling(VL);
             newTreeEntry(VL, false);
@@ -178,6 +198,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
         }
         buildTree_rec(operands,Depth+1);
       }
+      return;
     }
     case Instruction::Store:{
       //ensure simple and consecutive
@@ -189,7 +210,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
           return;
         }
         if (idx_vl!=VL.size()-1){
-          if (!isConsecutiveAccess(VL[idx_vl],VL[idx_vl])){
+          if (!isConsecutiveAccess(VL[idx_vl],VL[idx_vl+1])){
             dbg_executes(errs()<<"MySLP: not vectorized due to StoreInst does not satisfy isConsecutiveAccess\n";);
             BS.cancelScheduling(VL);
             newTreeEntry(VL, false);
@@ -205,15 +226,16 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
         }
         buildTree_rec(operands,Depth+1);
       }
-
+      return;
     }
     case Instruction::ICmp:
     case Instruction::FCmp:{
-      //ensure the predicate is the same type
+      //ensure the predicate is the same type and cond is the same type
       auto VL0Pred = dyn_cast<CmpInst>(VL[0])->getPredicate();
+      Type* VL0CondType = dyn_cast<CmpInst>(VL[0])->getOperand(0)->getType();
       for (int idx_vl=0;idx_vl<VL.size();idx_vl++){
-        if(VL0Pred!=dyn_cast<CmpInst>(VL[idx_vl])->getPredicate()){
-          //not the same predicate
+        if((VL0Pred!=dyn_cast<CmpInst>(VL[idx_vl])->getPredicate())||(VL0CondType!=dyn_cast<CmpInst>(VL[idx_vl])->getOperand(0)->getType())){
+          //not the same predicate or same type cond
           BS.cancelScheduling(VL);
           newTreeEntry(VL,false);
           return;
@@ -227,6 +249,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
         }
         buildTree_rec(operands,Depth+1);
       }
+      return;
     }
     case Instruction::Select:
     //BinaryOperators
@@ -259,7 +282,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
         buildTree_rec(operands,Depth+1);
 
       }
-
+      return;
     }
     //conversion operators
     case Instruction::Trunc:
@@ -299,6 +322,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
         buildTree_rec(operands,Depth+1);
 
       }
+      return;
     }
     //do not deal with
     case Instruction::ExtractValue:
@@ -652,8 +676,7 @@ Value *BoUpSLP::vectorizeTree() {
   return VectorizableTree[0].VectorizedValue;
 }
 
-struct MySLPPass : public PassInfoMixin<MySLPPass>
-{
+
   std::list<std::vector<Value *>> collectStores(BasicBlock *BB, BoUpSLP &R)
   {
     std::list<std::vector<Value *>> storePacks;
@@ -725,11 +748,17 @@ struct MySLPPass : public PassInfoMixin<MySLPPass>
   bool runImpl(Function &F, ScalarEvolution *SE_,
                TargetTransformInfo *TTI_,
                TargetLibraryInfo *TLI_, AliasAnalysis *AA_,
-               LoopInfo *LI_, DominatorTree *DT_,
-               AssumptionCache *AC_, DemandedBits *DB_,
-               OptimizationRemarkEmitter *ORE_)
+               LoopInfo *LI_, DominatorTree *DT_)//,
+               //AssumptionCache *AC_, DemandedBits *DB_,
+               //OptimizationRemarkEmitter *ORE_)
   {
     const DataLayout *DL = &F.getParent()->getDataLayout();
+
+    if (!DL)
+      return false;
+    //don't vectorize if no vector registers
+    //if (TTI_->getNumberOfRegisters(true))
+    //  return false;
 
     BoUpSLP R(&F, SE_, DL, TTI_, TLI_, AA_, LI_, DT_);
     for (po_iterator<BasicBlock *> it = po_begin(&F.getEntryBlock()); it != po_end(&F.getEntryBlock()); it++)
@@ -749,6 +778,10 @@ struct MySLPPass : public PassInfoMixin<MySLPPass>
 
     return false;
   }
+
+struct MySLPPass : public PassInfoMixin<MySLPPass>
+{
+  
   PreservedAnalyses run(Function &F,
                         FunctionAnalysisManager &FAM)
   {
@@ -759,11 +792,11 @@ struct MySLPPass : public PassInfoMixin<MySLPPass>
     auto *AA = &FAM.getResult<AAManager>(F);
     auto *LI = &FAM.getResult<LoopAnalysis>(F);
     auto *DT = &FAM.getResult<DominatorTreeAnalysis>(F);
-    auto *AC = &FAM.getResult<AssumptionAnalysis>(F);
-    auto *DB = &FAM.getResult<DemandedBitsAnalysis>(F);
-    auto *ORE = &FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
+    // auto *AC = &FAM.getResult<AssumptionAnalysis>(F);
+    // auto *DB = &FAM.getResult<DemandedBitsAnalysis>(F);
+    // auto *ORE = &FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
 
-    bool Changed = runImpl(F, SE, TTI, TLI, AA, LI, DT, AC, DB, ORE);
+    bool Changed = runImpl(F, SE, TTI, TLI, AA, LI, DT);//, AC, DB, ORE);
     if (!Changed)
       return PreservedAnalyses::all();
 
@@ -774,7 +807,76 @@ struct MySLPPass : public PassInfoMixin<MySLPPass>
     return PA;
   }
 };
-} // end anonymous namespace
+struct MySLPLegacyPass : public FunctionPass {
+  static char ID; // Pass identification
+  MySLPLegacyPass() : FunctionPass(ID) {
+  }
+
+  // Entry point for the overall scalar-replacement pass
+  bool runOnFunction(Function &F){
+    if (skipFunction(F))
+      return false;
+    dbg_executes(errs()<<"Warning: run on function\n";);
+    auto *SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
+    auto *TTI = &getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
+    //DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+    //DL = DLP ? &DLP->getDataLayout() : nullptr;
+    auto *TLIP = getAnalysisIfAvailable<TargetLibraryInfoWrapperPass>();
+    auto *TLI = TLIP ? &TLIP->getTLI() : nullptr;
+    auto *AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
+    auto *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+    auto *DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+    dbg_executes(errs()<<"Warning: dependency"<<SE<<" "<<TTI<<" "<<TLI<<" "<<AA<<" "<<LI<<" "<<DT<<" "<<"\n";);
+    return runImpl(F, SE, TTI, TLI, AA, LI, DT);//, AC, DB, ORE);
+  }
+  // getAnalysisUsage - List passes required by this pass.  We also know it
+  // will not alter the CFG, so say so.
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    FunctionPass::getAnalysisUsage(AU);
+    AU.addRequired<ScalarEvolutionWrapperPass>();
+    AU.addRequired<AAResultsWrapperPass>();
+    AU.addRequired<TargetTransformInfoWrapperPass>();
+    AU.addRequired<LoopInfoWrapperPass>();
+    AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addPreserved<AAResultsWrapperPass>();
+    AU.addPreserved<GlobalsAAWrapperPass>();
+    AU.setPreservesCFG();
+  }
+};
+
+//} // end anonymous namespace
+
+
+
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/PassSupport.h"
+static void registerMyPass(const PassManagerBuilder &,
+                           legacy::PassManagerBase &PM) {
+    PM.add(new MySLPLegacyPass());
+}
+static RegisterStandardPasses
+    RegisterMyPass(PassManagerBuilder::EP_ModuleOptimizerEarly,
+                   registerMyPass);
+
+
+
+char MySLPLegacyPass::ID = 0;
+static RegisterPass<MySLPLegacyPass> X("slpvect-kdw",
+"SLPVectorizer (by <kunwu2> and <daweis2>)",
+false /* does not modify the CFG */,
+false /* transformation, not just analysis */);
+
+// static const char lv_name[] = "KDW SLP Vectorizer";
+
+// INITIALIZE_PASS_BEGIN(MySLPLegacyPass, SV_NAME, lv_name, false, false)
+// INITIALIZE_PASS_DEPENDENCY(LoopInfoWrapperPass)
+// INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
+// INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
+// INITIALIZE_PASS_DEPENDENCY(ScalarEvolutionWrapperPass)
+// INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
+// INITIALIZE_PASS_END(MySLPLegacyPass, SV_NAME, lv_name, false, false)
+
 
 extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
 llvmGetPassPluginInfo()

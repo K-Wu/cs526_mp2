@@ -2,6 +2,21 @@
 
 
 static const unsigned RecursionMaxDepth = 12;
+static const int ScheduleRegionSizeBudget = 100000;
+static const int MinVectorRegSizeOption = 128;
+
+// Limit the number of alias checks. The limit is chosen so that
+// it has no negative effect on the llvm benchmarks.
+static const unsigned AliasedCheckLimit = 10;
+
+// Another limit for the alias checks: The maximum distance between load/store
+// instructions where alias checks are done.
+// This limit is useful for very large basic blocks.
+static const unsigned MaxMemDepDistance = 160;
+
+/// If the ScheduleRegionSizeBudget is exhausted, we allow small scheduling
+/// regions to be handled.
+static const int MinScheduleRegionSize = 16;
 
 /// \returns the AA location that is being access by the instruction.
 static MemoryLocation getLocation(Instruction *I, AliasAnalysis *AA) {
@@ -10,6 +25,17 @@ static MemoryLocation getLocation(Instruction *I, AliasAnalysis *AA) {
   if (LoadInst *LI = dyn_cast<LoadInst>(I))
     return MemoryLocation::get(LI);
   return MemoryLocation();
+}
+
+/// \returns True if the instruction is not a volatile or atomic load/store.
+static bool isSimple(Instruction *I) {
+  if (LoadInst *LI = dyn_cast<LoadInst>(I))
+    return LI->isSimple();
+  if (StoreInst *SI = dyn_cast<StoreInst>(I))
+    return SI->isSimple();
+  if (MemIntrinsic *MI = dyn_cast<MemIntrinsic>(I))
+    return !MI->isVolatile();
+  return true;
 }
 
 /// Predicate for the element types that the SLP vectorizer supports.
