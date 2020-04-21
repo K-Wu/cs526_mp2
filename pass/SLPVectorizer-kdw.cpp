@@ -22,6 +22,8 @@
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/DemandedBits.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
+
+#include "llvm/Transforms/Vectorize/LoopVectorize.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
@@ -519,7 +521,6 @@ struct MySLPLegacyPass : public FunctionPass {
     dbg_executes(errs()<<"Warning: dependency"<<SE<<" "<<TTI<<" "<<TLI<<" "<<AA<<" "<<LI<<" "<<DT<<" "<<"\n";);
     return runImpl(F, SE, TTI, TLI, AA, LI, DT);//, AC, DB, ORE);
   }
-
   // getAnalysisUsage - List passes required by this pass.  We also know it
   // will not alter the CFG, so say so.
   void getAnalysisUsage(AnalysisUsage &AU) const override {
@@ -547,7 +548,7 @@ static void registerMyPass(const PassManagerBuilder &,
     PM.add(new MySLPLegacyPass());
 }
 static RegisterStandardPasses
-    RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,
+    RegisterMyPass(PassManagerBuilder::EP_ModuleOptimizerEarly,
                    registerMyPass);
 
 
@@ -567,9 +568,6 @@ false /* transformation, not just analysis */);
 // INITIALIZE_PASS_DEPENDENCY(ScalarEvolutionWrapperPass)
 // INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 // INITIALIZE_PASS_END(MySLPLegacyPass, SV_NAME, lv_name, false, false)
-
-
-
 
 
 extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
