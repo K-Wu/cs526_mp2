@@ -57,14 +57,11 @@ public:
   typedef SmallPtrSet<Value *, 16> ValueSet;
   typedef SmallVector<StoreInst *, 8> StoreList;
 
-
   BoUpSLP(Function *Func, ScalarEvolution *Se, const DataLayout *Dl,
           TargetTransformInfo *Tti, TargetLibraryInfo *TLi, AliasAnalysis *Aa,
           LoopInfo *Li, DominatorTree *Dt)
       : F(Func), SE(Se), DL(Dl), TTI(Tti), TLI(TLi), AA(Aa), LI(Li), DT(Dt),
-        Builder(Se->getContext()) {
-            
-        }
+        Builder(Se->getContext()) {}
 
   /// \brief Vectorize the tree that starts with the elements in \p VL.
   /// Returns the vectorized root.
@@ -99,8 +96,153 @@ public:
   /// \brief Perform LICM and CSE on the newly generated gather sequences.
   //void optimizeGatherSequence();
 
+private:
+  struct TreeEntry;
 
-   /// Contains all scheduling relevant data for an instruction.
+  /// \returns the cost of the vectorizable entry.
+  int getEntryCost(TreeEntry *E);
+
+  /// This is the recursive part of buildTree.
+  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth);
+
+  /// Vectorize a single entry in the tree.
+  Value *vectorizeTree(TreeEntry *E);
+
+  /// Vectorize a single entry in the tree, starting in \p VL.
+  Value *vectorizeTree(ArrayRef<Value *> VL);
+
+  /// \returns the pointer to the vectorized value if \p VL is already
+  /// vectorized, or NULL. They may happen in cycles.
+  Value *alreadyVectorized(ArrayRef<Value *> VL) const;
+
+  /// \brief Take the pointer operand from the Load/Store instruction.
+  /// \returns NULL if this is not a valid Load/Store instruction.
+  static Value *getPointerOperand(Value *I);
+
+  /// \brief Take the address space operand from the Load/Store instruction.
+  /// \returns -1 if this is not a valid Load/Store instruction.
+  static unsigned getAddressSpaceOperand(Value *I);
+
+  /// \returns the scalarization cost for this type. Scalarization in this
+  /// context means the creation of vectors from a group of scalars.
+  int getGatherCost(Type *Ty);
+
+  /// \returns the scalarization cost for this list of values. Assuming that
+  /// this subtree gets vectorized, we may need to extract the values from the
+  /// roots. This method calculates the cost of extracting the values.
+  int getGatherCost(ArrayRef<Value *> VL);
+
+  /// \brief Checks if it is possible to sink an instruction from
+  /// \p Src to \p Dst.
+  /// \returns the pointer to the barrier instruction if we can't sink.
+  //Value *getSinkBarrier(Instruction *Src, Instruction *Dst); //removed in rl214494
+
+  /// \returns the index of the last instruction in the BB from \p VL.
+  //int getLastIndex(ArrayRef<Value *> VL); //removed in rl214494
+
+  /// \returns the Instruction in the bundle \p VL.
+  //Instruction *getLastInstruction(ArrayRef<Value *> VL); //removed in rl214494
+
+  /// \brief Set the Builder insert point to one after the last instruction in
+  /// the bundle
+  void setInsertPointAfterBundle(ArrayRef<Value *> VL);
+
+  /// \returns a vector from a collection of scalars in \p VL.
+  Value *Gather(ArrayRef<Value *> VL, VectorType *Ty);
+
+  /// \returns whether the VectorizableTree is fully vectoriable and will
+  /// be beneficial even the tree height is tiny.
+  bool isFullyVectorizableTinyTree();
+
+  struct TreeEntry {
+    TreeEntry() : Scalars(), VectorizedValue(nullptr), 
+    NeedToGather(0) {}
+
+    /// \returns true if the scalars in VL are equal to this entry.
+    bool isSame(ArrayRef<Value *> VL) const {
+      assert(VL.size() == Scalars.size() && "Invalid size");
+      return std::equal(VL.begin(), VL.end(), Scalars.begin());
+    }
+
+    /// A vector of scalars.
+    ValueList Scalars;
+
+    /// The Scalars are vectorized into this value. It is initialized to Null.
+    Value *VectorizedValue;
+
+    /// The index in the basic block of the last scalar.
+    //int LastScalarIndex; //removed in rl214494
+
+    /// Do we need to gather this sequence ?
+    bool NeedToGather;
+  };
+    /// Create a new VectorizableTree entry.
+  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized) {
+
+    VectorizableTree.push_back(TreeEntry());
+    int idx = VectorizableTree.size() - 1;
+    TreeEntry *Last = &VectorizableTree[idx];
+    Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
+    Last->NeedToGather = !Vectorized;
+    if (Vectorized){
+      dbg_executes(errs()<<"vectorized tree entry: ";);
+    }
+    else{
+      dbg_executes(errs()<<"non-vectorized tree entry: ";);
+    }
+    for (int idx=0;idx<VL.size();idx++){
+      dbg_executes(errs()<<" , "<<*(VL[idx]););
+    }
+    dbg_executes(errs()<<"\n";);
+      
+    if (Vectorized) {
+      for (int i = 0, e = VL.size(); i != e; ++i) {
+        assert(!ScalarToTreeEntry.count(VL[i]) && "Scalar already in tree!");
+        ScalarToTreeEntry[VL[i]] = idx;
+      }
+    } else {
+      MustGather.insert(VL.begin(), VL.end());
+    }
+    return Last;
+  }
+
+  /// -- Vectorization State --
+  /// Holds all of the tree entries.
+  std::vector<TreeEntry> VectorizableTree;
+
+  /// Maps a specific scalar to its tree entry.
+  SmallDenseMap<Value*, int> ScalarToTreeEntry;
+
+  /// A list of scalars that we found that we need to keep as scalars.
+  ValueSet MustGather;
+
+  /// This POD struct describes one external user in the vectorized tree.
+  struct ExternalUser {
+    ExternalUser (Value *S, llvm::User *U, int L) :
+      Scalar(S), User(U), Lane(L){};
+    // Which scalar in our function.
+    Value *Scalar;
+    // Which user that uses the scalar.
+    llvm::User *User;
+    // Which lane does the scalar belong to.
+    int Lane;
+  };
+  typedef SmallVector<ExternalUser, 16> UserList;
+
+  /// A list of values that need to extracted out of the tree.
+  /// This list holds pairs of (Internal Scalar : External User).
+  UserList ExternalUses;
+
+  /// A list of instructions to ignore while sinking
+  /// memory instructions. This map must be reset between runs of getCost.
+  ValueSet MemBarrierIgnoreList;
+
+  /// Holds all of the instructions that we gathered.
+  //SetVector<Instruction *> GatherSeq; //don't need as we don't optimize gather seq
+  /// A list of blocks that we are going to CSE.
+  //SetVector<BasicBlock *> CSEBlocks; //don't need as we don't optimize gather seq
+  
+ /// Contains all scheduling relevant data for an instruction.
   /// A ScheduleData either represents a single instruction or a member of an
   /// instruction bundle (= a group of instructions which is combined into a
   /// vector instruction).
@@ -228,9 +370,16 @@ public:
     /// True if this instruction is scheduled (or considered as scheduled in the
     /// dry-run).
     bool IsScheduled;
+  
   };
 
-  /// Contains all scheduling data for a basic block.
+friend inline raw_ostream &operator<<(raw_ostream &os,
+                                        const BoUpSLP::ScheduleData &SD) {
+    SD.dump(os);
+    return os;
+  }
+
+/// Contains all scheduling data for a basic block.
   ///
   struct BlockScheduling {
 
@@ -238,8 +387,6 @@ public:
         : BB(BB), ChunkSize(BB->size()), ChunkPos(ChunkSize),
           ScheduleStart(nullptr), ScheduleEnd(nullptr),
           FirstLoadStoreInRegion(nullptr), LastLoadStoreInRegion(nullptr),
-          ScheduleRegionSize(0),
-          ScheduleRegionSizeLimit(ScheduleRegionSizeBudget),
           // Make sure that the initial SchedulingRegionID is greater than the
           // initial SchedulingRegionID in ScheduleData (which is 0).
           SchedulingRegionID(1) {}
@@ -250,13 +397,6 @@ public:
       ScheduleEnd = nullptr;
       FirstLoadStoreInRegion = nullptr;
       LastLoadStoreInRegion = nullptr;
-
-      // Reduce the maximum schedule region size by the size of the
-      // previous scheduling run.
-      ScheduleRegionSizeLimit -= ScheduleRegionSize;
-      if (ScheduleRegionSizeLimit < MinScheduleRegionSize)
-        ScheduleRegionSizeLimit = MinScheduleRegionSize;
-      ScheduleRegionSize = 0;
 
       // Make a new scheduling region, i.e. all existing ScheduleData is not
       // in the new region yet.
@@ -328,14 +468,13 @@ public:
     /// Checks if a bundle of instructions can be scheduled, i.e. has no
     /// cyclic dependencies. This is only a dry-run, no instructions are
     /// actually moved at this stage.
-    bool tryScheduleBundle(ArrayRef<Value *> VL, BoUpSLP *SLP);
+    bool tryScheduleBundle(ArrayRef<Value *> VL, AliasAnalysis *AA);
 
     /// Un-bundles a group of instructions.
     void cancelScheduling(ArrayRef<Value *> VL);
 
     /// Extends the scheduling region so that V is inside the region.
-    /// \returns true if the region size is within the limit.
-    bool extendSchedulingRegion(Value *V);
+    void extendSchedulingRegion(Value *V);
 
     /// Initialize the ScheduleData structures for new instructions in the
     /// scheduling region.
@@ -346,7 +485,7 @@ public:
     /// Updates the dependency information of a bundle and of all instructions/
     /// bundles which depend on the original bundle.
     void calculateDependencies(ScheduleData *SD, bool InsertInReadyList,
-                               BoUpSLP *SLP);
+                               AliasAnalysis *AA);
 
     /// Sets all instruction in the scheduling region to un-scheduled.
     void resetSchedule();
@@ -389,211 +528,17 @@ public:
     /// (can be null).
     ScheduleData *LastLoadStoreInRegion;
 
-    /// The current size of the scheduling region.
-    int ScheduleRegionSize;
-
-    /// The maximum size allowed for the scheduling region.
-    int ScheduleRegionSizeLimit;
-
     /// The ID of the scheduling region. For a new vectorization iteration this
     /// is incremented which "removes" all ScheduleData from the region.
     int SchedulingRegionID;
   };
-
-
-private:
-  struct TreeEntry;
-
-  /// \returns the cost of the vectorizable entry.
-  int getEntryCost(TreeEntry *E);
-
-  /// This is the recursive part of buildTree.
-  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth);
-
-  /// Vectorize a single entry in the tree.
-  Value *vectorizeTree(TreeEntry *E);
-
-  /// Vectorize a single entry in the tree, starting in \p VL.
-  Value *vectorizeTree(ArrayRef<Value *> VL);
-
-  /// \returns the pointer to the vectorized value if \p VL is already
-  /// vectorized, or NULL. They may happen in cycles.
-  Value *alreadyVectorized(ArrayRef<Value *> VL) const;
-
-  /// \brief Take the pointer operand from the Load/Store instruction.
-  /// \returns NULL if this is not a valid Load/Store instruction.
-  static Value *getPointerOperand(Value *I);
-
-  /// \brief Take the address space operand from the Load/Store instruction.
-  /// \returns -1 if this is not a valid Load/Store instruction.
-  static unsigned getAddressSpaceOperand(Value *I);
-
-  /// \returns the scalarization cost for this type. Scalarization in this
-  /// context means the creation of vectors from a group of scalars.
-  int getGatherCost(Type *Ty);
-
-  /// \returns the scalarization cost for this list of values. Assuming that
-  /// this subtree gets vectorized, we may need to extract the values from the
-  /// roots. This method calculates the cost of extracting the values.
-  int getGatherCost(ArrayRef<Value *> VL);
-
-  /// \brief Checks if it is possible to sink an instruction from
-  /// \p Src to \p Dst.
-  /// \returns the pointer to the barrier instruction if we can't sink.
-  //Value *getSinkBarrier(Instruction *Src, Instruction *Dst); //removed in rl214494
-
-  /// \returns the index of the last instruction in the BB from \p VL.
-  //int getLastIndex(ArrayRef<Value *> VL); //removed in rl214494
-
-  /// \returns the Instruction in the bundle \p VL.
-  //Instruction *getLastInstruction(ArrayRef<Value *> VL); //removed in rl214494
-
-  /// \brief Set the Builder insert point to one after the last instruction in
-  /// the bundle
-  void setInsertPointAfterBundle(ArrayRef<Value *> VL);
-
-  /// \returns a vector from a collection of scalars in \p VL.
-  Value *Gather(ArrayRef<Value *> VL, VectorType *Ty);
-
-  /// \returns whether the VectorizableTree is fully vectoriable and will
-  /// be beneficial even the tree height is tiny.
-  bool isFullyVectorizableTinyTree();
-
-  struct TreeEntry {
-    TreeEntry() : Scalars(), VectorizedValue(nullptr), 
-    NeedToGather(0) {}
-
-    /// \returns true if the scalars in VL are equal to this entry.
-    bool isSame(ArrayRef<Value *> VL) const {
-      assert(VL.size() == Scalars.size() && "Invalid size");
-      return std::equal(VL.begin(), VL.end(), Scalars.begin());
-    }
-
-    /// A vector of scalars.
-    ValueList Scalars;
-
-    /// The Scalars are vectorized into this value. It is initialized to Null.
-    Value *VectorizedValue;
-
-    /// The index in the basic block of the last scalar.
-    //int LastScalarIndex; //removed in rl214494
-
-    /// Do we need to gather this sequence ?
-    bool NeedToGather;
-  };
-    /// Create a new VectorizableTree entry.
-  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized) {
-
-    VectorizableTree.push_back(TreeEntry());
-    int idx = VectorizableTree.size() - 1;
-    TreeEntry *Last = &VectorizableTree[idx];
-    Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
-    Last->NeedToGather = !Vectorized;
-    if (Vectorized){
-      dbg_executes(errs()<<"vectorized tree entry: ";);
-    }
-    else{
-      dbg_executes(errs()<<"non-vectorized tree entry: ";);
-    }
-    for (int idx=0;idx<VL.size();idx++){
-      dbg_executes(errs()<<" , "<<*(VL[idx]););
-    }
-    dbg_executes(errs()<<"\n";);
-      
-    if (Vectorized) {
-      for (int i = 0, e = VL.size(); i != e; ++i) {
-        assert(!ScalarToTreeEntry.count(VL[i]) && "Scalar already in tree!");
-        ScalarToTreeEntry[VL[i]] = idx;
-      }
-    } else {
-      MustGather.insert(VL.begin(), VL.end());
-    }
-    return Last;
-  }
-
-
-  /// Checks if two instructions may access the same memory.
-  ///
-  /// \p Loc1 is the location of \p Inst1. It is passed explicitly because it
-  /// is invariant in the calling loop.
-  bool isAliased(const MemoryLocation &Loc1, Instruction *Inst1,
-                 Instruction *Inst2) {
-
-    // First check if the result is already in the cache.
-    AliasCacheKey key = std::make_pair(Inst1, Inst2);
-    Optional<bool> &result = AliasCache[key];
-    if (result.hasValue()) {
-      return result.getValue();
-    }
-    MemoryLocation Loc2 = getLocation(Inst2, AA);
-    bool aliased = true;
-    if (Loc1.Ptr && Loc2.Ptr && isSimple(Inst1) && isSimple(Inst2)) {
-      // Do the alias check.
-      dbg_executes(errs()<<"AA isaliased "<<Loc1.Ptr<<" , "<<Loc2.Ptr<<" , "<<AA->alias(Loc1, Loc2)<<"\n";);
-      aliased = AA->alias(Loc1, Loc2);
-    }
-    // Store the result in the cache.
-    result = aliased;
-    return aliased;
-  }
-
-  using AliasCacheKey = std::pair<Instruction *, Instruction *>;
-  /// Cache for alias results.
-  /// TODO: consider moving this to the AliasAnalysis itself.
-  DenseMap<AliasCacheKey, Optional<bool>> AliasCache;
-
-  /// -- Vectorization State --
-  /// Holds all of the tree entries.
-  std::vector<TreeEntry> VectorizableTree;
-
-  /// Maps a specific scalar to its tree entry.
-  SmallDenseMap<Value*, int> ScalarToTreeEntry;
-
-  /// A list of scalars that we found that we need to keep as scalars.
-  ValueSet MustGather;
-
-  /// This POD struct describes one external user in the vectorized tree.
-  struct ExternalUser {
-    ExternalUser (Value *S, llvm::User *U, int L) :
-      Scalar(S), User(U), Lane(L){};
-    // Which scalar in our function.
-    Value *Scalar;
-    // Which user that uses the scalar.
-    llvm::User *User;
-    // Which lane does the scalar belong to.
-    int Lane;
-  };
-  typedef SmallVector<ExternalUser, 16> UserList;
-
-  /// A list of values that need to extracted out of the tree.
-  /// This list holds pairs of (Internal Scalar : External User).
-  UserList ExternalUses;
-
-  /// A list of instructions to ignore while sinking
-  /// memory instructions. This map must be reset between runs of getCost.
-  ValueSet MemBarrierIgnoreList;
-
-  /// Holds all of the instructions that we gathered.
-  //SetVector<Instruction *> GatherSeq; //don't need as we don't optimize gather seq
-  /// A list of blocks that we are going to CSE.
-  //SetVector<BasicBlock *> CSEBlocks; //don't need as we don't optimize gather seq
-  
- 
-
-friend inline raw_ostream &operator<<(raw_ostream &os,
-                                        const BoUpSLP::ScheduleData &SD) {
-    SD.dump(os);
-    return os;
-  }
-
-    
 
   /// Attaches the BlockScheduling structures to basic blocks.
   DenseMap<BasicBlock *, std::unique_ptr<BlockScheduling>> BlocksSchedules;
 
   /// Performs the "real" scheduling. Done before vectorization is actually
   /// performed in a basic block.
-  void scheduleBlock(BlockScheduling *BS);
+  void scheduleBlock(BasicBlock *BB);
 
   /// List of users to ignore during scheduling and that don't need extracting.
   ArrayRef<Value *> UserIgnoreList;
@@ -672,10 +617,10 @@ bool BoUpSLP::isConsecutiveAccess(Value *A, Value *B) {
 
 
 
-// Groups the instructions to a bundle (which is then a single scheduling entity)
+  // Groups the instructions to a bundle (which is then a single scheduling entity)
 // and schedules instructions until the bundle gets ready.
 bool BoUpSLP::BlockScheduling::tryScheduleBundle(ArrayRef<Value *> VL,
-                                                 BoUpSLP *SLP) {
+                                                 AliasAnalysis *AA) {
   if (isa<PHINode>(VL[0]))
     return true;
 
@@ -684,19 +629,9 @@ bool BoUpSLP::BlockScheduling::tryScheduleBundle(ArrayRef<Value *> VL,
   ScheduleData *PrevInBundle = nullptr;
   ScheduleData *Bundle = nullptr;
   bool ReSchedule = false;
-  dbg_executes(errs() << "SLP:  bundle: ";);
-  for (int idx=0;idx<VL.size();idx++) {
-  dbg_executes(errs()<< *VL[0] << " , ";);
-    }
-  dbg_executes(errs()<<"\n";);
-  // Make sure that the scheduling region contains all
-  // instructions of the bundle.
+  LLVM_DEBUG(dbgs() << "SLP:  bundle: " << *VL[0] << "\n");
   for (Value *V : VL) {
-    if (!extendSchedulingRegion(V))
-      return false;
-  }
-
-  for (Value *V : VL) {
+    extendSchedulingRegion(V);
     ScheduleData *BundleMember = getScheduleData(V);
     assert(BundleMember &&
            "no ScheduleData for bundle member (maybe not in same basic block)");
@@ -704,7 +639,8 @@ bool BoUpSLP::BlockScheduling::tryScheduleBundle(ArrayRef<Value *> VL,
       // A bundle member was scheduled as single instruction before and now
       // needs to be scheduled as part of the bundle. We just get rid of the
       // existing schedule.
-      dbg_executes(errs() << "SLP:  reset schedule because " << *BundleMember<< " was already scheduled\n";);
+      LLVM_DEBUG(dbgs() << "SLP:  reset schedule because " << *BundleMember
+                   << " was already scheduled\n");
       ReSchedule = true;
     }
     assert(BundleMember->isSchedulingEntity() &&
@@ -738,32 +674,25 @@ bool BoUpSLP::BlockScheduling::tryScheduleBundle(ArrayRef<Value *> VL,
     initialFillReadyList(ReadyInsts);
   }
 
-  dbg_executes(errs() << "SLP: try schedule bundle " << *Bundle << " in block "
-               << BB->getName() << "\n";);
+  //LLVM_DEBUG(dbgs() << "SLP: try schedule bundle " << *Bundle << " in block "
+  //             << BB->getName() << "\n");
 
-  calculateDependencies(Bundle, true, SLP);
+  calculateDependencies(Bundle, true, AA);
 
   // Now try to schedule the new bundle. As soon as the bundle is "ready" it
   // means that there are no cyclic dependencies and we can schedule it.
   // Note that's important that we don't "schedule" the bundle yet (see
   // cancelScheduling).
-  dbg_executes(errs() <<"bundle is ready: "<< Bundle->isReady() <<"\n";);
   while (!Bundle->isReady() && !ReadyInsts.empty()) {
 
     ScheduleData *pickedSD = ReadyInsts.back();
     ReadyInsts.pop_back();
-    //dbg_executes(errs() <<"isSchedulingEntity: "<< pickedSD->isSchedulingEntity()<<"isReady: "<< pickedSD->isReady()<<"\n";);
+
     if (pickedSD->isSchedulingEntity() && pickedSD->isReady()) {
-        //dbg_executes(errs() <<"in the schedule loop\n";);
       schedule(pickedSD, ReadyInsts);
     }
   }
-  if (!Bundle->isReady()) {
-      dbg_executes(errs() <<"UnscheduledDepsInBundle: "<<Bundle->UnscheduledDepsInBundle<<"\n";);
-    cancelScheduling(VL);
-    return false;
-  }
-  return true;
+  return Bundle->isReady();
 }
 
 void BoUpSLP::BlockScheduling::cancelScheduling(ArrayRef<Value *> VL) {
@@ -792,9 +721,9 @@ void BoUpSLP::BlockScheduling::cancelScheduling(ArrayRef<Value *> VL) {
   }
 }
 
-bool BoUpSLP::BlockScheduling::extendSchedulingRegion(Value *V) {
+void BoUpSLP::BlockScheduling::extendSchedulingRegion(Value *V) {
   if (getScheduleData(V))
-    return true;
+    return;
   Instruction *I = dyn_cast<Instruction>(V);
   assert(I && "bundle member must be an instruction");
   assert(!isa<PHINode>(I) && "phi nodes don't need to be scheduled");
@@ -805,27 +734,21 @@ bool BoUpSLP::BlockScheduling::extendSchedulingRegion(Value *V) {
     ScheduleEnd = I->getNextNode();
     assert(ScheduleEnd && "tried to vectorize a TerminatorInst?");
     LLVM_DEBUG(dbgs() << "SLP:  initialize schedule region to " << *I << "\n");
-    return true;
+    return;
   }
   // Search up and down at the same time, because we don't know if the new
   // instruction is above or below the existing scheduling region.
-  BasicBlock::reverse_iterator UpIter =
-      ++ScheduleStart->getIterator().getReverse();
+  BasicBlock::reverse_iterator UpIter(ScheduleStart);
   BasicBlock::reverse_iterator UpperEnd = BB->rend();
-  BasicBlock::iterator DownIter = ScheduleEnd->getIterator();
+  BasicBlock::iterator DownIter(ScheduleEnd);
   BasicBlock::iterator LowerEnd = BB->end();
   for (;;) {
-    if (++ScheduleRegionSize > ScheduleRegionSizeLimit) {
-      LLVM_DEBUG(dbgs() << "SLP:  exceeded schedule region size limit\n");
-      return false;
-    }
-
     if (UpIter != UpperEnd) {
       if (&*UpIter == I) {
         initScheduleData(I, ScheduleStart, nullptr, FirstLoadStoreInRegion);
         ScheduleStart = I;
         LLVM_DEBUG(dbgs() << "SLP:  extend schedule region start to " << *I << "\n");
-        return true;
+        return;
       }
       UpIter++;
     }
@@ -836,14 +759,13 @@ bool BoUpSLP::BlockScheduling::extendSchedulingRegion(Value *V) {
         ScheduleEnd = I->getNextNode();
         assert(ScheduleEnd && "tried to vectorize a TerminatorInst?");
         LLVM_DEBUG(dbgs() << "SLP:  extend schedule region end to " << *I << "\n");
-        return true;
+        return;
       }
       DownIter++;
     }
     assert((UpIter != UpperEnd || DownIter != LowerEnd) &&
            "instruction not found in block");
   }
-  return true;
 }
 
 void BoUpSLP::BlockScheduling::initScheduleData(Instruction *FromI,
@@ -886,10 +808,10 @@ void BoUpSLP::BlockScheduling::initScheduleData(Instruction *FromI,
   }
 }
 
+
 void BoUpSLP::BlockScheduling::calculateDependencies(ScheduleData *SD,
                                                      bool InsertInReadyList,
-                                                     BoUpSLP *SLP) {
-   dbg_executes(errs() << "MYSLP in calculate Dependancies" << *SD<<"\n";);                                                      
+                                                     AliasAnalysis *AA) {
   assert(SD->isSchedulingEntity());
 
   SmallVector<ScheduleData *, 10> WorkList;
@@ -903,7 +825,8 @@ void BoUpSLP::BlockScheduling::calculateDependencies(ScheduleData *SD,
     while (BundleMember) {
       assert(isInSchedulingRegion(BundleMember));
       if (!BundleMember->hasValidDependencies()) {
-        dbg_executes(errs() << "SLP:       update deps of " << *BundleMember << "\n";);
+
+        LLVM_DEBUG(dbgs() << "SLP:       update deps of " << *BundleMember << "\n");
         BundleMember->Dependencies = 0;
         BundleMember->resetUnscheduledDeps();
 
@@ -918,14 +841,13 @@ void BoUpSLP::BlockScheduling::calculateDependencies(ScheduleData *SD,
                 BundleMember->incrementUnscheduledDeps(1);
               }
               if (!DestBundle->hasValidDependencies()) {
-                  dbg_executes(errs() << "MYSLP Worklist pushback1 " << *DestBundle<<"\n";);    
                 WorkList.push_back(DestBundle);
               }
             }
           } else {
             // I'm not sure if this can ever happen. But we need to be safe.
-            // This lets the instruction/bundle never be scheduled and
-            // eventually disable vectorization.
+            // This lets the instruction/bundle never be scheduled and eventally
+            // disable vectorization.
             BundleMember->Dependencies++;
             BundleMember->incrementUnscheduledDeps(1);
           }
@@ -933,66 +855,27 @@ void BoUpSLP::BlockScheduling::calculateDependencies(ScheduleData *SD,
 
         // Handle the memory dependencies.
         ScheduleData *DepDest = BundleMember->NextLoadStore;
-        
         if (DepDest) {
-            dbg_executes(errs() << "MYSLP MemDEP in calculate Dependancies" << *DepDest<<"\n";);     
-          Instruction *SrcInst = BundleMember->Inst;
-          MemoryLocation SrcLoc = getLocation(SrcInst, SLP->AA);
+          MemoryLocation SrcLoc = getLocation(BundleMember->Inst, AA);
           bool SrcMayWrite = BundleMember->Inst->mayWriteToMemory();
-          unsigned numAliased = 0;
-          unsigned DistToSrc = 1;
 
           while (DepDest) {
             assert(isInSchedulingRegion(DepDest));
-
-            // We have two limits to reduce the complexity:
-            // 1) AliasedCheckLimit: It's a small limit to reduce calls to
-            //    SLP->isAliased (which is the expensive part in this loop).
-            // 2) MaxMemDepDistance: It's for very large blocks and it aborts
-            //    the whole loop (even if the loop is fast, it's quadratic).
-            //    It's important for the loop break condition (see below) to
-            //    check this limit even between two read-only instructions.
-            dbg_executes(errs() << "disttosrc ("<<DistToSrc<< ") mayWriteToMemory ("<<DepDest->Inst->mayWriteToMemory()<< ") numAliased ("<<numAliased<< ") isAliased ("<<SLP->isAliased(SrcLoc, SrcInst, DepDest->Inst)<<"\n";);
-            if (DistToSrc >= MaxMemDepDistance ||
-                    ((SrcMayWrite || DepDest->Inst->mayWriteToMemory()) &&
-                     (numAliased >= AliasedCheckLimit ||
-                      SLP->isAliased(SrcLoc, SrcInst, DepDest->Inst)))) {
-
-              // We increment the counter only if the locations are aliased
-              // (instead of counting all alias checks). This gives a better
-              // balance between reduced runtime and accurate dependencies.
-              numAliased++;
-
-              DepDest->MemoryDependencies.push_back(BundleMember);
-              BundleMember->Dependencies++;
-              ScheduleData *DestBundle = DepDest->FirstInBundle;
-              if (!DestBundle->IsScheduled) {
-                BundleMember->incrementUnscheduledDeps(1);
-              }
-              dbg_executes(errs() << "MYSLP before Worklist pushback ";); 
-              if (!DestBundle->hasValidDependencies()) {
-                  dbg_executes(errs() << "MYSLP Worklist pushback " << *DestBundle<<"\n";);    
-                WorkList.push_back(DestBundle);
+            if (SrcMayWrite || DepDest->Inst->mayWriteToMemory()) {
+              MemoryLocation DstLoc = getLocation(DepDest->Inst, AA);
+              if (!SrcLoc.Ptr || !DstLoc.Ptr || AA->alias(SrcLoc, DstLoc)) {
+                DepDest->MemoryDependencies.push_back(BundleMember);
+                BundleMember->Dependencies++;
+                ScheduleData *DestBundle = DepDest->FirstInBundle;
+                if (!DestBundle->IsScheduled) {
+                  BundleMember->incrementUnscheduledDeps(1);
+                }
+                if (!DestBundle->hasValidDependencies()) {
+                  WorkList.push_back(DestBundle);
+                }
               }
             }
             DepDest = DepDest->NextLoadStore;
-
-            // Example, explaining the loop break condition: Let's assume our
-            // starting instruction is i0 and MaxMemDepDistance = 3.
-            //
-            //                      +--------v--v--v
-            //             i0,i1,i2,i3,i4,i5,i6,i7,i8
-            //             +--------^--^--^
-            //
-            // MaxMemDepDistance let us stop alias-checking at i3 and we add
-            // dependencies from i0 to i3,i4,.. (even if they are not aliased).
-            // Previously we already added dependencies from i3 to i6,i7,i8
-            // (because of MaxMemDepDistance). As we added a dependency from
-            // i0 to i3, we have transitive dependencies from i0 to i6,i7,i8
-            // and we can abort this loop at i6.
-            if (DistToSrc >= 2 * MaxMemDepDistance)
-                break;
-            DistToSrc++;
           }
         }
       }
@@ -1000,7 +883,7 @@ void BoUpSLP::BlockScheduling::calculateDependencies(ScheduleData *SD,
     }
     if (InsertInReadyList && SD->isReady()) {
       ReadyInsts.push_back(SD);
-      dbg_executes(errs() << "SLP:     gets ready on update: " << *SD->Inst << "\n";);
+      LLVM_DEBUG(dbgs() << "SLP:     gets ready on update: " << *SD->Inst << "\n");
     }
   }
 }
@@ -1017,12 +900,12 @@ void BoUpSLP::BlockScheduling::resetSchedule() {
   ReadyInsts.clear();
 }
 
-void BoUpSLP::scheduleBlock(BlockScheduling *BS) {
+void BoUpSLP::scheduleBlock(BasicBlock *BB) {
+  LLVM_DEBUG(dbgs() << "SLP: schedule block " << BB->getName() << "\n");
 
-  if (!BS->ScheduleStart)
+  BlockScheduling *BS = BlocksSchedules[BB].get();
+  if (!BS || !BS->ScheduleStart)
     return;
-
-  LLVM_DEBUG(dbgs() << "SLP: schedule block " << BS->BB->getName() << "\n");
 
   BS->resetSchedule();
 
@@ -1036,7 +919,7 @@ void BoUpSLP::scheduleBlock(BlockScheduling *BS) {
   };
   std::set<ScheduleData *, ScheduleDataCompare> ReadyInsts;
 
-  // Ensure that all dependency data is updated and fill the ready-list with
+  // Ensure that all depencency data is updated and fill the ready-list with
   // initial instructions.
   int Idx = 0;
   int NumToSchedule = 0;
@@ -1048,7 +931,7 @@ void BoUpSLP::scheduleBlock(BlockScheduling *BS) {
         "scheduler and vectorizer have different opinion on what is a bundle");
     SD->FirstInBundle->SchedulingPriority = Idx++;
     if (SD->isSchedulingEntity()) {
-      BS->calculateDependencies(SD, false, this);
+      BS->calculateDependencies(SD, false, AA);
       NumToSchedule++;
     }
   }
@@ -1067,9 +950,8 @@ void BoUpSLP::scheduleBlock(BlockScheduling *BS) {
     while (BundleMember) {
       Instruction *pickedInst = BundleMember->Inst;
       if (LastScheduledInst->getNextNode() != pickedInst) {
-        BS->BB->getInstList().remove(pickedInst);
-        BS->BB->getInstList().insert(LastScheduledInst->getIterator(),
-                                     pickedInst);
+        BB->getInstList().remove(pickedInst);
+        BB->getInstList().insert(LastScheduledInst->getIterator(), pickedInst);
       }
       LastScheduledInst = pickedInst;
       BundleMember = BundleMember->NextInBundle;
