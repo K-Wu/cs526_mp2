@@ -794,7 +794,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
 // Vectorize the tree from root recursively.
 Value *BoUpSLP::vectorizeTree()
 {
-  // All blocks must be scheduled before any instructions are inserted.
+  // Schedule all blocks
   for (auto &BSIter : BlocksSchedules)
   {
     scheduleBlock(BSIter.second.get());
@@ -805,88 +805,73 @@ Value *BoUpSLP::vectorizeTree()
   do_vectorizeTree_rec(&VectorizableTree[0]);
 
 
-  // Step 2, we need to ExtractElement from the designated lane of the vectorized value for uses external to the tree.
+  // Step 2, we need to ExtractElement from the designated lane of the
+  // vectorized value for uses external to the tree, since those scalars are
+  // used in some new InsertElement instructions.
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
        it != e; ++it)
   {
-    Value *Scalar = it->Scalar;
-    llvm::User *User = it->User;
+    Value *scalar = it->Scalar;
+    llvm::User *U = it->User;
 
-    // Skip users that we already RAUW. This happens when one instruction
-    // has multiple uses of the same value.
-    if (std::find(Scalar->user_begin(), Scalar->user_end(), User) ==
+    // Skip users that we already handled.
+    if (std::find(scalar->user_begin(), scalar->user_end(), U) ==
         Scalar->user_end())
       continue;
-    assert(ScalarToTreeEntry.count(Scalar) && "Invalid scalar");
 
-    int Idx = ScalarToTreeEntry[Scalar];
-    TreeEntry *E = &VectorizableTree[Idx];
-    assert(!E->NeedToGather && "Extracting from a gather list");
+    // found the scalar in the tree and the corresponding vector and the position
+    TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+    Value *vector = E->VectorizedValue;
+    Value *pos = Builder.getInt32(it->Lane);
 
-    Value *Vec = E->VectorizedValue;
-    assert(Vec && "Can't find vectorizable value");
-
-    Value *Lane = Builder.getInt32(it->Lane);
-    // Generate extracts for out-of-tree users.
-    // Find the insertion point for the extractelement lane.
-    if (isa<Instruction>(Vec))
+    // insert an ExtractElement instruction for this pair of scalar and use
+    if (isa<Instruction>(vector))
     {
-      if (PHINode *PH = dyn_cast<PHINode>(User))
-      {
-        for (int i = 0, e = PH->getNumIncomingValues(); i != e; ++i)
-        {
-          if (PH->getIncomingValue(i) == Scalar)
-          {
+      if (PHINode *PH = dyn_cast<PHINode>(U)) {
+        // used in a PHI node
+        // found the incoming block corresponding to this scalar and insert after this block
+        for (int i=0;i<PH->getNumIncomingValues();i++) {
+          if (scalar == PH->getIncomingValue(i)) {
             Builder.SetInsertPoint(PH->getIncomingBlock(i)->getTerminator());
-            Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-            PH->setOperand(i, Ex);
+            // create an ExtractElement instruction
+            Value *I = Builder.CreateExtractElement(vector, pos);
+            // replace use
+            PH->setOperand(i, I);
           }
         }
+      } else {
+        Builder.SetInsertPoint(cast<Instruction>(U));
+        // create an ExtractElement instruction
+        Value *I = Builder.CreateExtractElement(vector, pos);
+        // replace use
+        U->replaceUsesOfWith(scalar, I);
       }
-      else
-      {
-        Builder.SetInsertPoint(cast<Instruction>(User));
-        Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-        User->replaceUsesOfWith(Scalar, Ex);
-      }
-    }
-    else
-    {
+    } else {
       Builder.SetInsertPoint(&F->getEntryBlock().front());
-      Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-      User->replaceUsesOfWith(Scalar, Ex);
+      // create an ExtractElement instruction
+      Value *I = Builder.CreateExtractElement(vector, pos);
+      // replace use
+      U->replaceUsesOfWith(scalar, I);
     }
-
   }
 
   // Step 3, replace all the uses of scalars with undef such that these uses will be removed
-  for (int EIdx = 0, EE = VectorizableTree.size(); EIdx < EE; ++EIdx)
-  {
-    TreeEntry *Entry = &VectorizableTree[EIdx];
-
-    // For each lane:
-    for (int Lane = 0, LE = Entry->Scalars.size(); Lane != LE; ++Lane)
-    {
-      Value *Scalar = Entry->Scalars[Lane];
+  for (int i=0;i<VectorizableTree.size();i++) {
+    TreeEntry *E = &VectorizableTree[i];
+    for (int j=0;j<E->Scalars.size();j++) {
+      Value *scalar = E->Scalars[j];
       // Since the users of gathered values have already been replaced with
       // ExtractElement instructions, we should skip those cases.
       if (Entry->NeedToGather)
         continue;
-
-      assert(Entry->VectorizedValue && "Can't find vectorizable value");
-
-      Type *Ty = Scalar->getType();
-      if (!Ty->isVoidTy())
-      {
-        Value *Undef = UndefValue::get(Ty);
-        Scalar->replaceAllUsesWith(Undef);
+      // otherwise, replace all uses of this scalar with undef
+      // such that this scalar will be standaloned from the IR and removed by DCE
+      if (!scalar->getType()->isVoidTy()) {
+        scalar->replaceAllUsesWith(UndefValue::get(scalar->getType()));
       }
       cast<Instruction>(Scalar)->eraseFromParent();
     }
   }
-
-  // for (auto &BN : BlocksNumbers)
-  //   BN.second.forget();
 
   Builder.ClearInsertionPoint();
 
