@@ -504,6 +504,7 @@ Value *BoUpSLP::vectorizeTree_rec(ArrayRef<Value *> VL)
 // Currently, this function only handles Binary, Load/Store, and GEP OPs.
 Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
 {
+  IRBuilder<>::InsertPointGuard Guard(Builder);
   // Case 1, check if this entry has been vectorized.
   // If so, return directly.
   if (E->VectorizedValue)
