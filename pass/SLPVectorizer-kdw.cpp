@@ -152,7 +152,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
   }
  auto& BSRef=BlocksSchedules[BB];
  auto& BS = *BSRef.get();
- 
+
  dbg_executes(errs()<<"WARNING: BS "<<BS.BB<<"\n";);
   if(!BS.tryScheduleBundle(VL,this)){
     //BS.cancelScheduling(VL);
@@ -387,38 +387,45 @@ void BoUpSLP::setInsertPointAfterBundle(ArrayRef<Value *> VL) {
   Builder.SetCurrentDebugLocation(VL0->getDebugLoc());
 }
 
-// gather a list of values into a vector
-// If a value is in ScalarToTreeEntry, mark it with ExternalUse such that
-// it will be extract later.
 Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty) {
-  Value *Vec = UndefValue::get(Ty);
-  // Generate the 'InsertElement' instruction.
-  for (unsigned i = 0; i < Ty->getNumElements(); ++i) {
-    Vec = Builder.CreateInsertElement(Vec, VL[i], Builder.getInt32(i));
-    if (Instruction *Insrt = dyn_cast<Instruction>(Vec)) {
-      GatherSeq.insert(Insrt);
-      CSEBlocks.insert(Insrt->getParent());
+  // This function gathers a list of scalars into a vector by inserting some
+  // InsertElement instructions. If a scalar is in the tree, it will be removed
+  // finally. However, the new InsertElement instruction is a user of this scalar, so we need to add
+  // an ExtractElement instruction before this InsertElement instruction.
+  // To do this, we put create a record in ExternalUses
+  // such that it will be handled later.
 
-      // Add to our 'need-to-extract' list.
-      if (ScalarToTreeEntry.count(VL[i])) {
-        int Idx = ScalarToTreeEntry[VL[i]];
-        TreeEntry *E = &VectorizableTree[Idx];
-        // Find which lane we need to extract.
-        int FoundLane = -1;
-        for (unsigned Lane = 0, LE = VL.size(); Lane != LE; ++Lane) {
-          // Is this the lane of the scalar that we are looking for ?
-          if (E->Scalars[Lane] == VL[i]) {
-            FoundLane = Lane;
-            break;
-          }
+  // Step 1, assemble the new vector by inserting InsertElement instructions
+  // First create a new empty vector.
+  Value *new_vector = UndefValue::get(Ty);
+  // Then, for each scalar in VL, create an InsertElement instruction.
+  for (int i=0; i<VL->size(); i++) {
+    auto scalar = VL[i];
+    new_vector = Builder.CreateInsertElement(new_vector, scalar, Builder.getInt32(i));
+    Instruction *I = dyn_cast<Instruction>(new_vector);
+
+    // TODO:
+    GatherSeq.insert(I);
+    CSEBlocks.insert(I->getParent());
+  }
+
+  // Step 2, for each scalar in VL, check if it is in the tree. If so, put it into ExternalUses.
+  for (int i=0; i<VL->size(); i++) {
+    auto scalar = VL[i];
+    if (ScalarToTreeEntry.count(scalar)) {
+      // Found the scalar in the tree.
+      // Find the corresponding entry of the tree.
+      TreeEntry* E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+      // TODO: put E directly into ExternalUser
+      // Next, find the position of the scalar in E.
+      for (int pos = 0; pos<E.Scalars.size(); pos++) {
+        if (E.Scalars[pos] == scalar) {
+          ExternalUse.push_back(ExternalUser(scalar, I, pos));
+          break;
         }
-        assert(FoundLane >= 0 && "Could not find the correct lane");
-        ExternalUses.push_back(ExternalUser(VL[i], Insrt, FoundLane));
       }
     }
   }
-
-  return Vec;
 }
 
 // Vectorize a list of values. If values are in the tree,
@@ -781,7 +788,7 @@ Value *BoUpSLP::vectorizeTree() {
 
 struct MySLPPass : public PassInfoMixin<MySLPPass>
 {
-  
+
   PreservedAnalyses run(Function &F,
                         FunctionAnalysisManager &FAM)
   {
