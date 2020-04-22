@@ -571,7 +571,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
       {
         Instruction *I = cast<Instruction>(E->Scalars[i]);
         LHS_scalars.push_back(I->getOperand(0));
-        RHS_scalars.push_back(I->getOperand(0));
+        RHS_scalars.push_back(I->getOperand(1));
       }
     }
     // Step 2, vecotrize operands
