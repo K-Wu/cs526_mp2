@@ -429,7 +429,7 @@ Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty)
     // TODO: optimizeGatherSequence()
 
     // Step 2, after such vectorization, the vectorized value Vec is outside the tree. The in the tree user of the scalar element in the vectorized value Vec needs to be satisfied by ExtractElement.
-    //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses. 
+    //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses.
     if (ScalarToTreeEntry.count(scalar))
     {
       // Found the scalar in the tree.
@@ -560,13 +560,9 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     // For binary operators. Operands: LHS and RHS
     // Step 1, collect operands
     ValueList LHS_scalars, RHS_scalars;
-    if (isa<BinaryOperator>(VL0) && VL0->isCommutative())
-    {
-      //
+    if (isa<BinaryOperator>(scalar) && scalar->isCommutative()) {
       reorderInputsAccordingToOpcode(E->Scalars, LHS_scalars, RHS_scalars);
-    }
-    else
-    {
+    } else {
       for (int i = 0; i < E->Scalars.size(); i++)
       {
         Instruction *I = cast<Instruction>(E->Scalars[i]);
@@ -643,7 +639,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
   }
   case Instruction::GetElementPtr:
   {
-    llvm_unreachable("GEP not implemented"); 
+    llvm_unreachable("GEP not implemented");
     // GEP. number of operands varies
     setInsertPointAfterBundle(E->Scalars);
 
@@ -680,7 +676,6 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
 
     return GEPI;
   }
-  // TODO: the following code is copied from the original file
   case Instruction::ZExt:
   case Instruction::SExt:
   case Instruction::FPToUI:
@@ -695,70 +690,92 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
   case Instruction::BitCast:
   case Instruction::AddrSpaceCast:
   {
-    ValueList INVL;
-    for (int i = 0, e = E->Scalars.size(); i < e; ++i)
-      INVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
+    // Single operand
+    // Step 1, collect operands
+    ValueList operand_scalars;
+    for (int i = 0; i < E->Scalars.size(); i++)
+    {
+      auto *I = cast<StoreInst>(E->Scalars[i]);
+      operand_scalars.push_back(I->getOperand(0));
+    }
 
+    // Step 2, vectorize operands
     setInsertPointAfterBundle(E->Scalars);
+    Value *operand_vector = vectorizeTree_rec(operand_scalars);
 
-    Value *InVec = vectorizeTree_rec(INVL);
+    if (alreadyVectorized(E->Scalars))
+    {
+      // it is possible that when vectorizing the operands, we also vectorized this entry.
+      return alreadyVectorized(E->Scalars);
+    }
 
-    if (Value *V = alreadyVectorized(E->Scalars))
-      return V;
-
-    CastInst *CI = dyn_cast<CastInst>(VL0);
-    Value *V = Builder.CreateCast(CI->getOpcode(), InVec, VecTy);
+    // Step 3, create a new Instruction with the vectorized operands.
+    CastInst *CI = dyn_cast<CastInst>(scalar);
+    Value *V = Builder.CreateCast(CI->getOpcode(), operand_vector, vector_type);
     E->VectorizedValue = V;
     return V;
   }
   case Instruction::FCmp:
   case Instruction::ICmp:
   {
-    ValueList LHSV, RHSV;
-    for (int i = 0, e = E->Scalars.size(); i < e; ++i)
+    // For binary operators. Operands: LHS and RHS
+    // Step 1, collect operands
+    ValueList LHS_scalars, RHS_scalars;
+    for (int i = 0; i < E->Scalars.size(); i++)
     {
-      LHSV.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
-      RHSV.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
+      Instruction *I = cast<Instruction>(E->Scalars[i]);
+      LHS_scalars.push_back(I->getOperand(0));
+      RHS_scalars.push_back(I->getOperand(1));
+    }
+    // Step 2, vecotrize operands
+    setInsertPointAfterBundle(E->Scalars);
+    auto LHS_vector = vectorizeTree_rec(LHS_scalars);
+    auto RHS_vector = vectorizeTree_rec(RHS_scalars);
+
+    if (alreadyVectorized(E->Scalars))
+    {
+      // it is possible that when vectorizing the operands, we also vectorized this entry.
+      return alreadyVectorized(E->Scalars);
     }
 
-    setInsertPointAfterBundle(E->Scalars);
-
-    Value *L = vectorizeTree_rec(LHSV);
-    Value *R = vectorizeTree_rec(RHSV);
-
-    if (Value *V = alreadyVectorized(E->Scalars))
-      return V;
-
-    CmpInst::Predicate P0 = dyn_cast<CmpInst>(VL0)->getPredicate();
+    // Step 3, create a new Instruction with the vectorized operands.
+    CmpInst::Predicate P0 = dyn_cast<CmpInst>(scalar)->getPredicate();
     Value *V;
     if (Opcode == Instruction::FCmp)
-      V = Builder.CreateFCmp(P0, L, R);
+      V = Builder.CreateFCmp(P0, LHS_vector, RHS_vector);
     else
-      V = Builder.CreateICmp(P0, L, R);
+      V = Builder.CreateICmp(P0, LHS_vector, RHS_vector);
 
     E->VectorizedValue = V;
     return V;
   }
   case Instruction::Select:
   {
-    ValueList TrueVec, FalseVec, CondVec;
-    for (int i = 0, e = E->Scalars.size(); i < e; ++i)
+    // Triple operands: True, False, Condition
+    // Step 1, collect operands
+    ValueList true_scalars, false_scalars, condition_scalars;
+    for (int i = 0; i < E->Scalars.size(); i++)
     {
-      CondVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
-      TrueVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
-      FalseVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(2));
+      Instruction *I = cast<Instruction>(E->Scalars[i]);
+      true_scalars.push_back(I->getOperand(0));
+      false_scalars.push_back(I->getOperand(1));
+      condition_scalars.push_back(I->getOperand(2));
     }
 
+    // Step 2, vecotrize operands
     setInsertPointAfterBundle(E->Scalars);
+    auto true_vector = vectorizeTree_rec(true_scalars);
+    auto false_vector = vectorizeTree_rec(false_scalars);
+    auto condition_vector = vectorizeTree_rec(condition_scalars);
 
-    Value *Cond = vectorizeTree_rec(CondVec);
-    Value *True = vectorizeTree_rec(TrueVec);
-    Value *False = vectorizeTree_rec(FalseVec);
+    if (alreadyVectorized(E->Scalars))
+    {
+      // it is possible that when vectorizing the operands, we also vectorized this entry.
+      return alreadyVectorized(E->Scalars);
+    }
 
-    if (Value *V = alreadyVectorized(E->Scalars))
-      return V;
-
-    Value *V = Builder.CreateSelect(Cond, True, False);
+    // Step 3, create a new Instruction with the vectorized operands.
+    Value *V = Builder.CreateSelect(condition_vector, true_vector, false_vector);
     E->VectorizedValue = V;
     return V;
   }
