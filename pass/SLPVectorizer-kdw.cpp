@@ -755,7 +755,6 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E) {
              "Invalid number of incoming values");
       return NewPhi;
     }
-
     case Instruction::ExtractElement: {
       if (CanReuseExtract(E->Scalars)) {
         Value *V = VL0->getOperand(0);
@@ -849,17 +848,16 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E) {
 }
 
 // Vectorize the tree from root recursively.
-// external uses: some scalars are referenced by instructions not in the tree.
-// extract them from vectors and replace the original use.
-// Finally, remove use of all scalars in the tree such that those scalars can
-// be removed safely.
 Value *BoUpSLP::vectorizeTree() {
+  // Step 1, vectorize the root. After this all the dependence of this root instruction (a store)
+  // will be vecotrized.
   Builder.SetInsertPoint(F->getEntryBlock().begin());
   vectorizeTree(&VectorizableTree[0]);
 
   DEBUG(dbgs() << "SLP: Extracting " << ExternalUses.size() << " values .\n");
 
-  // Extract all of the elements with the external uses.
+  // Step 2, since we create some InsertElement instructions which refers to a scalar that has been vectorized,
+  // we have to insert ExtractElement instructions before these InsertElement instructions.
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
        it != e; ++it) {
     Value *Scalar = it->Scalar;
@@ -908,14 +906,15 @@ Value *BoUpSLP::vectorizeTree() {
     DEBUG(dbgs() << "SLP: Replaced:" << *User << ".\n");
   }
 
-  // For each vectorized value:
+  // Step 3, replace all the uses of scalars with undef such that these uses will be removed
   for (int EIdx = 0, EE = VectorizableTree.size(); EIdx < EE; ++EIdx) {
     TreeEntry *Entry = &VectorizableTree[EIdx];
 
     // For each lane:
     for (int Lane = 0, LE = Entry->Scalars.size(); Lane != LE; ++Lane) {
       Value *Scalar = Entry->Scalars[Lane];
-      // No need to handle users of gathered values.
+      // Since the users of gathered values have already been replaced with
+      // ExtractElement instructions, we should skip those cases.
       if (Entry->NeedToGather)
         continue;
 
