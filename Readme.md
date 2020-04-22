@@ -53,28 +53,28 @@ Testing Time: ???s
 ```
 
 ## A Curated Set of Tests
-X86/arith-sub.ll
-X86/broadcast.ll
-X86/cmp_sel.ll
-X86/commutativity.ll
-X86/extract-shuffle.ll
-X86/extract.ll
-X86/external_user.ll
-X86/external_user_jumbled_load.ll
-X86/different-vec-widths.ll
-X86/jumbled-load-shuffle-placement.ll
-X86/jumbled-load-multiuse.ll
-X86/jumbled-load-used-in-phi.ll
-X86/load-bitcast-vec.ll
-X86/load-merge.ll
-X86/long_chains.ll
-X86/multi_user.ll
-X86/multi_block.ll
-X86/phi.ll
-X86/phi3.ll
-X86/odd_store.ll
-X86/extractelement.ll
-X86/cast.ll
+1. X86/arith-sub.ll
+2. X86/broadcast.ll
+3. X86/cmp_sel.ll
+4. X86/commutativity.ll
+5. X86/extract-shuffle.ll
+6. X86/extract.ll
+7. X86/external_user.ll
+8. X86/external_user_jumbled_load.ll
+9. X86/different-vec-widths.ll
+10. X86/jumbled-load-shuffle-placement.ll
+11. X86/jumbled-load-multiuse.ll
+12. X86/jumbled-load-used-in-phi.ll
+13. X86/load-bitcast-vec.ll
+14. X86/load-merge.ll
+15. X86/long_chains.ll
+16. X86/multi_user.ll
+17. X86/multi_block.ll
+18. X86/phi.ll
+19. X86/phi3.ll
+20. X86/odd_store.ll
+21. X86/extractelement.ll
+22. X86/cast.ll
 
 ## External Test Cases
 /tests-original/ and its derivation /tests-ourpass/ are from the llvm-project github repo \[13\], specifically at <https://github.com/llvm/llvm-project/tree/master/llvm/test/Transforms/SLPVectorizer>.
