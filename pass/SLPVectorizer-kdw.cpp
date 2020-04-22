@@ -864,7 +864,6 @@ Value *BoUpSLP::vectorizeTree()
         Value *Undef = UndefValue::get(Ty);
         Scalar->replaceAllUsesWith(Undef);
       }
-      LLVM_DEBUG(dbgs() << "SLP: \tErasing scalar:" << *Scalar << ".\n");
       cast<Instruction>(Scalar)->eraseFromParent();
     }
   }
