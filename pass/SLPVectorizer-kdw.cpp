@@ -4,6 +4,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/Transforms/Utils/Mem2Reg.h"
 #include "llvm/Transforms/Utils/PromoteMemToReg.h"
 #include "llvm/IR/Dominators.h"
@@ -18,6 +19,7 @@
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/Analysis/VectorUtils.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/DemandedBits.h"
@@ -152,7 +154,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
   }
  auto& BSRef=BlocksSchedules[BB];
  auto& BS = *BSRef.get();
- 
+
  dbg_executes(errs()<<"WARNING: BS "<<BS.BB<<"\n";);
   if(!BS.tryScheduleBundle(VL,this)){
     //BS.cancelScheduling(VL);
@@ -381,89 +383,126 @@ void BoUpSLP::buildTree(ArrayRef<Value *> Roots)
 // }
 void BoUpSLP::setInsertPointAfterBundle(ArrayRef<Value *> VL) {
   Instruction *VL0 = cast<Instruction>(VL[0]);
-  BasicBlock::iterator NextInst = VL0;
+  // BasicBlock::iterator NextInst = VL0;
+  BasicBlock::iterator NextInst(VL0);
   ++NextInst;
   Builder.SetInsertPoint(VL0->getParent(), NextInst);
   Builder.SetCurrentDebugLocation(VL0->getDebugLoc());
 }
 
-// gather a list of values into a vector
-// If a value is in ScalarToTreeEntry, mark it with ExternalUse such that
-// it will be extract later.
 Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty) {
-  Value *Vec = UndefValue::get(Ty);
-  // Generate the 'InsertElement' instruction.
-  for (unsigned i = 0; i < Ty->getNumElements(); ++i) {
-    Vec = Builder.CreateInsertElement(Vec, VL[i], Builder.getInt32(i));
-    if (Instruction *Insrt = dyn_cast<Instruction>(Vec)) {
-      GatherSeq.insert(Insrt);
-      CSEBlocks.insert(Insrt->getParent());
+  // This function gathers a list of scalars into a vector by inserting some
+  // InsertElement instructions. If a scalar is in the tree, it will be removed
+  // finally. However, the new InsertElement instruction is a user of this scalar, so we need to add
+  // an ExtractElement instruction before this InsertElement instruction.
+  // To do this, we put create a record in ExternalUses
+  // such that it will be handled later.
 
-      // Add to our 'need-to-extract' list.
-      if (ScalarToTreeEntry.count(VL[i])) {
-        int Idx = ScalarToTreeEntry[VL[i]];
-        TreeEntry *E = &VectorizableTree[Idx];
-        // Find which lane we need to extract.
-        int FoundLane = -1;
-        for (unsigned Lane = 0, LE = VL.size(); Lane != LE; ++Lane) {
-          // Is this the lane of the scalar that we are looking for ?
-          if (E->Scalars[Lane] == VL[i]) {
-            FoundLane = Lane;
-            break;
-          }
+  // Note: before calling this function, insert point has to be set by the caller.
+
+  // First create a new empty vector.
+  Value *new_vector = UndefValue::get(Ty);
+  for (int i=0; i<VL.size(); i++) {
+    auto scalar = VL[i];
+    // Step 1, assemble the new vector by inserting InsertElement instructions
+    new_vector = Builder.CreateInsertElement(new_vector, scalar, Builder.getInt32(i));
+    Instruction *I = dyn_cast<Instruction>(new_vector);
+
+    // TODO: optimizeGatherSequence()
+    // GatherSeq.insert(I);
+    // CSEBlocks.insert(I->getParent());
+
+    // Step 2, for each scalar in VL, check if it is in the tree. If so, put it into ExternalUses.
+    if (ScalarToTreeEntry.count(scalar)) {
+      // Found the scalar in the tree.
+      // Find the corresponding entry of the tree.
+      TreeEntry* E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+      // TODO: put E directly into ExternalUser
+      // Next, find the position of the scalar in E.
+      for (int pos = 0; pos<E->Scalars.size(); pos++) {
+        if (E->Scalars[pos] == scalar) {
+          ExternalUses.push_back(ExternalUser(scalar, I, pos));
+          break;
         }
-        assert(FoundLane >= 0 && "Could not find the correct lane");
-        ExternalUses.push_back(ExternalUser(VL[i], Insrt, FoundLane));
       }
     }
   }
 
-  return Vec;
+  return new_vector;
 }
 
-// Vectorize a list of values. If values are in the tree,
-// vectorize the corresponding tree entry, otherwise,
-// gather the values into a new vector.
-Value *BoUpSLP::vectorizeTree(ArrayRef<Value *> VL) {
-  if (ScalarToTreeEntry.count(VL[0])) {
-    int Idx = ScalarToTreeEntry[VL[0]];
-    TreeEntry *E = &VectorizableTree[Idx];
-    if (E->isSame(VL))
-      return vectorizeTree(E);
+// Given a scalar value. Return the corresponding vector type.
+VectorType *getVectorType(Value *scalar, unsigned int length) {
+  Type *type = scalar->getType();
+  if (StoreInst *SI = dyn_cast<StoreInst>(scalar)) {
+    // If scalar is the ret of a store op, then we use the type of the value being stored.
+    type = SI->getValueOperand()->getType();
   }
+  VectorType *vector_type = VectorType::get(type, length);
+  return vector_type;
+}
 
-  Type *ScalarTy = VL[0]->getType();
-  if (StoreInst *SI = dyn_cast<StoreInst>(VL[0]))
-    ScalarTy = SI->getValueOperand()->getType();
-  VectorType *VecTy = VectorType::get(ScalarTy, VL.size());
+// Vectorize a list of scalars. If they are in the tree (and in the same entry),
+// vectorize the corresponding tree entry, otherwise,
+// gather the scalars into a new vector.
+// Note: before calling this function, insert point has to be set by the caller.
+Value *BoUpSLP::vectorizeTree(ArrayRef<Value *> VL) {
+  auto scalar = VL[0];
+  auto length = VL.size();
 
-  return Gather(VL, VecTy);
+  // Case 1, scalars are in the tree.
+  // TODO: merge common logic with alreadyVectorized()
+  if (ScalarToTreeEntry.count(scalar)) {
+    // Found the scalar in the tree.
+    // Find the corresponding entry of the tree.
+    TreeEntry* E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+    //we have to check whether VL == E.Scalars exactly
+    if (E->isSame(VL)) {
+      // VL == E.Scalars exactly, so we do not have to create a new vector
+      // vectorize E direcly.
+      return vectorizeTree(E);
+    }
+  }
+  //Case 2, scalars are not in the tree.
+  // Create a new vector by gathering
+  auto vector_type = getVectorType(scalar, length);
+  return Gather(VL, vector_type);
 }
 
 // Vectorize a single tree entry if it has not been vectorized.
 // Currently, this function only handles Binary, Load/Store, and GEP OPs.
 Value *BoUpSLP::vectorizeTree(TreeEntry *E) {
-  IRBuilder<>::InsertPointGuard Guard(Builder);
-
+  // Case 1, check if this entry has been vectorized.
+  // If so, return directly.
   if (E->VectorizedValue) {
-    DEBUG(dbgs() << "SLP: Diamond merged for " << *E->Scalars[0] << ".\n");
     return E->VectorizedValue;
   }
 
-  Instruction *VL0 = cast<Instruction>(E->Scalars[0]);
-  Type *ScalarTy = VL0->getType();
-  if (StoreInst *SI = dyn_cast<StoreInst>(VL0))
-    ScalarTy = SI->getValueOperand()->getType();
-  VectorType *VecTy = VectorType::get(ScalarTy, E->Scalars.size());
+  Instruction *scalar = cast<Instruction>(E->Scalars[0]);
+  auto vector_type = getVectorType(scalar, E->Scalars.size());
 
+  // Case 2, If this entry is marked as NeedToGather, then it is easy. Just Gather it.
   if (E->NeedToGather) {
     setInsertPointAfterBundle(E->Scalars);
-    return Gather(E->Scalars, VecTy);
+    return Gather(E->Scalars, vector_type);
   }
+
+  // Case 3, otherwise, we vectorize this entry according to the operation.
+  // BasicBlock *BB = scalar->getParent();
+  // scheduleBlock(BB);
+
   unsigned Opcode = getSameOpcode(E->Scalars);
 
-  switch (Opcode) {
+  // TODO: remove this after refactoring
+  Instruction *VL0 = scalar;
+  Type *ScalarTy = VL0->getType();
+  VectorType *VecTy = vector_type;
 
+  switch (Opcode) {
+    // Several different cases.
+    // The general idea is:
+    // first we collect the operands of this instruction and vectorize it.
+    // then convert this instruction into a vectorized version with the vectorized operands.
     case Instruction::Add:
     case Instruction::FAdd:
     case Instruction::Sub:
@@ -482,30 +521,32 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E) {
     case Instruction::And:
     case Instruction::Or:
     case Instruction::Xor: {
-      ValueList LHSVL, RHSVL;
-      if (isa<BinaryOperator>(VL0) && VL0->isCommutative())
-        reorderInputsAccordingToOpcode(E->Scalars, LHSVL, RHSVL);
-      else
-        for (int i = 0, e = E->Scalars.size(); i < e; ++i) {
-          LHSVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
-          RHSVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
+      // For binary operators. Operands: LHS and RHS
+      // Step 1, collect operands
+      ValueList LHS_scalars, RHS_scalars;
+      if (isa<BinaryOperator>(VL0) && VL0->isCommutative()) {
+        //
+        reorderInputsAccordingToOpcode(E->Scalars, LHS_scalars, RHS_scalars);
+      } else {
+        for (int i=0;i<E->Scalars.size();i++) {
+          Instruction *I = cast<Instruction>(E->Scalars[i]);
+          LHS_scalars.push_back(I->getOperand(0));
+          RHS_scalars.push_back(I->getOperand(0));
         }
-
-      setInsertPointAfterBundle(E->Scalars);
-
-      Value *LHS = vectorizeTree(LHSVL);
-      Value *RHS = vectorizeTree(RHSVL);
-
-      if (LHS == RHS && isa<Instruction>(LHS)) {
-        assert((VL0->getOperand(0) == VL0->getOperand(1)) && "Invalid order");
       }
+      // Step 2, vecotrize operands
+      setInsertPointAfterBundle(E->Scalars);
+      auto LHS_vector = vectorizeTree(LHS_scalars);
+      auto RHS_vector = vectorizeTree(RHS_scalars);
 
-      if (Value *V = alreadyVectorized(E->Scalars))
-        return V;
-
-      BinaryOperator *BinOp = cast<BinaryOperator>(VL0);
-      Value *V = Builder.CreateBinOp(BinOp->getOpcode(), LHS, RHS);
+      if (alreadyVectorized(E->Scalars)) {
+        // it is possible that when vectorizing the operands, we also vectorized this entry.
+        return alreadyVectorized(E->Scalars);
+      }
+      // Step 3, create a new Instruction with the vectorized operands.
+      Value *V = Builder.CreateBinOp(cast<BinaryOperator>(scalar)->getOpcode(), LHS_vector, RHS_vector);
       E->VectorizedValue = V;
+      // ++NumVectorInstructions;
 
       if (Instruction *I = dyn_cast<Instruction>(V))
         return propagateMetadata(I, E->Scalars);
@@ -513,70 +554,289 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E) {
       return V;
     }
     case Instruction::Load: {
-      // Loads are inserted at the head of the tree because we don't want to
-      // sink them all the way down past store instructions.
+      // Load Instruction: Operands: addresses. For this one we don't have to vectorize the operand.
       setInsertPointAfterBundle(E->Scalars);
-
-      LoadInst *LI = cast<LoadInst>(VL0);
+      LoadInst *LI = cast<LoadInst>(scalar);
       unsigned AS = LI->getPointerAddressSpace();
+      // vector_type->getPointerTo(AS) return PtrType pointing to vector_type
+      // By construction, scalar is the first element of this vector, so we can
+      // use its address as the address of the vector.
+      Value *vector_ptr = Builder.CreateBitCast(LI->getPointerOperand(), vector_type->getPointerTo(AS));
 
-      Value *VecPtr = Builder.CreateBitCast(LI->getPointerOperand(),
-                                            VecTy->getPointerTo(AS));
       unsigned Alignment = LI->getAlignment();
-      LI = Builder.CreateLoad(VecPtr);
+
+      // create a new Load instruction which loads a vector from the address of scalar.
+      LI = Builder.CreateLoad(vector_ptr);
       if (!Alignment)
         Alignment = DL->getABITypeAlignment(LI->getPointerOperand()->getType());
       LI->setAlignment(Alignment);
       E->VectorizedValue = LI;
+      // ++NumVectorInstructions;
       return propagateMetadata(LI, E->Scalars);
     }
     case Instruction::Store: {
+      // Store instruction: single operand
       StoreInst *SI = cast<StoreInst>(VL0);
-      unsigned Alignment = SI->getAlignment();
       unsigned AS = SI->getPointerAddressSpace();
-
-      ValueList ValueOp;
-      for (int i = 0, e = E->Scalars.size(); i < e; ++i)
-        ValueOp.push_back(cast<StoreInst>(E->Scalars[i])->getValueOperand());
-
-      setInsertPointAfterBundle(E->Scalars);
-
-      Value *VecValue = vectorizeTree(ValueOp);
-      Value *VecPtr = Builder.CreateBitCast(SI->getPointerOperand(),
-                                            VecTy->getPointerTo(AS));
-      StoreInst *S = Builder.CreateStore(VecValue, VecPtr);
+      unsigned Alignment = SI->getAlignment();
       if (!Alignment)
         Alignment = DL->getABITypeAlignment(SI->getPointerOperand()->getType());
-      S->setAlignment(Alignment);
-      E->VectorizedValue = S;
-      return propagateMetadata(S, E->Scalars);
+
+      // Step 1, collect operands
+      ValueList operand_scalars;
+      for (int i=0;i<E->Scalars.size();i++) {
+        auto *I = cast<StoreInst>(E->Scalars[i]);
+        operand_scalars.push_back(I->getValueOperand());
+      }
+
+      // Step 2, vectorize operands
+      setInsertPointAfterBundle(E->Scalars);
+      Value *operand_vector = vectorizeTree(operand_scalars);
+      Value *vector_ptr = Builder.CreateBitCast(SI->getPointerOperand(), vector_type->getPointerTo(AS));
+
+      SI = Builder.CreateStore(operand_vector, vector_ptr);
+      SI->setAlignment(Alignment);
+      E->VectorizedValue = SI;
+      // ++NumVectorInstructions;
+      return propagateMetadata(SI, E->Scalars);
     }
     case Instruction::GetElementPtr: {
+      // GEP. number of operands varies
       setInsertPointAfterBundle(E->Scalars);
 
-      ValueList Op0VL;
-      for (int i = 0, e = E->Scalars.size(); i < e; ++i)
-        Op0VL.push_back(cast<GetElementPtrInst>(E->Scalars[i])->getOperand(0));
+      // Step 1 and 2, collect and vectorize all operands.
+      // collect and vectorize operand 0's
+      ValueList op0_scalars;
+      for (int i=0;i<E->Scalars.size();i++) {
+        auto *I = cast<GetElementPtrInst>(E->Scalars[i]);
+        op0_scalars.push_back(I->getOperand(0));
+      }
+      Value *op0_vector = vectorizeTree(op0_scalars);
 
-      Value *Op0 = vectorizeTree(Op0VL);
+      // collect and vectorize other operands
+      std::vector<Value *> other_operands_vector;
+      for (int j=0; j<cast<GetElementPtrInst>(E->Scalars[0])->getNumOperands() - 1; j++) {
+        ValueList opj_scalars;
+        for (int i=0;i<E->Scalars.size();i++) {
+          auto *I = cast<GetElementPtrInst>(E->Scalars[i]);
+          opj_scalars.push_back(I->getOperand(j+1));
+        }
+        Value *opj_vector = vectorizeTree(opj_scalars);
+        other_operands_vector.push_back(opj_vector);
+      }
 
+      // Step 2, create  new GEP instruction
+      Value *GEPI = Builder.CreateGEP(op0_vector, other_operands_vector);
+      E->VectorizedValue = GEPI;
+      // ++NumVectorInstructions;
+
+      if (Instruction *I = dyn_cast<Instruction>(GEPI))
+        return propagateMetadata(I, E->Scalars);
+
+      return GEPI;
+    }
+    // TODO: the following code is copied from the original file
+    case Instruction::Call: {
+      CallInst *CI = cast<CallInst>(VL0);
+      setInsertPointAfterBundle(E->Scalars);
+      Function *FI;
+      Intrinsic::ID IID  = Intrinsic::not_intrinsic;
+      if (CI && (FI = CI->getCalledFunction())) {
+        IID = (Intrinsic::ID) FI->getIntrinsicID();
+      }
       std::vector<Value *> OpVecs;
-      for (int j = 1, e = cast<GetElementPtrInst>(VL0)->getNumOperands(); j < e;
-           ++j) {
+      for (int j = 0, e = CI->getNumArgOperands(); j < e; ++j) {
         ValueList OpVL;
-        for (int i = 0, e = E->Scalars.size(); i < e; ++i)
-          OpVL.push_back(cast<GetElementPtrInst>(E->Scalars[i])->getOperand(j));
+        // ctlz,cttz and powi are special intrinsics whose second argument is
+        // a scalar. This argument should not be vectorized.
+        if (hasVectorInstrinsicScalarOpd(IID, 1) && j == 1) {
+          CallInst *CEI = cast<CallInst>(E->Scalars[0]);
+          OpVecs.push_back(CEI->getArgOperand(j));
+          continue;
+        }
+        for (int i = 0, e = E->Scalars.size(); i < e; ++i) {
+          CallInst *CEI = cast<CallInst>(E->Scalars[i]);
+          OpVL.push_back(CEI->getArgOperand(j));
+        }
 
         Value *OpVec = vectorizeTree(OpVL);
+        LLVM_DEBUG(dbgs() << "SLP: OpVec[" << j << "]: " << *OpVec << "\n");
         OpVecs.push_back(OpVec);
       }
 
-      Value *V = Builder.CreateGEP(Op0, OpVecs);
+      Module *M = F->getParent();
+      Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+      Type *Tys[] = { VectorType::get(CI->getType(), E->Scalars.size()) };
+      Function *CF = Intrinsic::getDeclaration(M, ID, Tys);
+      Value *V = Builder.CreateCall(CF, OpVecs);
       E->VectorizedValue = V;
+      // ++NumVectorInstructions;
+      return V;
+    }
+    case Instruction::ShuffleVector: {
+      ValueList LHSVL, RHSVL;
+      for (int i = 0, e = E->Scalars.size(); i < e; ++i) {
+        LHSVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
+        RHSVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
+      }
+      setInsertPointAfterBundle(E->Scalars);
 
+      Value *LHS = vectorizeTree(LHSVL);
+      Value *RHS = vectorizeTree(RHSVL);
+
+      if (Value *V = alreadyVectorized(E->Scalars))
+        return V;
+
+      // Create a vector of LHS op1 RHS
+      BinaryOperator *BinOp0 = cast<BinaryOperator>(VL0);
+      Value *V0 = Builder.CreateBinOp(BinOp0->getOpcode(), LHS, RHS);
+
+      // Create a vector of LHS op2 RHS
+      Instruction *VL1 = cast<Instruction>(E->Scalars[1]);
+      BinaryOperator *BinOp1 = cast<BinaryOperator>(VL1);
+      Value *V1 = Builder.CreateBinOp(BinOp1->getOpcode(), LHS, RHS);
+
+      // Create appropriate shuffle to take alternative operations from
+      // the vector.
+      std::vector<Constant *> Mask(E->Scalars.size());
+      unsigned e = E->Scalars.size();
+      for (unsigned i = 0; i < e; ++i) {
+        if (i & 1)
+          Mask[i] = Builder.getInt32(e + i);
+        else
+          Mask[i] = Builder.getInt32(i);
+      }
+
+      Value *ShuffleMask = ConstantVector::get(Mask);
+
+      Value *V = Builder.CreateShuffleVector(V0, V1, ShuffleMask);
+      E->VectorizedValue = V;
+      // ++NumVectorInstructions;
       if (Instruction *I = dyn_cast<Instruction>(V))
         return propagateMetadata(I, E->Scalars);
 
+      return V;
+    }
+    case Instruction::PHI: {
+      PHINode *PH = dyn_cast<PHINode>(VL0);
+      Builder.SetInsertPoint(PH->getParent()->getFirstNonPHI());
+      Builder.SetCurrentDebugLocation(PH->getDebugLoc());
+      PHINode *NewPhi = Builder.CreatePHI(VecTy, PH->getNumIncomingValues());
+      E->VectorizedValue = NewPhi;
+
+      // PHINodes may have multiple entries from the same block. We want to
+      // visit every block once.
+      SmallSet<BasicBlock*, 4> VisitedBBs;
+
+      for (unsigned i = 0, e = PH->getNumIncomingValues(); i < e; ++i) {
+        ValueList Operands;
+        BasicBlock *IBB = PH->getIncomingBlock(i);
+
+        // FIXME
+        // if (!VisitedBBs.insert(IBB)) {
+        //   NewPhi->addIncoming(NewPhi->getIncomingValueForBlock(IBB), IBB);
+        //   continue;
+        // }
+
+        // Prepare the operand vector.
+        for (unsigned j = 0; j < E->Scalars.size(); ++j)
+          Operands.push_back(cast<PHINode>(E->Scalars[j])->
+                             getIncomingValueForBlock(IBB));
+
+        Builder.SetInsertPoint(IBB->getTerminator());
+        Builder.SetCurrentDebugLocation(PH->getDebugLoc());
+        Value *Vec = vectorizeTree(Operands);
+        NewPhi->addIncoming(Vec, IBB);
+      }
+
+      assert(NewPhi->getNumIncomingValues() == PH->getNumIncomingValues() &&
+             "Invalid number of incoming values");
+      return NewPhi;
+    }
+    case Instruction::ExtractElement: {
+      if (CanReuseExtract(E->Scalars)) {
+        Value *V = VL0->getOperand(0);
+        E->VectorizedValue = V;
+        return V;
+      }
+      return Gather(E->Scalars, VecTy);
+    }
+    case Instruction::ZExt:
+    case Instruction::SExt:
+    case Instruction::FPToUI:
+    case Instruction::FPToSI:
+    case Instruction::FPExt:
+    case Instruction::PtrToInt:
+    case Instruction::IntToPtr:
+    case Instruction::SIToFP:
+    case Instruction::UIToFP:
+    case Instruction::Trunc:
+    case Instruction::FPTrunc:
+    case Instruction::BitCast: {
+      ValueList INVL;
+      for (int i = 0, e = E->Scalars.size(); i < e; ++i)
+        INVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
+
+      setInsertPointAfterBundle(E->Scalars);
+
+      Value *InVec = vectorizeTree(INVL);
+
+      if (Value *V = alreadyVectorized(E->Scalars))
+        return V;
+
+      CastInst *CI = dyn_cast<CastInst>(VL0);
+      Value *V = Builder.CreateCast(CI->getOpcode(), InVec, VecTy);
+      E->VectorizedValue = V;
+      // ++NumVectorInstructions;
+      return V;
+    }
+    case Instruction::FCmp:
+    case Instruction::ICmp: {
+      ValueList LHSV, RHSV;
+      for (int i = 0, e = E->Scalars.size(); i < e; ++i) {
+        LHSV.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
+        RHSV.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
+      }
+
+      setInsertPointAfterBundle(E->Scalars);
+
+      Value *L = vectorizeTree(LHSV);
+      Value *R = vectorizeTree(RHSV);
+
+      if (Value *V = alreadyVectorized(E->Scalars))
+        return V;
+
+      CmpInst::Predicate P0 = dyn_cast<CmpInst>(VL0)->getPredicate();
+      Value *V;
+      if (Opcode == Instruction::FCmp)
+        V = Builder.CreateFCmp(P0, L, R);
+      else
+        V = Builder.CreateICmp(P0, L, R);
+
+      E->VectorizedValue = V;
+      // ++NumVectorInstructions;
+      return V;
+    }
+    case Instruction::Select: {
+      ValueList TrueVec, FalseVec, CondVec;
+      for (int i = 0, e = E->Scalars.size(); i < e; ++i) {
+        CondVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
+        TrueVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
+        FalseVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(2));
+      }
+
+      setInsertPointAfterBundle(E->Scalars);
+
+      Value *Cond = vectorizeTree(CondVec);
+      Value *True = vectorizeTree(TrueVec);
+      Value *False = vectorizeTree(FalseVec);
+
+      if (Value *V = alreadyVectorized(E->Scalars))
+        return V;
+
+      Value *V = Builder.CreateSelect(Cond, True, False);
+      E->VectorizedValue = V;
+      // ++NumVectorInstructions;
       return V;
     }
     default:
@@ -586,17 +846,21 @@ Value *BoUpSLP::vectorizeTree(TreeEntry *E) {
 }
 
 // Vectorize the tree from root recursively.
-// external uses: some scalars are referenced by instructions not in the tree.
-// extract them from vectors and replace the original use.
-// Finally, remove use of all scalars in the tree such that those scalars can
-// be removed safely.
 Value *BoUpSLP::vectorizeTree() {
-  Builder.SetInsertPoint(F->getEntryBlock().begin());
+  // All blocks must be scheduled before any instructions are inserted.
+  for (auto &BSIter : BlocksSchedules) {
+    scheduleBlock(BSIter.second.get());
+  }
+
+  // Step 1, vectorize the root. After this all the dependence of this root instruction (a store)
+  // will be vecotrized.
+  Builder.SetInsertPoint(&F->getEntryBlock().front());
   vectorizeTree(&VectorizableTree[0]);
 
-  DEBUG(dbgs() << "SLP: Extracting " << ExternalUses.size() << " values .\n");
+  LLVM_DEBUG(dbgs() << "SLP: Extracting " << ExternalUses.size() << " values .\n");
 
-  // Extract all of the elements with the external uses.
+  // Step 2, since we create some InsertElement instructions which refers to a scalar that has been vectorized,
+  // we have to insert ExtractElement instructions before these InsertElement instructions.
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
        it != e; ++it) {
     Value *Scalar = it->Scalar;
@@ -625,34 +889,35 @@ Value *BoUpSLP::vectorizeTree() {
           if (PH->getIncomingValue(i) == Scalar) {
             Builder.SetInsertPoint(PH->getIncomingBlock(i)->getTerminator());
             Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-            CSEBlocks.insert(PH->getIncomingBlock(i));
+            // CSEBlocks.insert(PH->getIncomingBlock(i));
             PH->setOperand(i, Ex);
           }
         }
       } else {
         Builder.SetInsertPoint(cast<Instruction>(User));
         Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-        CSEBlocks.insert(cast<Instruction>(User)->getParent());
+        // CSEBlocks.insert(cast<Instruction>(User)->getParent());
         User->replaceUsesOfWith(Scalar, Ex);
      }
     } else {
-      Builder.SetInsertPoint(F->getEntryBlock().begin());
+      Builder.SetInsertPoint(&F->getEntryBlock().front());
       Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-      CSEBlocks.insert(&F->getEntryBlock());
+      // CSEBlocks.insert(&F->getEntryBlock());
       User->replaceUsesOfWith(Scalar, Ex);
     }
 
-    DEBUG(dbgs() << "SLP: Replaced:" << *User << ".\n");
+    LLVM_DEBUG(dbgs() << "SLP: Replaced:" << *User << ".\n");
   }
 
-  // For each vectorized value:
+  // Step 3, replace all the uses of scalars with undef such that these uses will be removed
   for (int EIdx = 0, EE = VectorizableTree.size(); EIdx < EE; ++EIdx) {
     TreeEntry *Entry = &VectorizableTree[EIdx];
 
     // For each lane:
     for (int Lane = 0, LE = Entry->Scalars.size(); Lane != LE; ++Lane) {
       Value *Scalar = Entry->Scalars[Lane];
-      // No need to handle users of gathered values.
+      // Since the users of gathered values have already been replaced with
+      // ExtractElement instructions, we should skip those cases.
       if (Entry->NeedToGather)
         continue;
 
@@ -663,13 +928,13 @@ Value *BoUpSLP::vectorizeTree() {
         Value *Undef = UndefValue::get(Ty);
         Scalar->replaceAllUsesWith(Undef);
       }
-      DEBUG(dbgs() << "SLP: \tErasing scalar:" << *Scalar << ".\n");
+      LLVM_DEBUG(dbgs() << "SLP: \tErasing scalar:" << *Scalar << ".\n");
       cast<Instruction>(Scalar)->eraseFromParent();
     }
   }
 
-  for (auto &BN : BlocksNumbers)
-    BN.second.forget();
+  // for (auto &BN : BlocksNumbers)
+  //   BN.second.forget();
 
   Builder.ClearInsertionPoint();
 
@@ -781,7 +1046,7 @@ Value *BoUpSLP::vectorizeTree() {
 
 struct MySLPPass : public PassInfoMixin<MySLPPass>
 {
-  
+
   PreservedAnalyses run(Function &F,
                         FunctionAnalysisManager &FAM)
   {
