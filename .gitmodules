@@ -1,0 +1,3 @@
+[submodule "perfbench"]
+	path = perfbench
+	url = https://github.com/K-Wu/openbenchmark_llvm_vectorizer
