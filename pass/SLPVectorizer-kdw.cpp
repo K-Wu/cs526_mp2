@@ -757,9 +757,9 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     for (int i = 0; i < E->Scalars.size(); i++)
     {
       Instruction *I = cast<Instruction>(E->Scalars[i]);
-      true_scalars.push_back(I->getOperand(0));
-      false_scalars.push_back(I->getOperand(1));
-      condition_scalars.push_back(I->getOperand(2));
+      condition_scalars.push_back(I->getOperand(0));
+      true_scalars.push_back(I->getOperand(1));
+      false_scalars.push_back(I->getOperand(2));
     }
 
     // Step 2, vecotrize operands
@@ -816,7 +816,7 @@ Value *BoUpSLP::vectorizeTree()
 
     // Skip users that we already handled.
     if (std::find(scalar->user_begin(), scalar->user_end(), U) ==
-        Scalar->user_end())
+        scalar->user_end())
       continue;
 
     // found the scalar in the tree and the corresponding vector and the position
@@ -862,14 +862,14 @@ Value *BoUpSLP::vectorizeTree()
       Value *scalar = E->Scalars[j];
       // Since the users of gathered values have already been replaced with
       // ExtractElement instructions, we should skip those cases.
-      if (Entry->NeedToGather)
+      if (E->NeedToGather)
         continue;
       // otherwise, replace all uses of this scalar with undef
       // such that this scalar will be standaloned from the IR and removed by DCE
       if (!scalar->getType()->isVoidTy()) {
         scalar->replaceAllUsesWith(UndefValue::get(scalar->getType()));
       }
-      cast<Instruction>(Scalar)->eraseFromParent();
+      cast<Instruction>(scalar)->eraseFromParent();
     }
   }
 
