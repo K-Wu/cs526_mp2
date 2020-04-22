@@ -1,6 +1,7 @@
 
-# CS526 SP20 MP1
+# CS526 SP20 MP2
 Kun Wu \<netid: kunwu2, UIN: 676032253\>
+
 Dawei Sun \<netid: daweis2, UIN: \>
 ## Build
 This project uses another skeleton code from one online tutorial \[1\] than the one provided by CS 526 Spring 2020, in order to enable building this project as a shared library. It uses cmake as its build management system, and adopts the new PassManager. The provided skeleton code mandates the project building with llvm-8.0.1 source tree as long as built-in passes are called in the legacy pass manager, which forbids quick development.
@@ -52,7 +53,12 @@ Testing Time: ???s
   Expected Passes    : ???
 ```
 
-## A Curated Set of Tests
+## External Correctness Test Cases
+tests in /tests-original/ and its derivation in /tests-curated/ and /tests-curated-refresults/ are from the llvm-project github repo \[13\], specifically at <https://github.com/llvm/llvm-project/tree/master/llvm/test/Transforms/SLPVectorizer>.
+
+### A Curated Set of Tests
+They are placed in tests-curated/. The reference results are in tests-curated-refresults/.
+
 1. X86/arith-sub.ll
 2. X86/broadcast.ll
 3. X86/cmp_sel.ll
@@ -76,8 +82,9 @@ Testing Time: ???s
 21. X86/extractelement.ll
 22. X86/cast.ll
 
-## External Test Cases
-/tests-original/ and its derivation /tests-ourpass/ are from the llvm-project github repo \[13\], specifically at <https://github.com/llvm/llvm-project/tree/master/llvm/test/Transforms/SLPVectorizer>.
+## External Performance Benchmark
+A set of performance benchmarks from openbenchmark \[19\] are set up in https://github.com/K-Wu/openbenchmark_llvm_vectorizer. They include vectorization-enabled single-core programs and multithreading programs, either enabled by openmp or pthread.
+
 
 ### Results
 The implementation only passes ??? out of ??? tests in /tests-ourpass/*.ll. The most prominent issues come from 1)???, 2)???, such as ???, not supported, and 3)???. However, they are expected behavior of the implemented logic.
@@ -90,6 +97,8 @@ Failing Tests (???):
   Expected Passes    : ???
   Unexpected Failures: ???
   ```
+
+## Planned 
 
 ## Next Steps
 According to the external test cases result, ??? is necessary to make our ??? pass more complete and closer to the official ???.
@@ -134,3 +143,7 @@ According to the external test cases result, ??? is necessary to make our ??? pa
 \[16\] LLVM Language Reference Manual <https://llvm.org/docs/LangRef.html>
 
 \[17\] Vasileios Porpodas et al. Look-Ahead SLP: Auto-Vectorization in the Presence of Commutative Operations.  <http://vporpo.me/papers/vwslp_pact2018_slides.pdf>
+
+\[18\] Vasileios Porpodas and Timothy M. Jones. TSLP Throttling Automatic Vectorization: When Less is More. <https://llvm.org/devmtg/2015-10/slides/Porpodas-ThrottlingAutomaticVectorization.pdf>
+
+\[19\] OpenBenchmark Test on SLPVectorizer in LLVM 3.4 <https://openbenchmarking.org/result/1307291-SO-FSLPVECTO83>
