@@ -429,7 +429,7 @@ Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty)
     // TODO: optimizeGatherSequence()
 
     // Step 2, after such vectorization, the vectorized value Vec is outside the tree. The in the tree user of the scalar element in the vectorized value Vec needs to be satisfied by ExtractElement.
-    //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses. 
+    //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses.
     if (ScalarToTreeEntry.count(scalar))
     {
       // Found the scalar in the tree.
@@ -504,6 +504,7 @@ Value *BoUpSLP::vectorizeTree_rec(ArrayRef<Value *> VL)
 // Currently, this function only handles Binary, Load/Store, and GEP OPs.
 Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
 {
+  IRBuilder<>::InsertPointGuard Guard(Builder);
   // Case 1, check if this entry has been vectorized.
   // If so, return directly.
   if (E->VectorizedValue)
@@ -560,13 +561,9 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     // For binary operators. Operands: LHS and RHS
     // Step 1, collect operands
     ValueList LHS_scalars, RHS_scalars;
-    if (isa<BinaryOperator>(VL0) && VL0->isCommutative())
-    {
-      //
+    if (isa<BinaryOperator>(scalar) && scalar->isCommutative()) {
       reorderInputsAccordingToOpcode(E->Scalars, LHS_scalars, RHS_scalars);
-    }
-    else
-    {
+    } else {
       for (int i = 0; i < E->Scalars.size(); i++)
       {
         Instruction *I = cast<Instruction>(E->Scalars[i]);
@@ -643,7 +640,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
   }
   case Instruction::GetElementPtr:
   {
-    llvm_unreachable("GEP not implemented"); 
+    llvm_unreachable("GEP not implemented");
     // GEP. number of operands varies
     setInsertPointAfterBundle(E->Scalars);
 
@@ -680,7 +677,6 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
 
     return GEPI;
   }
-  // TODO: the following code is copied from the original file
   case Instruction::ZExt:
   case Instruction::SExt:
   case Instruction::FPToUI:
@@ -695,70 +691,92 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
   case Instruction::BitCast:
   case Instruction::AddrSpaceCast:
   {
-    ValueList INVL;
-    for (int i = 0, e = E->Scalars.size(); i < e; ++i)
-      INVL.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
+    // Single operand
+    // Step 1, collect operands
+    ValueList operand_scalars;
+    for (int i = 0; i < E->Scalars.size(); i++)
+    {
+      auto *I = cast<StoreInst>(E->Scalars[i]);
+      operand_scalars.push_back(I->getOperand(0));
+    }
 
+    // Step 2, vectorize operands
     setInsertPointAfterBundle(E->Scalars);
+    Value *operand_vector = vectorizeTree_rec(operand_scalars);
 
-    Value *InVec = vectorizeTree_rec(INVL);
+    if (alreadyVectorized(E->Scalars))
+    {
+      // it is possible that when vectorizing the operands, we also vectorized this entry.
+      return alreadyVectorized(E->Scalars);
+    }
 
-    if (Value *V = alreadyVectorized(E->Scalars))
-      return V;
-
-    CastInst *CI = dyn_cast<CastInst>(VL0);
-    Value *V = Builder.CreateCast(CI->getOpcode(), InVec, VecTy);
+    // Step 3, create a new Instruction with the vectorized operands.
+    CastInst *CI = dyn_cast<CastInst>(scalar);
+    Value *V = Builder.CreateCast(CI->getOpcode(), operand_vector, vector_type);
     E->VectorizedValue = V;
     return V;
   }
   case Instruction::FCmp:
   case Instruction::ICmp:
   {
-    ValueList LHSV, RHSV;
-    for (int i = 0, e = E->Scalars.size(); i < e; ++i)
+    // For binary operators. Operands: LHS and RHS
+    // Step 1, collect operands
+    ValueList LHS_scalars, RHS_scalars;
+    for (int i = 0; i < E->Scalars.size(); i++)
     {
-      LHSV.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
-      RHSV.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
+      Instruction *I = cast<Instruction>(E->Scalars[i]);
+      LHS_scalars.push_back(I->getOperand(0));
+      RHS_scalars.push_back(I->getOperand(1));
+    }
+    // Step 2, vecotrize operands
+    setInsertPointAfterBundle(E->Scalars);
+    auto LHS_vector = vectorizeTree_rec(LHS_scalars);
+    auto RHS_vector = vectorizeTree_rec(RHS_scalars);
+
+    if (alreadyVectorized(E->Scalars))
+    {
+      // it is possible that when vectorizing the operands, we also vectorized this entry.
+      return alreadyVectorized(E->Scalars);
     }
 
-    setInsertPointAfterBundle(E->Scalars);
-
-    Value *L = vectorizeTree_rec(LHSV);
-    Value *R = vectorizeTree_rec(RHSV);
-
-    if (Value *V = alreadyVectorized(E->Scalars))
-      return V;
-
-    CmpInst::Predicate P0 = dyn_cast<CmpInst>(VL0)->getPredicate();
+    // Step 3, create a new Instruction with the vectorized operands.
+    CmpInst::Predicate P0 = dyn_cast<CmpInst>(scalar)->getPredicate();
     Value *V;
     if (Opcode == Instruction::FCmp)
-      V = Builder.CreateFCmp(P0, L, R);
+      V = Builder.CreateFCmp(P0, LHS_vector, RHS_vector);
     else
-      V = Builder.CreateICmp(P0, L, R);
+      V = Builder.CreateICmp(P0, LHS_vector, RHS_vector);
 
     E->VectorizedValue = V;
     return V;
   }
   case Instruction::Select:
   {
-    ValueList TrueVec, FalseVec, CondVec;
-    for (int i = 0, e = E->Scalars.size(); i < e; ++i)
+    // Triple operands: True, False, Condition
+    // Step 1, collect operands
+    ValueList true_scalars, false_scalars, condition_scalars;
+    for (int i = 0; i < E->Scalars.size(); i++)
     {
-      CondVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(0));
-      TrueVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(1));
-      FalseVec.push_back(cast<Instruction>(E->Scalars[i])->getOperand(2));
+      Instruction *I = cast<Instruction>(E->Scalars[i]);
+      condition_scalars.push_back(I->getOperand(0));
+      true_scalars.push_back(I->getOperand(1));
+      false_scalars.push_back(I->getOperand(2));
     }
 
+    // Step 2, vecotrize operands
     setInsertPointAfterBundle(E->Scalars);
+    auto true_vector = vectorizeTree_rec(true_scalars);
+    auto false_vector = vectorizeTree_rec(false_scalars);
+    auto condition_vector = vectorizeTree_rec(condition_scalars);
 
-    Value *Cond = vectorizeTree_rec(CondVec);
-    Value *True = vectorizeTree_rec(TrueVec);
-    Value *False = vectorizeTree_rec(FalseVec);
+    if (alreadyVectorized(E->Scalars))
+    {
+      // it is possible that when vectorizing the operands, we also vectorized this entry.
+      return alreadyVectorized(E->Scalars);
+    }
 
-    if (Value *V = alreadyVectorized(E->Scalars))
-      return V;
-
-    Value *V = Builder.CreateSelect(Cond, True, False);
+    // Step 3, create a new Instruction with the vectorized operands.
+    Value *V = Builder.CreateSelect(condition_vector, true_vector, false_vector);
     E->VectorizedValue = V;
     return V;
   }
@@ -777,7 +795,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
 // Vectorize the tree from root recursively.
 Value *BoUpSLP::vectorizeTree()
 {
-  // All blocks must be scheduled before any instructions are inserted.
+  // Schedule all blocks
   for (auto &BSIter : BlocksSchedules)
   {
     scheduleBlock(BSIter.second.get());
@@ -788,88 +806,73 @@ Value *BoUpSLP::vectorizeTree()
   do_vectorizeTree_rec(&VectorizableTree[0]);
 
 
-  // Step 2, we need to ExtractElement from the designated lane of the vectorized value for uses external to the tree.
+  // Step 2, we need to ExtractElement from the designated lane of the
+  // vectorized value for uses external to the tree, since those scalars are
+  // used in some new InsertElement instructions.
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
        it != e; ++it)
   {
-    Value *Scalar = it->Scalar;
-    llvm::User *User = it->User;
+    Value *scalar = it->Scalar;
+    llvm::User *U = it->User;
 
-    // Skip users that we already RAUW. This happens when one instruction
-    // has multiple uses of the same value.
-    if (std::find(Scalar->user_begin(), Scalar->user_end(), User) ==
-        Scalar->user_end())
+    // Skip users that we already handled.
+    if (std::find(scalar->user_begin(), scalar->user_end(), U) ==
+        scalar->user_end())
       continue;
-    assert(ScalarToTreeEntry.count(Scalar) && "Invalid scalar");
 
-    int Idx = ScalarToTreeEntry[Scalar];
-    TreeEntry *E = &VectorizableTree[Idx];
-    assert(!E->NeedToGather && "Extracting from a gather list");
+    // found the scalar in the tree and the corresponding vector and the position
+    TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+    Value *vector = E->VectorizedValue;
+    Value *pos = Builder.getInt32(it->Lane);
 
-    Value *Vec = E->VectorizedValue;
-    assert(Vec && "Can't find vectorizable value");
-
-    Value *Lane = Builder.getInt32(it->Lane);
-    // Generate extracts for out-of-tree users.
-    // Find the insertion point for the extractelement lane.
-    if (isa<Instruction>(Vec))
+    // insert an ExtractElement instruction for this pair of scalar and use
+    if (isa<Instruction>(vector))
     {
-      if (PHINode *PH = dyn_cast<PHINode>(User))
-      {
-        for (int i = 0, e = PH->getNumIncomingValues(); i != e; ++i)
-        {
-          if (PH->getIncomingValue(i) == Scalar)
-          {
+      if (PHINode *PH = dyn_cast<PHINode>(U)) {
+        // used in a PHI node
+        // found the incoming block corresponding to this scalar and insert after this block
+        for (int i=0;i<PH->getNumIncomingValues();i++) {
+          if (scalar == PH->getIncomingValue(i)) {
             Builder.SetInsertPoint(PH->getIncomingBlock(i)->getTerminator());
-            Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-            PH->setOperand(i, Ex);
+            // create an ExtractElement instruction
+            Value *I = Builder.CreateExtractElement(vector, pos);
+            // replace use
+            PH->setOperand(i, I);
           }
         }
+      } else {
+        Builder.SetInsertPoint(cast<Instruction>(U));
+        // create an ExtractElement instruction
+        Value *I = Builder.CreateExtractElement(vector, pos);
+        // replace use
+        U->replaceUsesOfWith(scalar, I);
       }
-      else
-      {
-        Builder.SetInsertPoint(cast<Instruction>(User));
-        Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-        User->replaceUsesOfWith(Scalar, Ex);
-      }
-    }
-    else
-    {
+    } else {
       Builder.SetInsertPoint(&F->getEntryBlock().front());
-      Value *Ex = Builder.CreateExtractElement(Vec, Lane);
-      User->replaceUsesOfWith(Scalar, Ex);
+      // create an ExtractElement instruction
+      Value *I = Builder.CreateExtractElement(vector, pos);
+      // replace use
+      U->replaceUsesOfWith(scalar, I);
     }
-
   }
 
   // Step 3, replace all the uses of scalars with undef such that these uses will be removed
-  for (int EIdx = 0, EE = VectorizableTree.size(); EIdx < EE; ++EIdx)
-  {
-    TreeEntry *Entry = &VectorizableTree[EIdx];
-
-    // For each lane:
-    for (int Lane = 0, LE = Entry->Scalars.size(); Lane != LE; ++Lane)
-    {
-      Value *Scalar = Entry->Scalars[Lane];
+  for (int i=0;i<VectorizableTree.size();i++) {
+    TreeEntry *E = &VectorizableTree[i];
+    for (int j=0;j<E->Scalars.size();j++) {
+      Value *scalar = E->Scalars[j];
       // Since the users of gathered values have already been replaced with
       // ExtractElement instructions, we should skip those cases.
-      if (Entry->NeedToGather)
+      if (E->NeedToGather)
         continue;
-
-      assert(Entry->VectorizedValue && "Can't find vectorizable value");
-
-      Type *Ty = Scalar->getType();
-      if (!Ty->isVoidTy())
-      {
-        Value *Undef = UndefValue::get(Ty);
-        Scalar->replaceAllUsesWith(Undef);
+      // otherwise, replace all uses of this scalar with undef
+      // such that this scalar will be standaloned from the IR and removed by DCE
+      if (!scalar->getType()->isVoidTy()) {
+        scalar->replaceAllUsesWith(UndefValue::get(scalar->getType()));
       }
-      cast<Instruction>(Scalar)->eraseFromParent();
+      cast<Instruction>(scalar)->eraseFromParent();
     }
   }
-
-  // for (auto &BN : BlocksNumbers)
-  //   BN.second.forget();
 
   Builder.ClearInsertionPoint();
 
