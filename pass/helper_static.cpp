@@ -140,6 +140,14 @@ static bool CanReuseExtract(ArrayRef<Value *> VL)
   return true;
 }
 
+/// \returns True if all of the values in \p VL are constants.
+static bool allConstant(ArrayRef<Value *> VL) {
+  for (unsigned i = 0, e = VL.size(); i < e; ++i)
+    if (!isa<Constant>(VL[i]))
+      return false;
+  return true;
+}
+
 /// \returns True if all of the values in \p VL are identical.
 static bool isSplat(ArrayRef<Value *> VL)
 {
@@ -266,3 +274,4 @@ static void reorderInputsAccordingToOpcode(ArrayRef<Value *> VL,
     Right = OrigRight;
   }
 }
+

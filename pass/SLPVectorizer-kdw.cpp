@@ -115,6 +115,12 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
     return;
   }
 
+  //if all Constant or isSplat there is cheap way of gathering them
+  if (allConstant(VL)||isSplat(VL)){
+    newTreeEntry(VL, false);
+    return;
+  }
+
   // Check if this is a duplicate of another scalar in the tree.
   if (ScalarToTreeEntry.count(VL[0]))
   {
@@ -976,6 +982,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
         continue;
       R.deleteTree();
       R.buildTree(seedPack);
+      R.getTreeCost();
       R.vectorizeTree();
     }
   }
