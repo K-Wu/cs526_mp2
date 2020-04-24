@@ -29,6 +29,7 @@
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -367,17 +368,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
     return;
   }
   //do not deal with
-  case Instruction::ExtractValue:
-  case Instruction::ExtractElement:
-  case Instruction::GetElementPtr:
-  case Instruction::PHI:
-  case Instruction::Call:
-  case Instruction::ShuffleVector:
-  {
-    BS.cancelScheduling(VL);
-    newTreeEntry(VL, false); //cannot schedule
-    return;
-  }
+  #include "buildTree_rec.casedef"
   default:
   { //TODO: what about alloca, atomic operations that bump into this scheme?
     llvm_unreachable("unexpected Opcode");
@@ -644,45 +635,6 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     E->VectorizedValue = SI;
     return propagateMetadata(SI, E->Scalars);
   }
-  case Instruction::GetElementPtr:
-  {
-    llvm_unreachable("GEP not implemented");
-    // GEP. number of operands varies
-    setInsertPointAfterBundle(E->Scalars);
-
-    // Step 1 and 2, collect and vectorize all operands.
-    // collect and vectorize operand 0's
-    ValueList op0_scalars;
-    for (int i = 0; i < E->Scalars.size(); i++)
-    {
-      auto *I = cast<GetElementPtrInst>(E->Scalars[i]);
-      op0_scalars.push_back(I->getOperand(0));
-    }
-    Value *op0_vector = vectorizeTree_rec(op0_scalars);
-
-    // collect and vectorize other operands
-    std::vector<Value *> other_operands_vector;
-    for (int j = 0; j < cast<GetElementPtrInst>(E->Scalars[0])->getNumOperands() - 1; j++)
-    {
-      ValueList opj_scalars;
-      for (int i = 0; i < E->Scalars.size(); i++)
-      {
-        auto *I = cast<GetElementPtrInst>(E->Scalars[i]);
-        opj_scalars.push_back(I->getOperand(j + 1));
-      }
-      Value *opj_vector = vectorizeTree_rec(opj_scalars);
-      other_operands_vector.push_back(opj_vector);
-    }
-
-    // Step 2, create  new GEP instruction
-    Value *GEPI = Builder.CreateGEP(op0_vector, other_operands_vector);
-    E->VectorizedValue = GEPI;
-
-    if (Instruction *I = dyn_cast<Instruction>(GEPI))
-      return propagateMetadata(I, E->Scalars);
-
-    return GEPI;
-  }
   case Instruction::ZExt:
   case Instruction::SExt:
   case Instruction::FPToUI:
@@ -786,12 +738,8 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     E->VectorizedValue = V;
     return V;
   }
-  //not implemented
-  case Instruction::Call:
-  case Instruction::ShuffleVector:
-  case Instruction::ExtractValue:
-  case Instruction::ExtractElement:
-  case Instruction::PHI:
+  //the following are either not implemented or copied from the source code
+  #include "vectorizeTree_rec.casedef"
   default:
     llvm_unreachable("unknown inst");
   }

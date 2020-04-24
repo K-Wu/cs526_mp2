@@ -1,0 +1,207 @@
+case Instruction::GetElementPtr:
+{
+    setInsertPointAfterBundle(E->Scalars);
+
+    SmallVector<Value *, 8> Op0VL;
+    for (Value *V : E->Scalars)
+        Op0VL.push_back(cast<GetElementPtrInst>(V)->getOperand(0));
+
+    Value *Op0 = vectorizeTree_rec(Op0VL);
+
+    std::vector<Value *> OpVecs;
+    for (int j = 1, e = cast<GetElementPtrInst>(VL0)->getNumOperands(); j < e;
+         ++j)
+    {
+        SmallVector<Value *, 8> OpVL;
+        for (Value *V : E->Scalars)
+            OpVL.push_back(cast<GetElementPtrInst>(V)->getOperand(j));
+
+        Value *OpVec = vectorizeTree_rec(OpVL);
+        OpVecs.push_back(OpVec);
+    }
+
+    Value *V = Builder.CreateGEP(
+        cast<GetElementPtrInst>(VL0)->getSourceElementType(), Op0, OpVecs);
+    E->VectorizedValue = V;
+    //++NumVectorInstructions;
+
+    if (Instruction *I = dyn_cast<Instruction>(V))
+        return propagateMetadata(I, E->Scalars);
+
+    return V;
+}
+case Instruction::Call:
+{
+    CallInst *CI = cast<CallInst>(VL0);
+    setInsertPointAfterBundle(E->Scalars);
+    Function *FI;
+    Intrinsic::ID IID = Intrinsic::not_intrinsic;
+    Value *ScalarArg = nullptr;
+    if (CI && (FI = CI->getCalledFunction()))
+    {
+        IID = FI->getIntrinsicID();
+    }
+    std::vector<Value *> OpVecs;
+    for (int j = 0, e = CI->getNumArgOperands(); j < e; ++j)
+    {
+        SmallVector<Value *, 8> OpVL;
+        // ctlz,cttz and powi are special intrinsics whose second argument is
+        // a scalar. This argument should not be vectorized.
+        if (hasVectorInstrinsicScalarOpd(IID, 1) && j == 1)
+        {
+            CallInst *CEI = cast<CallInst>(E->Scalars[0]);
+            ScalarArg = CEI->getArgOperand(j);
+            OpVecs.push_back(CEI->getArgOperand(j));
+            continue;
+        }
+        for (Value *V : E->Scalars)
+        {
+            CallInst *CEI = cast<CallInst>(V);
+            OpVL.push_back(CEI->getArgOperand(j));
+        }
+
+        Value *OpVec = vectorizeTree_rec(OpVL);
+        LLVM_DEBUG(dbgs() << "SLP: OpVec[" << j << "]: " << *OpVec << "\n");
+        OpVecs.push_back(OpVec);
+    }
+
+    Module *M = F->getParent();
+    Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+    Type *Tys[] = {VectorType::get(CI->getType(), E->Scalars.size())};
+    Function *CF = Intrinsic::getDeclaration(M, ID, Tys);
+    SmallVector<OperandBundleDef, 1> OpBundles;
+    CI->getOperandBundlesAsDefs(OpBundles);
+    Value *V = Builder.CreateCall(CF, OpVecs, OpBundles);
+
+    // The scalar argument uses an in-tree scalar so we add the new vectorized
+    // call to ExternalUses list to make sure that an extract will be
+    // generated in the future.
+    if (ScalarArg && ScalarToTreeEntry.count(ScalarArg))
+        ExternalUses.push_back(ExternalUser(ScalarArg, cast<User>(V), 0));
+
+    E->VectorizedValue = V;
+    propagateIRFlags(E->VectorizedValue, E->Scalars);
+    //++NumVectorInstructions;
+    return V;
+}
+case Instruction::ShuffleVector:
+{
+    SmallVector<Value *, 8> LHSVL, RHSVL;
+    assert(isa<BinaryOperator>(VL0) && "Invalid Shuffle Vector Operand");
+    //reorderAltShuffleOperands(E->Scalars, LHSVL, RHSVL);//TODO: add reorder here if needed
+    setInsertPointAfterBundle(E->Scalars);
+
+    Value *LHS = vectorizeTree_rec(LHSVL);
+    Value *RHS = vectorizeTree_rec(RHSVL);
+
+    if (Value *V = alreadyVectorized(E->Scalars))
+        return V;
+
+    // Create a vector of LHS op1 RHS
+    BinaryOperator *BinOp0 = cast<BinaryOperator>(VL0);
+    Value *V0 = Builder.CreateBinOp(BinOp0->getOpcode(), LHS, RHS);
+
+    // Create a vector of LHS op2 RHS
+    Instruction *VL1 = cast<Instruction>(E->Scalars[1]);
+    BinaryOperator *BinOp1 = cast<BinaryOperator>(VL1);
+    Value *V1 = Builder.CreateBinOp(BinOp1->getOpcode(), LHS, RHS);
+
+    // Create shuffle to take alternate operations from the vector.
+    // Also, gather up odd and even scalar ops to propagate IR flags to
+    // each vector operation.
+    SmallVector<Value *, 8> OddScalars, EvenScalars;
+    unsigned e = E->Scalars.size();
+    SmallVector<Constant *, 8> Mask(e);
+    for (unsigned i = 0; i < e; ++i)
+    {
+        if (i & 1)
+        {
+            Mask[i] = Builder.getInt32(e + i);
+            OddScalars.push_back(E->Scalars[i]);
+        }
+        else
+        {
+            Mask[i] = Builder.getInt32(i);
+            EvenScalars.push_back(E->Scalars[i]);
+        }
+    }
+
+    Value *ShuffleMask = ConstantVector::get(Mask);
+    propagateIRFlags(V0, EvenScalars);
+    propagateIRFlags(V1, OddScalars);
+
+    Value *V = Builder.CreateShuffleVector(V0, V1, ShuffleMask);
+    E->VectorizedValue = V;
+    //++NumVectorInstructions;
+    if (Instruction *I = dyn_cast<Instruction>(V))
+        return propagateMetadata(I, E->Scalars);
+
+    return V;
+}
+case Instruction::ExtractElement:
+{
+    if (CanReuseExtract(E->Scalars, Instruction::ExtractElement, TTI))
+    {
+        Value *V = VL0->getOperand(0);
+        E->VectorizedValue = V;
+        return V;
+    }
+    setInsertPointAfterBundle(E->Scalars);
+    auto *V = Gather(E->Scalars, VecTy);
+    E->VectorizedValue = V;
+    return V;
+}
+case Instruction::ExtractValue:
+{
+    if (CanReuseExtract(E->Scalars, Instruction::ExtractValue, TTI))
+    {
+        LoadInst *LI = cast<LoadInst>(VL0->getOperand(0));
+        Builder.SetInsertPoint(LI);
+        PointerType *PtrTy = PointerType::get(VecTy, LI->getPointerAddressSpace());
+        Value *Ptr = Builder.CreateBitCast(LI->getOperand(0), PtrTy);
+        LoadInst *V = Builder.CreateAlignedLoad(Ptr, LI->getAlignment());
+        E->VectorizedValue = V;
+        return propagateMetadata(V, E->Scalars);
+    }
+    setInsertPointAfterBundle(E->Scalars);
+    auto *V = Gather(E->Scalars, VecTy);
+    E->VectorizedValue = V;
+    return V;
+}
+case Instruction::PHI:
+{
+    PHINode *PH = dyn_cast<PHINode>(VL0);
+    Builder.SetInsertPoint(PH->getParent()->getFirstNonPHI());
+    Builder.SetCurrentDebugLocation(PH->getDebugLoc());
+    PHINode *NewPhi = Builder.CreatePHI(VecTy, PH->getNumIncomingValues());
+    E->VectorizedValue = NewPhi;
+
+    // PHINodes may have multiple entries from the same block. We want to
+    // visit every block once.
+    SmallSet<BasicBlock *, 4> VisitedBBs;
+
+    for (unsigned i = 0, e = PH->getNumIncomingValues(); i < e; ++i)
+    {
+        SmallVector<Value *, 8> Operands;
+        BasicBlock *IBB = PH->getIncomingBlock(i);
+
+        if (!VisitedBBs.insert(IBB).second)
+        {
+            NewPhi->addIncoming(NewPhi->getIncomingValueForBlock(IBB), IBB);
+            continue;
+        }
+
+        // Prepare the operand vector.
+        for (Value *V : E->Scalars)
+            Operands.push_back(cast<PHINode>(V)->getIncomingValueForBlock(IBB));
+
+        Builder.SetInsertPoint(IBB->getTerminator());
+        Builder.SetCurrentDebugLocation(PH->getDebugLoc());
+        Value *Vec = vectorizeTree_rec(Operands);
+        NewPhi->addIncoming(Vec, IBB);
+    }
+
+    assert(NewPhi->getNumIncomingValues() == PH->getNumIncomingValues() &&
+           "Invalid number of incoming values");
+    return NewPhi;
+}

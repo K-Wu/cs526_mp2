@@ -106,34 +106,85 @@ static Type *getSameType(ArrayRef<Value *> VL)
   return Ty;
 }
 
+/// \returns True if Extract{Value,Element} instruction extracts element Idx.
+static bool matchExtractIndex(Instruction *E, unsigned Idx, unsigned Opcode) {
+  assert(Opcode == Instruction::ExtractElement ||
+         Opcode == Instruction::ExtractValue);
+  if (Opcode == Instruction::ExtractElement) {
+    ConstantInt *CI = dyn_cast<ConstantInt>(E->getOperand(1));
+    return CI && CI->getZExtValue() == Idx;
+  } else {
+    ExtractValueInst *EI = cast<ExtractValueInst>(E);
+    return EI->getNumIndices() == 1 && *EI->idx_begin() == Idx;
+  }
+}
+
+static unsigned canMapToVector(Type *T, const DataLayout &DL, const TargetTransformInfo* TTI) {
+  int MaxVecRegSize = TTI->getRegisterBitWidth(true);
+  int MinVecRegSize = TTI->getMinVectorRegisterBitWidth();
+  unsigned N;
+  Type *EltTy;
+  auto *ST = dyn_cast<StructType>(T);
+  if (ST) {
+    N = ST->getNumElements();
+    EltTy = *ST->element_begin();
+  } else {
+    N = cast<ArrayType>(T)->getNumElements();
+    EltTy = cast<ArrayType>(T)->getElementType();
+  }
+  if (!isValidElementType(EltTy))
+    return 0;
+  uint64_t VTSize = DL.getTypeStoreSizeInBits(VectorType::get(EltTy, N));
+  if (VTSize < MinVecRegSize || VTSize > MaxVecRegSize || VTSize != DL.getTypeStoreSizeInBits(T))
+    return 0;
+  if (ST) {
+    // Check that struct is homogeneous.
+    for (const auto *Ty : ST->elements())
+      if (Ty != EltTy)
+        return 0;
+  }
+  return N;
+}
+
 /// \returns True if the ExtractElement instructions in VL can be vectorized
 /// to use the original vector.
-static bool CanReuseExtract(ArrayRef<Value *> VL)
-{
-  assert(Instruction::ExtractElement == getSameOpcode(VL) && "Invalid opcode");
+static bool CanReuseExtract(ArrayRef<Value *> VL, unsigned Opcode, const TargetTransformInfo* TTI) {
+  assert(Opcode == Instruction::ExtractElement ||
+         Opcode == Instruction::ExtractValue);
+  assert(Opcode == getSameOpcode(VL) && "Invalid opcode");
   // Check if all of the extracts come from the same vector and from the
   // correct offset.
   Value *VL0 = VL[0];
-  ExtractElementInst *E0 = cast<ExtractElementInst>(VL0);
+  Instruction *E0 = cast<Instruction>(VL0);
   Value *Vec = E0->getOperand(0);
 
-  // We have to extract from the same vector type.
-  unsigned NElts = Vec->getType()->getVectorNumElements();
+  // We have to extract from a vector/aggregate with the same number of elements.
+  unsigned NElts;
+  if (Opcode == Instruction::ExtractValue) {
+    const DataLayout &DL = E0->getModule()->getDataLayout();
+    NElts = canMapToVector(Vec->getType(), DL, TTI);
+    if (!NElts)
+      return false;
+    // Check if load can be rewritten as load of vector.
+    LoadInst *LI = dyn_cast<LoadInst>(Vec);
+    if (!LI || !LI->isSimple() || !LI->hasNUses(VL.size()))
+      return false;
+  } else {
+    NElts = Vec->getType()->getVectorNumElements();
+  }
 
   if (NElts != VL.size())
     return false;
 
   // Check that all of the indices extract from the correct offset.
-  ConstantInt *CI = dyn_cast<ConstantInt>(E0->getOperand(1));
-  if (!CI || CI->getZExtValue())
+  if (!matchExtractIndex(E0, 0, Opcode))
     return false;
 
-  for (unsigned i = 1, e = VL.size(); i < e; ++i)
-  {
-    ExtractElementInst *E = cast<ExtractElementInst>(VL[i]);
-    ConstantInt *CI = dyn_cast<ConstantInt>(E->getOperand(1));
-
-    if (!CI || CI->getZExtValue() != i || E->getOperand(0) != Vec)
+  for (unsigned i = 1, e = VL.size(); i < e; ++i) {
+    Instruction *E = cast<Instruction>(VL[i]);
+    if (!matchExtractIndex(E, i, Opcode))
+      return false;
+    if (E->getOperand(0) != Vec)
       return false;
   }
 
@@ -275,3 +326,19 @@ static void reorderInputsAccordingToOpcode(ArrayRef<Value *> VL,
   }
 }
 
+/// Get the intersection (logical and) of all of the potential IR flags
+/// of each scalar operation (VL) that will be converted into a vector (I).
+/// Flag set: NSW, NUW, exact, and all of fast-math.
+static void propagateIRFlags(Value *I, ArrayRef<Value *> VL) {
+  if (auto *VecOp = dyn_cast<Instruction>(I)) {
+    if (auto *Intersection = dyn_cast<Instruction>(VL[0])) {
+      // Intersection is initialized to the 0th scalar,
+      // so start counting from index '1'.
+      for (int i = 1, e = VL.size(); i < e; ++i) {
+        if (auto *Scalar = dyn_cast<Instruction>(VL[i]))
+          Intersection->andIRFlags(Scalar);
+      }
+      VecOp->copyIRFlags(Intersection);
+    }
+  }
+}
