@@ -117,7 +117,8 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
   }
 
   //if all Constant or isSplat there is cheap way of gathering them
-  if (allConstant(VL)||isSplat(VL)){
+  if (allConstant(VL) || isSplat(VL))
+  {
     newTreeEntry(VL, false);
     return;
   }
@@ -250,12 +251,12 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
     newTreeEntry(VL, true);
     // for (int idx_operand = 0; idx_operand < dyn_cast<StoreInst>(VL[0])->getNumOperands(); idx_operand++)
     // {
-      std::vector<Value *> operands;
-      for (int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
-      {
-        operands.push_back(dyn_cast<StoreInst>(VL[idx_vl])->getOperand(0));
-      }
-      buildTree_rec(operands, Depth + 1);
+    std::vector<Value *> operands;
+    for (int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
+    {
+      operands.push_back(dyn_cast<StoreInst>(VL[idx_vl])->getOperand(0));
+    }
+    buildTree_rec(operands, Depth + 1);
     //}
     return;
   }
@@ -367,8 +368,8 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth)
     }
     return;
   }
-  //do not deal with
-  #include "buildTree_rec.casedef"
+//do not deal with
+#include "buildTree_rec.casedef"
   default:
   { //TODO: what about alloca, atomic operations that bump into this scheme?
     llvm_unreachable("unexpected Opcode");
@@ -400,8 +401,6 @@ void BoUpSLP::buildTree(ArrayRef<Value *> Roots)
     }
   }
 }
-
-
 
 Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty)
 {
@@ -558,9 +557,12 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     // For binary operators. Operands: LHS and RHS
     // Step 1, collect operands
     ValueList LHS_scalars, RHS_scalars;
-    if (isa<BinaryOperator>(scalar) && scalar->isCommutative()) {
+    if (isa<BinaryOperator>(scalar) && scalar->isCommutative())
+    {
       reorderInputsAccordingToOpcode(E->Scalars, LHS_scalars, RHS_scalars);
-    } else {
+    }
+    else
+    {
       for (int i = 0; i < E->Scalars.size(); i++)
       {
         Instruction *I = cast<Instruction>(E->Scalars[i]);
@@ -738,8 +740,8 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     E->VectorizedValue = V;
     return V;
   }
-  //the following are either not implemented or copied from the source code
-  #include "vectorizeTree_rec.casedef"
+//the following are either not implemented or copied from the source code
+#include "vectorizeTree_rec.casedef"
   default:
     llvm_unreachable("unknown inst");
   }
@@ -758,7 +760,6 @@ Value *BoUpSLP::vectorizeTree()
   // Step 1, recursively vectorize starting from the root.
   Builder.SetInsertPoint(&F->getEntryBlock().front());
   do_vectorizeTree_rec(&VectorizableTree[0]);
-
 
   // Step 2, we need to ExtractElement from the designated lane of the
   // vectorized value for uses external to the tree, since those scalars are
@@ -782,11 +783,14 @@ Value *BoUpSLP::vectorizeTree()
     // insert an ExtractElement instruction for this pair of scalar and use
     if (isa<Instruction>(vector))
     {
-      if (PHINode *PH = dyn_cast<PHINode>(U)) {
+      if (PHINode *PH = dyn_cast<PHINode>(U))
+      {
         // used in a PHI node
         // found the incoming block corresponding to this scalar and insert after this block
-        for (int i=0;i<PH->getNumIncomingValues();i++) {
-          if (scalar == PH->getIncomingValue(i)) {
+        for (int i = 0; i < PH->getNumIncomingValues(); i++)
+        {
+          if (scalar == PH->getIncomingValue(i))
+          {
             Builder.SetInsertPoint(PH->getIncomingBlock(i)->getTerminator());
             // create an ExtractElement instruction
             Value *I = Builder.CreateExtractElement(vector, pos);
@@ -794,14 +798,18 @@ Value *BoUpSLP::vectorizeTree()
             PH->setOperand(i, I);
           }
         }
-      } else {
+      }
+      else
+      {
         Builder.SetInsertPoint(cast<Instruction>(U));
         // create an ExtractElement instruction
         Value *I = Builder.CreateExtractElement(vector, pos);
         // replace use
         U->replaceUsesOfWith(scalar, I);
       }
-    } else {
+    }
+    else
+    {
       Builder.SetInsertPoint(&F->getEntryBlock().front());
       // create an ExtractElement instruction
       Value *I = Builder.CreateExtractElement(vector, pos);
@@ -811,9 +819,11 @@ Value *BoUpSLP::vectorizeTree()
   }
 
   // Step 3, replace all the uses of scalars with undef such that these uses will be removed
-  for (int i=0;i<VectorizableTree.size();i++) {
+  for (int i = 0; i < VectorizableTree.size(); i++)
+  {
     TreeEntry *E = &VectorizableTree[i];
-    for (int j=0;j<E->Scalars.size();j++) {
+    for (int j = 0; j < E->Scalars.size(); j++)
+    {
       Value *scalar = E->Scalars[j];
       // Since the users of gathered values have already been replaced with
       // ExtractElement instructions, we should skip those cases.
@@ -821,7 +831,8 @@ Value *BoUpSLP::vectorizeTree()
         continue;
       // otherwise, replace all uses of this scalar with undef
       // such that this scalar will be standaloned from the IR and removed by DCE
-      if (!scalar->getType()->isVoidTy()) {
+      if (!scalar->getType()->isVoidTy())
+      {
         scalar->replaceAllUsesWith(UndefValue::get(scalar->getType()));
       }
       cast<Instruction>(scalar)->eraseFromParent();

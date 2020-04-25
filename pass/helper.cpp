@@ -789,7 +789,7 @@ bool BoUpSLP::BlockScheduling::tryScheduleBundle(ArrayRef<Value *> VL,
   }
 
   LLVM_DEBUG(dbgs() << "SLP: try schedule bundle " << *Bundle << " in block "
-                      << BB->getName() << "\n");
+                    << BB->getName() << "\n");
 
   calculateDependencies(Bundle, true, SLP);
 
@@ -1196,8 +1196,6 @@ void BoUpSLP::scheduleBlock(BlockScheduling *BS)
   BS->ScheduleStart = nullptr;
 }
 
-
-
 Value *BoUpSLP::alreadyVectorized(ArrayRef<Value *> VL) const
 {
   SmallDenseMap<Value *, int>::const_iterator Entry = ScalarToTreeEntry.find(VL[0]);
@@ -1211,19 +1209,21 @@ Value *BoUpSLP::alreadyVectorized(ArrayRef<Value *> VL) const
   return nullptr;
 }
 
-
-int BoUpSLP::getEntryCost(TreeEntry *E) {
-  ArrayRef<Value*> VL = E->Scalars;
+int BoUpSLP::getEntryCost(TreeEntry *E)
+{
+  ArrayRef<Value *> VL = E->Scalars;
 
   Type *ScalarTy = VL[0]->getType();
   if (StoreInst *SI = dyn_cast<StoreInst>(VL[0]))
     ScalarTy = SI->getValueOperand()->getType();
   VectorType *VecTy = VectorType::get(ScalarTy, VL.size());
 
-  if (E->NeedToGather) {
+  if (E->NeedToGather)
+  {
     if (allConstant(VL))
       return 0;
-    if (isSplat(VL)) {
+    if (isSplat(VL))
+    {
       return TTI->getShuffleCost(TargetTransformInfo::SK_Broadcast, VecTy, 0);
     }
     return getGatherCost(E->Scalars);
@@ -1231,213 +1231,234 @@ int BoUpSLP::getEntryCost(TreeEntry *E) {
   unsigned Opcode = getSameOpcode(VL);
   assert(Opcode && getSameType(VL) && getSameBlock(VL) && "Invalid VL");
   Instruction *VL0 = cast<Instruction>(VL[0]);
-  switch (Opcode) {
-    case Instruction::PHI: {
-      return 0;
-    }
-    case Instruction::ExtractValue:
-    case Instruction::ExtractElement:{
-      if (CanReuseExtract(VL, Opcode, TTI)) {
-        int DeadCost = 0;
-        for (unsigned i = 0, e = VL.size(); i < e; ++i) {
-          Instruction *E = cast<Instruction>(VL[i]);
-          if (E->hasOneUse())
-            // Take credit for instruction that will become dead.
-            DeadCost +=
-                TTI->getVectorInstrCost(Instruction::ExtractElement, VecTy, i);
-        }
-        return -DeadCost;
+  switch (Opcode)
+  {
+  case Instruction::PHI:
+  {
+    return 0;
+  }
+  case Instruction::ExtractValue:
+  case Instruction::ExtractElement:
+  {
+    if (CanReuseExtract(VL, Opcode, TTI))
+    {
+      int DeadCost = 0;
+      for (unsigned i = 0, e = VL.size(); i < e; ++i)
+      {
+        Instruction *E = cast<Instruction>(VL[i]);
+        if (E->hasOneUse())
+          // Take credit for instruction that will become dead.
+          DeadCost +=
+              TTI->getVectorInstrCost(Instruction::ExtractElement, VecTy, i);
       }
-      return getGatherCost(VecTy);
+      return -DeadCost;
     }
-    case Instruction::ZExt:
-    case Instruction::SExt:
-    case Instruction::FPToUI:
-    case Instruction::FPToSI:
-    case Instruction::FPExt:
-    case Instruction::PtrToInt:
-    case Instruction::IntToPtr:
-    case Instruction::SIToFP:
-    case Instruction::UIToFP:
-    case Instruction::Trunc:
-    case Instruction::FPTrunc:
-    case Instruction::BitCast: {
-      Type *SrcTy = VL0->getOperand(0)->getType();
+    return getGatherCost(VecTy);
+  }
+  case Instruction::ZExt:
+  case Instruction::SExt:
+  case Instruction::FPToUI:
+  case Instruction::FPToSI:
+  case Instruction::FPExt:
+  case Instruction::PtrToInt:
+  case Instruction::IntToPtr:
+  case Instruction::SIToFP:
+  case Instruction::UIToFP:
+  case Instruction::Trunc:
+  case Instruction::FPTrunc:
+  case Instruction::BitCast:
+  {
+    Type *SrcTy = VL0->getOperand(0)->getType();
 
-      // Calculate the cost of this instruction.
-      int ScalarCost = VL.size() * TTI->getCastInstrCost(VL0->getOpcode(),
-                                                         VL0->getType(), SrcTy);
+    // Calculate the cost of this instruction.
+    int ScalarCost = VL.size() * TTI->getCastInstrCost(VL0->getOpcode(),
+                                                       VL0->getType(), SrcTy);
 
-      VectorType *SrcVecTy = VectorType::get(SrcTy, VL.size());
-      int VecCost = TTI->getCastInstrCost(VL0->getOpcode(), VecTy, SrcVecTy);
-      return VecCost - ScalarCost;
-    }
-    case Instruction::FCmp:
-    case Instruction::ICmp:
-    case Instruction::Select:{
-      // Calculate the cost of this instruction.
+    VectorType *SrcVecTy = VectorType::get(SrcTy, VL.size());
+    int VecCost = TTI->getCastInstrCost(VL0->getOpcode(), VecTy, SrcVecTy);
+    return VecCost - ScalarCost;
+  }
+  case Instruction::FCmp:
+  case Instruction::ICmp:
+  case Instruction::Select:
+  {
+    // Calculate the cost of this instruction.
+    VectorType *MaskTy = VectorType::get(Builder.getInt1Ty(), VL.size());
+    int ScalarCost = VecTy->getNumElements() *
+                     TTI->getCmpSelInstrCost(Opcode, ScalarTy, Builder.getInt1Ty());
+    int VecCost = TTI->getCmpSelInstrCost(Opcode, VecTy, MaskTy);
+    return VecCost - ScalarCost;
+  }
+  case Instruction::Add:
+  case Instruction::FAdd:
+  case Instruction::Sub:
+  case Instruction::FSub:
+  case Instruction::Mul:
+  case Instruction::FMul:
+  case Instruction::UDiv:
+  case Instruction::SDiv:
+  case Instruction::FDiv:
+  case Instruction::URem:
+  case Instruction::SRem:
+  case Instruction::FRem:
+  case Instruction::Shl:
+  case Instruction::LShr:
+  case Instruction::AShr:
+  case Instruction::And:
+  case Instruction::Or:
+  case Instruction::Xor:
+  {
+    // Calculate the cost of this instruction.
+    int ScalarCost = 0;
+    int VecCost = 0;
+    if (Opcode == Instruction::FCmp || Opcode == Instruction::ICmp ||
+        Opcode == Instruction::Select)
+    {
       VectorType *MaskTy = VectorType::get(Builder.getInt1Ty(), VL.size());
-      int ScalarCost = VecTy->getNumElements() *
-          TTI->getCmpSelInstrCost(Opcode, ScalarTy, Builder.getInt1Ty());
-      int VecCost = TTI->getCmpSelInstrCost(Opcode, VecTy, MaskTy);
-      return VecCost - ScalarCost;
+      ScalarCost = VecTy->getNumElements() *
+                   TTI->getCmpSelInstrCost(Opcode, ScalarTy, Builder.getInt1Ty());
+      VecCost = TTI->getCmpSelInstrCost(Opcode, VecTy, MaskTy);
     }
-    case Instruction::Add:
-    case Instruction::FAdd:
-    case Instruction::Sub:
-    case Instruction::FSub:
-    case Instruction::Mul:
-    case Instruction::FMul:
-    case Instruction::UDiv:
-    case Instruction::SDiv:
-    case Instruction::FDiv:
-    case Instruction::URem:
-    case Instruction::SRem:
-    case Instruction::FRem:
-    case Instruction::Shl:
-    case Instruction::LShr:
-    case Instruction::AShr:
-    case Instruction::And:
-    case Instruction::Or:
-    case Instruction::Xor: {
-      // Calculate the cost of this instruction.
-      int ScalarCost = 0;
-      int VecCost = 0;
-      if (Opcode == Instruction::FCmp || Opcode == Instruction::ICmp ||
-          Opcode == Instruction::Select) {
-        VectorType *MaskTy = VectorType::get(Builder.getInt1Ty(), VL.size());
-        ScalarCost = VecTy->getNumElements() *
-        TTI->getCmpSelInstrCost(Opcode, ScalarTy, Builder.getInt1Ty());
-        VecCost = TTI->getCmpSelInstrCost(Opcode, VecTy, MaskTy);
-      } else {
-        // Certain instructions can be cheaper to vectorize if they have a
-        // constant second vector operand.
-        TargetTransformInfo::OperandValueKind Op1VK =
-            TargetTransformInfo::OK_AnyValue;
-        TargetTransformInfo::OperandValueKind Op2VK =
-            TargetTransformInfo::OK_UniformConstantValue;
-
-        // If all operands are exactly the same ConstantInt then set the
-        // operand kind to OK_UniformConstantValue.
-        // If instead not all operands are constants, then set the operand kind
-        // to OK_AnyValue. If all operands are constants but not the same,
-        // then set the operand kind to OK_NonUniformConstantValue.
-        ConstantInt *CInt = nullptr;
-        for (unsigned i = 0; i < VL.size(); ++i) {
-          const Instruction *I = cast<Instruction>(VL[i]);
-          if (!isa<ConstantInt>(I->getOperand(1))) {
-            Op2VK = TargetTransformInfo::OK_AnyValue;
-            break;
-          }
-          if (i == 0) {
-            CInt = cast<ConstantInt>(I->getOperand(1));
-            continue;
-          }
-          if (Op2VK == TargetTransformInfo::OK_UniformConstantValue &&
-              CInt != cast<ConstantInt>(I->getOperand(1)))
-            Op2VK = TargetTransformInfo::OK_NonUniformConstantValue;
-        }
-
-        ScalarCost =
-            VecTy->getNumElements() *
-            TTI->getArithmeticInstrCost(Opcode, ScalarTy, Op1VK, Op2VK);
-        VecCost = TTI->getArithmeticInstrCost(Opcode, VecTy, Op1VK, Op2VK);
-      }
-      return VecCost - ScalarCost;
-    }
-    case Instruction::GetElementPtr: {
+    else
+    {
+      // Certain instructions can be cheaper to vectorize if they have a
+      // constant second vector operand.
       TargetTransformInfo::OperandValueKind Op1VK =
           TargetTransformInfo::OK_AnyValue;
       TargetTransformInfo::OperandValueKind Op2VK =
           TargetTransformInfo::OK_UniformConstantValue;
 
-      int ScalarCost =
-          VecTy->getNumElements() *
-          TTI->getArithmeticInstrCost(Instruction::Add, ScalarTy, Op1VK, Op2VK);
-      int VecCost =
-          TTI->getArithmeticInstrCost(Instruction::Add, VecTy, Op1VK, Op2VK);
-
-      return VecCost - ScalarCost;
-    }
-    case Instruction::Load: {
-      // Cost of wide load - cost of scalar loads.
-      unsigned alignment = dyn_cast<LoadInst>(VL0)->getAlignment();
-      int ScalarLdCost = VecTy->getNumElements() *
-            TTI->getMemoryOpCost(Instruction::Load, ScalarTy, alignment, 0);
-      int VecLdCost = TTI->getMemoryOpCost(Instruction::Load,
-                                           VecTy, alignment, 0);
-      return VecLdCost - ScalarLdCost;
-    }
-    case Instruction::Store: {
-      // We know that we can merge the stores. Calculate the cost.
-      unsigned alignment = dyn_cast<StoreInst>(VL0)->getAlignment();
-      int ScalarStCost = VecTy->getNumElements() *
-            TTI->getMemoryOpCost(Instruction::Store, ScalarTy, alignment, 0);
-      int VecStCost = TTI->getMemoryOpCost(Instruction::Store,
-                                           VecTy, alignment, 0);
-      return VecStCost - ScalarStCost;
-    }
-    case Instruction::Call: {
-      CallInst *CI = cast<CallInst>(VL0);
-      Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
-
-      // Calculate the cost of the scalar and vector calls.
-      SmallVector<Type*, 4> ScalarTys, VecTys;
-      for (unsigned op = 0, opc = CI->getNumArgOperands(); op!= opc; ++op) {
-        ScalarTys.push_back(CI->getArgOperand(op)->getType());
-        VecTys.push_back(VectorType::get(CI->getArgOperand(op)->getType(),
-                                         VecTy->getNumElements()));
-      }
-
-      FastMathFlags FMF;
-      if (auto *FPMO = dyn_cast<FPMathOperator>(CI))
-        FMF = FPMO->getFastMathFlags();
-
-      int ScalarCallCost = VecTy->getNumElements() *
-          TTI->getIntrinsicInstrCost(ID, ScalarTy, ScalarTys, FMF);
-
-      int VecCallCost = TTI->getIntrinsicInstrCost(ID, VecTy, VecTys, FMF);
-
-      LLVM_DEBUG(dbgs() << "SLP: Call cost "<< VecCallCost - ScalarCallCost
-            << " (" << VecCallCost  << "-" <<  ScalarCallCost << ")"
-            << " for " << *CI << "\n");
-
-      return VecCallCost - ScalarCallCost;
-    }
-    case Instruction::ShuffleVector: {
-      TargetTransformInfo::OperandValueKind Op1VK =
-          TargetTransformInfo::OK_AnyValue;
-      TargetTransformInfo::OperandValueKind Op2VK =
-          TargetTransformInfo::OK_AnyValue;
-      int ScalarCost = 0;
-      int VecCost = 0;
-      for (unsigned i = 0; i < VL.size(); ++i) {
-        Instruction *I = cast<Instruction>(VL[i]);
-        if (!I)
+      // If all operands are exactly the same ConstantInt then set the
+      // operand kind to OK_UniformConstantValue.
+      // If instead not all operands are constants, then set the operand kind
+      // to OK_AnyValue. If all operands are constants but not the same,
+      // then set the operand kind to OK_NonUniformConstantValue.
+      ConstantInt *CInt = nullptr;
+      for (unsigned i = 0; i < VL.size(); ++i)
+      {
+        const Instruction *I = cast<Instruction>(VL[i]);
+        if (!isa<ConstantInt>(I->getOperand(1)))
+        {
+          Op2VK = TargetTransformInfo::OK_AnyValue;
           break;
-        ScalarCost +=
-            TTI->getArithmeticInstrCost(I->getOpcode(), ScalarTy, Op1VK, Op2VK);
+        }
+        if (i == 0)
+        {
+          CInt = cast<ConstantInt>(I->getOperand(1));
+          continue;
+        }
+        if (Op2VK == TargetTransformInfo::OK_UniformConstantValue &&
+            CInt != cast<ConstantInt>(I->getOperand(1)))
+          Op2VK = TargetTransformInfo::OK_NonUniformConstantValue;
       }
-      // VecCost is equal to sum of the cost of creating 2 vectors
-      // and the cost of creating shuffle.
-      Instruction *I0 = cast<Instruction>(VL[0]);
-      VecCost =
-          TTI->getArithmeticInstrCost(I0->getOpcode(), VecTy, Op1VK, Op2VK);
-      Instruction *I1 = cast<Instruction>(VL[1]);
-      VecCost +=
-          TTI->getArithmeticInstrCost(I1->getOpcode(), VecTy, Op1VK, Op2VK);
-      VecCost +=
-          TTI->getShuffleCost(TargetTransformInfo::SK_Select, VecTy, 0);
-      return VecCost - ScalarCost;
+
+      ScalarCost =
+          VecTy->getNumElements() *
+          TTI->getArithmeticInstrCost(Opcode, ScalarTy, Op1VK, Op2VK);
+      VecCost = TTI->getArithmeticInstrCost(Opcode, VecTy, Op1VK, Op2VK);
     }
-    default:
-      llvm_unreachable("Unknown instruction");
+    return VecCost - ScalarCost;
+  }
+  case Instruction::GetElementPtr:
+  {
+    TargetTransformInfo::OperandValueKind Op1VK =
+        TargetTransformInfo::OK_AnyValue;
+    TargetTransformInfo::OperandValueKind Op2VK =
+        TargetTransformInfo::OK_UniformConstantValue;
+
+    int ScalarCost =
+        VecTy->getNumElements() *
+        TTI->getArithmeticInstrCost(Instruction::Add, ScalarTy, Op1VK, Op2VK);
+    int VecCost =
+        TTI->getArithmeticInstrCost(Instruction::Add, VecTy, Op1VK, Op2VK);
+
+    return VecCost - ScalarCost;
+  }
+  case Instruction::Load:
+  {
+    // Cost of wide load - cost of scalar loads.
+    unsigned alignment = dyn_cast<LoadInst>(VL0)->getAlignment();
+    int ScalarLdCost = VecTy->getNumElements() *
+                       TTI->getMemoryOpCost(Instruction::Load, ScalarTy, alignment, 0);
+    int VecLdCost = TTI->getMemoryOpCost(Instruction::Load,
+                                         VecTy, alignment, 0);
+    return VecLdCost - ScalarLdCost;
+  }
+  case Instruction::Store:
+  {
+    // We know that we can merge the stores. Calculate the cost.
+    unsigned alignment = dyn_cast<StoreInst>(VL0)->getAlignment();
+    int ScalarStCost = VecTy->getNumElements() *
+                       TTI->getMemoryOpCost(Instruction::Store, ScalarTy, alignment, 0);
+    int VecStCost = TTI->getMemoryOpCost(Instruction::Store,
+                                         VecTy, alignment, 0);
+    return VecStCost - ScalarStCost;
+  }
+  case Instruction::Call:
+  {
+    CallInst *CI = cast<CallInst>(VL0);
+    Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+
+    // Calculate the cost of the scalar and vector calls.
+    SmallVector<Type *, 4> ScalarTys, VecTys;
+    for (unsigned op = 0, opc = CI->getNumArgOperands(); op != opc; ++op)
+    {
+      ScalarTys.push_back(CI->getArgOperand(op)->getType());
+      VecTys.push_back(VectorType::get(CI->getArgOperand(op)->getType(),
+                                       VecTy->getNumElements()));
+    }
+
+    FastMathFlags FMF;
+    if (auto *FPMO = dyn_cast<FPMathOperator>(CI))
+      FMF = FPMO->getFastMathFlags();
+
+    int ScalarCallCost = VecTy->getNumElements() *
+                         TTI->getIntrinsicInstrCost(ID, ScalarTy, ScalarTys, FMF);
+
+    int VecCallCost = TTI->getIntrinsicInstrCost(ID, VecTy, VecTys, FMF);
+
+    LLVM_DEBUG(dbgs() << "SLP: Call cost " << VecCallCost - ScalarCallCost
+                      << " (" << VecCallCost << "-" << ScalarCallCost << ")"
+                      << " for " << *CI << "\n");
+
+    return VecCallCost - ScalarCallCost;
+  }
+  case Instruction::ShuffleVector:
+  {
+    TargetTransformInfo::OperandValueKind Op1VK =
+        TargetTransformInfo::OK_AnyValue;
+    TargetTransformInfo::OperandValueKind Op2VK =
+        TargetTransformInfo::OK_AnyValue;
+    int ScalarCost = 0;
+    int VecCost = 0;
+    for (unsigned i = 0; i < VL.size(); ++i)
+    {
+      Instruction *I = cast<Instruction>(VL[i]);
+      if (!I)
+        break;
+      ScalarCost +=
+          TTI->getArithmeticInstrCost(I->getOpcode(), ScalarTy, Op1VK, Op2VK);
+    }
+    // VecCost is equal to sum of the cost of creating 2 vectors
+    // and the cost of creating shuffle.
+    Instruction *I0 = cast<Instruction>(VL[0]);
+    VecCost =
+        TTI->getArithmeticInstrCost(I0->getOpcode(), VecTy, Op1VK, Op2VK);
+    Instruction *I1 = cast<Instruction>(VL[1]);
+    VecCost +=
+        TTI->getArithmeticInstrCost(I1->getOpcode(), VecTy, Op1VK, Op2VK);
+    VecCost +=
+        TTI->getShuffleCost(TargetTransformInfo::SK_Select, VecTy, 0);
+    return VecCost - ScalarCost;
+  }
+  default:
+    llvm_unreachable("Unknown instruction");
   }
 }
 
-bool BoUpSLP::isFullyVectorizableTinyTree() {
-  LLVM_DEBUG(dbgs() << "SLP: Check whether the tree with height " <<
-        VectorizableTree.size() << " is fully vectorizable .\n");
+bool BoUpSLP::isFullyVectorizableTinyTree()
+{
+  LLVM_DEBUG(dbgs() << "SLP: Check whether the tree with height " << VectorizableTree.size() << " is fully vectorizable .\n");
 
   // We only handle trees of height 2.
   if (VectorizableTree.size() != 2)
@@ -1454,14 +1475,16 @@ bool BoUpSLP::isFullyVectorizableTinyTree() {
   return true;
 }
 
-int BoUpSLP::getTreeCost() {
+int BoUpSLP::getTreeCost()
+{
   int Cost = 0;
-  LLVM_DEBUG(dbgs() << "SLP: Calculating cost for tree of size " <<
-        VectorizableTree.size() << ".\n");
+  LLVM_DEBUG(dbgs() << "SLP: Calculating cost for tree of size " << VectorizableTree.size() << ".\n");
 
   // We only vectorize tiny trees if it is fully vectorizable.
-  if (VectorizableTree.size() < 3 && !isFullyVectorizableTinyTree()) {
-    if (!VectorizableTree.size()) {
+  if (VectorizableTree.size() < 3 && !isFullyVectorizableTinyTree())
+  {
+    if (!VectorizableTree.size())
+    {
       assert(!ExternalUses.size() && "We should not have any external users");
     }
     return INT_MAX;
@@ -1469,17 +1492,19 @@ int BoUpSLP::getTreeCost() {
 
   unsigned BundleWidth = VectorizableTree[0].Scalars.size();
 
-  for (unsigned i = 0, e = VectorizableTree.size(); i != e; ++i) {
+  for (unsigned i = 0, e = VectorizableTree.size(); i != e; ++i)
+  {
     int C = getEntryCost(&VectorizableTree[i]);
     LLVM_DEBUG(dbgs() << "SLP: Adding cost " << C << " for bundle that starts with "
-          << *VectorizableTree[i].Scalars[0] << " .\n");
+                      << *VectorizableTree[i].Scalars[0] << " .\n");
     Cost += C;
   }
 
   SmallSet<Value *, 16> ExtractCostCalculated;
   int ExtractCost = 0;
   for (UserList::iterator I = ExternalUses.begin(), E = ExternalUses.end();
-       I != E; ++I) {
+       I != E; ++I)
+  {
     // We only add extract cost once for the same scalar.
     if (!ExtractCostCalculated.insert(I->Scalar).second)
       continue;
@@ -1489,18 +1514,20 @@ int BoUpSLP::getTreeCost() {
                                            I->Lane);
   }
 
-  LLVM_DEBUG(dbgs() << "SLP: Total Cost " << Cost + ExtractCost<< ".\n");
-  return  Cost + ExtractCost;
+  LLVM_DEBUG(dbgs() << "SLP: Total Cost " << Cost + ExtractCost << ".\n");
+  return Cost + ExtractCost;
 }
 
-int BoUpSLP::getGatherCost(Type *Ty) {
+int BoUpSLP::getGatherCost(Type *Ty)
+{
   int Cost = 0;
   for (unsigned i = 0, e = cast<VectorType>(Ty)->getNumElements(); i < e; ++i)
     Cost += TTI->getVectorInstrCost(Instruction::InsertElement, Ty, i);
   return Cost;
 }
 
-int BoUpSLP::getGatherCost(ArrayRef<Value *> VL) {
+int BoUpSLP::getGatherCost(ArrayRef<Value *> VL)
+{
   // Find the type of the operands in VL.
   Type *ScalarTy = VL[0]->getType();
   if (StoreInst *SI = dyn_cast<StoreInst>(VL[0]))
@@ -1509,4 +1536,3 @@ int BoUpSLP::getGatherCost(ArrayRef<Value *> VL) {
   // Find the cost of inserting/extracting values from the vector.
   return getGatherCost(VecTy);
 }
-

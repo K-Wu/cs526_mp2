@@ -131,7 +131,7 @@ case Instruction::Call:
             BS.cancelScheduling(VL);
             newTreeEntry(VL, false);
             LLVM_DEBUG(dbgs() << "SLP: mismatched calls:" << *CI << "!=" << *VL[i]
-                         << "\n");
+                              << "\n");
             return;
         }
         // ctlz,cttz and powi are special intrinsics whose second argument
@@ -144,8 +144,8 @@ case Instruction::Call:
                 BS.cancelScheduling(VL);
                 newTreeEntry(VL, false);
                 LLVM_DEBUG(dbgs() << "SLP: mismatched arguments in call:" << *CI
-                             << " argument " << A1I << "!=" << A1J
-                             << "\n");
+                                  << " argument " << A1I << "!=" << A1J
+                                  << "\n");
                 return;
             }
         }
@@ -158,7 +158,7 @@ case Instruction::Call:
             BS.cancelScheduling(VL);
             newTreeEntry(VL, false);
             LLVM_DEBUG(dbgs() << "SLP: mismatched bundle operands in calls:" << *CI << "!="
-                         << *VL[i] << '\n');
+                              << *VL[i] << '\n');
             return;
         }
     }
