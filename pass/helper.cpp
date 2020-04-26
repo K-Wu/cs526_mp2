@@ -68,14 +68,21 @@ public:
   /// Returns the vectorized root.
   Value *vectorizeTree();
 
+  Value *vectorizeTree(SmallBitVector cut);
+
   /// \returns the vectorization cost of the subtree that starts at \p VL.
   /// A negative number means that this is profitable.
   int getTreeCost();
+
+  int getTreeCost(SmallBitVector cut);
 
   /// Construct a vectorizable tree that starts at \p Roots, ignoring users for
   /// the purpose of scheduling and extraction in the \p UserIgnoreLst.
   void buildTree(ArrayRef<Value *> Roots); //,
                                            //ArrayRef<Value *> UserIgnoreLst = None);
+
+  void calcExternalUses();
+  void calcExternalUses(SmallBitVector cut);
 
   /// Clear the internal data structures that are created by 'buildTree'.
   void deleteTree()
@@ -85,12 +92,17 @@ public:
     MustGather.clear();
     ExternalUses.clear();
     MemBarrierIgnoreList.clear();
-
+    EntryChildrenEntries.clear();
+    EntryChildrenID.clear();
     for (auto &Iter : BlocksSchedules)
     {
       BlockScheduling *BS = Iter.second.get();
       BS->clear();
     }
+  }
+
+  void clearExternalUses(){
+    ExternalUses.clear();
   }
 
   /// \returns true if the memory operations A and B are consecutive.
@@ -432,14 +444,56 @@ public:
     int SchedulingRegionID;
   };
 
-private:
   struct TreeEntry;
+
+  struct TreeEntry
+  {
+    TreeEntry() : Scalars(), VectorizedValue(nullptr),
+                  NeedToGather(0),idx(0) {}
+
+    /// \returns true if the scalars in VL are equal to this entry.
+    bool isSame(ArrayRef<Value *> VL) const
+    {
+      assert(VL.size() == Scalars.size() && "Invalid size");
+      return std::equal(VL.begin(), VL.end(), Scalars.begin());
+    }
+
+    /// A vector of scalars.
+    ValueList Scalars;
+
+    /// The Scalars are vectorized into this value. It is initialized to Null.
+    Value *VectorizedValue;
+
+    int idx;    
+
+    /// The index in the basic block of the last scalar.
+    //int LastScalarIndex; //removed in rl214494
+
+    /// Do we need to gather this sequence ?
+    bool NeedToGather;
+  };
 
   /// \returns the cost of the vectorizable entry.
   int getEntryCost(TreeEntry *E);
 
+  std::vector<SmallBitVector> getCuts(unsigned int allNeighbourThreshold);
+
+  void levelOrderTraverse(std::vector<unsigned int>& levels, std::vector<TreeEntry*>& entries);
+
+  unsigned int getVectorizableTreeSize() const{
+    return VectorizableTree.size();
+  }
+  
+  SmallBitVector setNeedToGather(SmallBitVector cut);
+  void unsetNeedToGather(SmallBitVector nodesNeedToUnset);
+  void descheduleExternalNodes(SmallBitVector cut,SmallBitVector nodesNeedToUnsetNeedToGather);
+  void printVectorizableTree();
+private:
+  
+  
+
   /// This is the recursive part of buildTree.
-  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth);
+  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth, TreeEntry *parent);
 
   /// Vectorize a single entry in the tree.
   Value *do_vectorizeTree_rec(TreeEntry *E);
@@ -489,38 +543,22 @@ private:
   /// \returns whether the VectorizableTree is fully vectoriable and will
   /// be beneficial even the tree height is tiny.
   bool isFullyVectorizableTinyTree();
+  bool isFullyVectorizableTinyTree(ArrayRef<unsigned int> allNodesInCut);
 
-  struct TreeEntry
-  {
-    TreeEntry() : Scalars(), VectorizedValue(nullptr),
-                  NeedToGather(0) {}
+  std::vector<std::vector<TreeEntry*>> EntryChildrenEntries;
+  std::vector<std::vector<int>> EntryChildrenID;
 
-    /// \returns true if the scalars in VL are equal to this entry.
-    bool isSame(ArrayRef<Value *> VL) const
-    {
-      assert(VL.size() == Scalars.size() && "Invalid size");
-      return std::equal(VL.begin(), VL.end(), Scalars.begin());
-    }
 
-    /// A vector of scalars.
-    ValueList Scalars;
 
-    /// The Scalars are vectorized into this value. It is initialized to Null.
-    Value *VectorizedValue;
-
-    /// The index in the basic block of the last scalar.
-    //int LastScalarIndex; //removed in rl214494
-
-    /// Do we need to gather this sequence ?
-    bool NeedToGather;
-  };
   /// Create a new VectorizableTree entry.
-  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized)
+  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized, TreeEntry *parent)
   {
-
+    EntryChildrenEntries.push_back({});
+    EntryChildrenID.push_back({});
     VectorizableTree.push_back(TreeEntry());
     int idx = VectorizableTree.size() - 1;
     TreeEntry *Last = &VectorizableTree[idx];
+    Last->idx=idx;
     Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
     Last->NeedToGather = !Vectorized;
     if (Vectorized)
@@ -531,9 +569,9 @@ private:
     {
       dbg_executes(errs() << "non-vectorized tree entry: ";);
     }
-    for (int idx = 0; idx < VL.size(); idx++)
+    for (int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
     {
-      dbg_executes(errs() << " , " << *(VL[idx]););
+      dbg_executes(errs() << " , " << *(VL[idx_vl]););
     }
     dbg_executes(errs() << "\n";);
 
@@ -548,6 +586,19 @@ private:
     else
     {
       MustGather.insert(VL.begin(), VL.end());
+    }
+    if (parent != NULL) //do nothing if parent is root
+    {
+      assert(parent->idx!=idx);
+      EntryChildrenEntries[parent->idx].push_back(&VectorizableTree[idx]);
+      // if (Last->NeedToGather)
+      // {
+      //   EntryChildrenID[parent->idx].push_back(-1);
+      // }
+      // else
+      // {
+        EntryChildrenID[parent->idx].push_back(idx);
+      //}
     }
     return Last;
   }
@@ -1470,6 +1521,25 @@ bool BoUpSLP::isFullyVectorizableTinyTree()
 
   // Gathering cost would be too much for tiny trees.
   if (VectorizableTree[0].NeedToGather || VectorizableTree[1].NeedToGather)
+    return false;
+
+  return true;
+}
+
+bool BoUpSLP::isFullyVectorizableTinyTree(ArrayRef<unsigned int> allNodesInCut)
+{
+  LLVM_DEBUG(dbgs() << "SLP: Check whether the tree with height " << VectorizableTree.size() << " is fully vectorizable .\n");
+
+  // We only handle trees of height 2.
+  if (allNodesInCut.size() != 2)
+    return false;
+
+  // Handle splat stores.
+  if (!VectorizableTree[allNodesInCut[0]].NeedToGather && isSplat(VectorizableTree[allNodesInCut[1]].Scalars))
+    return true;
+
+  // Gathering cost would be too much for tiny trees.
+  if (VectorizableTree[allNodesInCut[0]].NeedToGather || VectorizableTree[allNodesInCut[1]].NeedToGather)
     return false;
 
   return true;

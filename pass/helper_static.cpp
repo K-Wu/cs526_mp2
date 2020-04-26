@@ -1,6 +1,7 @@
 #pragma once
 
 static const unsigned RecursionMaxDepth = 12;
+static const unsigned AllNeighbourThreshold = 50;
 static const int ScheduleRegionSizeBudget = 100000;
 static const int MinVectorRegSizeOption = 128;
 
