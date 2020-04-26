@@ -101,7 +101,8 @@ public:
     }
   }
 
-  void clearExternalUses(){
+  void clearExternalUses()
+  {
     ExternalUses.clear();
   }
 
@@ -449,7 +450,7 @@ public:
   struct TreeEntry
   {
     TreeEntry() : Scalars(), VectorizedValue(nullptr),
-                  NeedToGather(0),idx(0) {}
+                  NeedToGather(0), idx(0) {}
 
     /// \returns true if the scalars in VL are equal to this entry.
     bool isSame(ArrayRef<Value *> VL) const
@@ -464,7 +465,7 @@ public:
     /// The Scalars are vectorized into this value. It is initialized to Null.
     Value *VectorizedValue;
 
-    int idx;    
+    int idx;
 
     /// The index in the basic block of the last scalar.
     //int LastScalarIndex; //removed in rl214494
@@ -478,20 +479,19 @@ public:
 
   std::vector<SmallBitVector> getCuts(unsigned int allNeighbourThreshold);
 
-  void levelOrderTraverse(std::vector<unsigned int>& levels, std::vector<TreeEntry*>& entries);
+  void levelOrderTraverse(std::vector<unsigned int> &levels, std::vector<TreeEntry *> &entries);
 
-  unsigned int getVectorizableTreeSize() const{
+  unsigned int getVectorizableTreeSize() const
+  {
     return VectorizableTree.size();
   }
-  
+
   SmallBitVector setNeedToGather(SmallBitVector cut);
   void unsetNeedToGather(SmallBitVector nodesNeedToUnset);
-  void descheduleExternalNodes(SmallBitVector cut,SmallBitVector nodesNeedToUnsetNeedToGather);
+  void descheduleExternalNodes(SmallBitVector cut, SmallBitVector nodesNeedToUnsetNeedToGather);
   void printVectorizableTree();
-private:
-  
-  
 
+private:
   /// This is the recursive part of buildTree.
   void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth, int parentIdx);
 
@@ -545,24 +545,18 @@ private:
   bool isFullyVectorizableTinyTree();
   bool isFullyVectorizableTinyTree(ArrayRef<unsigned int> allNodesInCut);
 
-  std::vector<std::vector<TreeEntry*>> EntryChildrenEntries;
+  std::vector<std::vector<TreeEntry *>> EntryChildrenEntries;
   std::vector<std::vector<int>> EntryChildrenID;
 
-
-
   /// Create a new VectorizableTree entry.
-  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized, int parentIdx)//BugFixed: change TreeEntry* parent to parentIdx as vector will need to grow and change migrate in memory.
+  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized, int parentIdx) //BugFixed: change TreeEntry* parent to parentIdx as vector will need to grow and change migrate in memory.
   {
     EntryChildrenEntries.push_back({});
     EntryChildrenID.push_back(std::vector<int>());
     VectorizableTree.push_back(TreeEntry());
     int idx = VectorizableTree.size() - 1;
     TreeEntry *Last = &VectorizableTree[idx];
-    TreeEntry * parent = NULL;
-    if (parentIdx>=0){//Skip the parent children push back if this newTreeEntry is creating a root node
-    parent=&VectorizableTree[idx];
-    }
-    Last->idx=idx;
+    Last->idx = idx;
     Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
     Last->NeedToGather = !Vectorized;
     if (Vectorized)
@@ -591,7 +585,7 @@ private:
     {
       MustGather.insert(VL.begin(), VL.end());
     }
-    if (parent != NULL) //do nothing if parent is root
+    if (parentIdx >= 0) //do nothing if parent is root //Skip the parent children push back if this newTreeEntry is creating a root node
     {
       //assert(parent->idx!=idx);
       //EntryChildrenEntries[parent->idx].push_back(&VectorizableTree[idx]);
@@ -601,8 +595,11 @@ private:
       // }
       // else
       // {
-        //assert(parent->idx<EntryChildrenID.size());
-        EntryChildrenID[parent->idx].push_back(idx);
+      //assert(parent->idx<EntryChildrenID.size());
+      dbg_executes(if (idx == 5) {
+        errs() << "print idx5: " << parentIdx << "," << idx << "\n";
+      });
+      EntryChildrenID[parentIdx].push_back(idx);
       //}
     }
     return Last;

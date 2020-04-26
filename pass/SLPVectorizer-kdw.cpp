@@ -62,6 +62,26 @@ using namespace llvm;
 //{
 #include "helper.cpp"
 
+struct lessThanSmallBitVector
+{
+  bool operator()(const SmallBitVector &a, const SmallBitVector b) const
+  {
+    SmallBitVector result(a);
+    result |= b;
+    return (result == b) && (a.count() < b.count());
+  }
+};
+
+static void uniquePushBackSmallBitVector(std::vector<SmallBitVector> &cuts, SmallBitVector element)
+{
+  for (int idx = 0; idx < cuts.size(); idx++)
+  {
+    if (cuts[idx] == element)
+      return;
+  }
+  cuts.push_back(element);
+}
+
 static void dumpSmallBitVector(SmallBitVector &BV)
 {
   errs() << "{";
@@ -171,8 +191,6 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
-
-  
 
   // Check if this is a duplicate of another scalar in the tree.
   if (ScalarToTreeEntry.count(VL[0]))
@@ -300,6 +318,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       }
     }
     TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
     // for (int idx_operand = 0; idx_operand < dyn_cast<StoreInst>(VL[0])->getNumOperands(); idx_operand++)
     // {
     std::vector<Value *> operands;
@@ -307,7 +326,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     {
       operands.push_back(dyn_cast<StoreInst>(VL[idx_vl])->getOperand(0));
     }
-    buildTree_rec(operands, Depth + 1, thisNode->idx);
+    buildTree_rec(operands, Depth + 1, thisNodeIdx);
     //}
     return;
   }
@@ -328,6 +347,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       }
     }
     TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
     for (int idx_operand = 0; idx_operand < VL0->getNumOperands(); idx_operand++)
     {
       std::vector<Value *> operands;
@@ -335,7 +355,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       {
         operands.push_back(dyn_cast<CmpInst>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNode->idx);
+      buildTree_rec(operands, Depth + 1, thisNodeIdx);
     }
     return;
   }
@@ -363,6 +383,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
   {
     //build for each operand
     TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
     for (int idx_operand = 0; idx_operand < VL0->getNumOperands(); idx_operand++)
     {
       std::vector<Value *> operands;
@@ -370,7 +391,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       {
         operands.push_back(dyn_cast<Instruction>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNode->idx);
+      buildTree_rec(operands, Depth + 1, thisNodeIdx);
     }
     return;
   }
@@ -408,6 +429,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       }
     }
     TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
     for (int idx_operand = 0; idx_operand < VL0->getNumOperands(); idx_operand++)
     {
       std::vector<Value *> operands;
@@ -415,7 +437,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       {
         operands.push_back(dyn_cast<Instruction>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNode->idx);
+      buildTree_rec(operands, Depth + 1, thisNodeIdx);
     }
     return;
   }
@@ -1107,7 +1129,7 @@ static SmallBitVector enlistAllLevelNodeCutInLevel(SmallBitVector lastLevelAllNo
   {
     assert(result != lastLevelAllNodeCut && "SmallBitVector doesn't use copy constructor");
   }
-  cuts.push_back(result);
+  uniquePushBackSmallBitVector(cuts, result);
   return result;
 }
 
@@ -1120,7 +1142,7 @@ static void enlistNextLevelEachNeighbourCut(SmallBitVector lastLevelAllNodeCut, 
     assert(!entriesInLevelOrder[idx]->NeedToGather && "NeedToGather leaves shouldn't be incldued in level order");
     currResult.set(entriesInLevelOrder[idx]->idx);
     assert(currResult != lastLevelAllNodeCut && "SmallBitVector doesn't use copy constructor || level order traverse repetitively enlist some entry");
-    cuts.push_back(currResult);
+    uniquePushBackSmallBitVector(cuts, currResult);
   }
 }
 
@@ -1136,7 +1158,8 @@ static void printEntries(ArrayRef<BoUpSLP::TreeEntry *> entries)
 //the cut SmallBitVector doesn't involve NeedToGather leaves, i.e., those bits corresponding to NeedToGather leaves won't be set even if they are in this cut.
 std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
 {
-  std::vector<SmallBitVector> result;
+
+  std::vector<SmallBitVector> levelAllNodesCuts;
   std::list<TreeEntry *> workList;
   std::list<SmallBitVector> workListAlreadyInCut;
   //SmallBitVector currVisited(VectorizableTree.size());//indexing the nodes according to VectorizableTree means NeedToGather leaves also takes up bits but we don't count them in cut SmallBitVector.
@@ -1156,13 +1179,15 @@ std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
   SmallBitVector lastLevelAllNodeCut(VectorizableTree.size());
   for (unsigned int currLevel = 0; currLevel <= levels[levels.size() - 1]; currLevel++)
   {
-    lastLevelAllNodeCut = enlistAllLevelNodeCutInLevel(lastLevelAllNodeCut, result, unique_level_idx[currLevel], unique_level_idx[currLevel + 1], entriesInLevelOrder);
+    lastLevelAllNodeCut = enlistAllLevelNodeCutInLevel(lastLevelAllNodeCut, levelAllNodesCuts, unique_level_idx[currLevel], unique_level_idx[currLevel + 1], entriesInLevelOrder);
   }
-
+  std::vector<SmallBitVector> results(levelAllNodesCuts.begin(), levelAllNodesCuts.end());
   for (unsigned int currLevel = 0; currLevel < levels[levels.size() - 1]; currLevel++)
   {
-    if ((result.size() - levels[levels.size() - 1] - 1) < allNeighbourThreshold)
-      enlistNextLevelEachNeighbourCut(result[currLevel], result, unique_level_idx[currLevel + 1], unique_level_idx[currLevel + 2], entriesInLevelOrder, allNeighbourThreshold - (result.size() - levels[levels.size() - 1] - 1));
+    if ((results.size() - levels[levels.size() - 1] - 1) < allNeighbourThreshold)
+    {
+      enlistNextLevelEachNeighbourCut(levelAllNodesCuts[currLevel], results, unique_level_idx[currLevel + 1], unique_level_idx[currLevel + 2], entriesInLevelOrder, allNeighbourThreshold - (results.size() - levels[levels.size() - 1] - 1));
+    }
   }
 
   // while(!workList.empty()){
@@ -1182,7 +1207,7 @@ std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
   //   }
   // }
 
-  return result;
+  return results;
 }
 
 std::list<std::vector<Value *>> collectStores(BasicBlock *BB, BoUpSLP &R)
