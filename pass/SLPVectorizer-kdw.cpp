@@ -83,7 +83,7 @@ void BoUpSLP::printVectorizableTree()
     dbg_executes(errs() << "idx(" << idx << ") children: ";);
     for (unsigned int childIdx = 0; childIdx < EntryChildrenID[idx].size(); childIdx++)
     {
-      dbg_executes(errs() << "(" << EntryChildrenEntries[idx][childIdx]->idx << "," << EntryChildrenID[idx][childIdx] << ") , ";);
+      dbg_executes(errs() << "(" /*<< EntryChildrenEntries[idx][childIdx]->idx << ","*/ << EntryChildrenID[idx][childIdx] << ") , ";);
     }
     dbg_executes(errs() << "\n";);
   }
@@ -109,7 +109,7 @@ void BoUpSLP::descheduleExternalNodes(SmallBitVector cut, SmallBitVector nodesNe
   }
 }
 
-void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *parentNode)
+void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNodeIdx)
 {
   dbg_executes(errs() << "MySLP buildtree_rec entry bundle: ";);
   for (int idx = 0; idx < VL.size(); idx++)
@@ -121,7 +121,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   if (Depth == RecursionMaxDepth)
   {
     dbg_executes(errs() << "MySLP: buildTree max depth\n";);
-    newTreeEntry(VL, false, parentNode);
+    newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
 
@@ -129,7 +129,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   if (!getSameType(VL))
   {
     dbg_executes(errs() << "MySLP: buildTree not same type\n";);
-    newTreeEntry(VL, false, parentNode);
+    newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
   for (int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
@@ -140,7 +140,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       if (!isValidElementType(SI->getPointerOperand()->getType()))
       {
         dbg_executes(errs() << "MySLP: buildTree store not valid type\n";);
-        newTreeEntry(VL, false, parentNode);
+        newTreeEntry(VL, false, parentNodeIdx);
         return;
       }
     }
@@ -149,10 +149,17 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       if (!isValidElementType(VL[idx_vl]->getType()))
       {
         dbg_executes(errs() << "MySLP: buildTree not valid type\n";);
-        newTreeEntry(VL, false, parentNode);
+        newTreeEntry(VL, false, parentNodeIdx);
         return;
       }
     }
+  }
+
+  //if all Constant or isSplat there is cheap way of gathering them
+  if (allConstant(VL) || isSplat(VL))
+  {
+    newTreeEntry(VL, false, parentNodeIdx);
+    return;
   }
 
   //if the instructions are not in the same block or same OP stop
@@ -161,16 +168,11 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   if (!OpCode || !BB)
   {
     dbg_executes(errs() << "MySLP: buildTree not same block or same opcode\n";);
-    newTreeEntry(VL, false, parentNode);
+    newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
 
-  //if all Constant or isSplat there is cheap way of gathering them
-  if (allConstant(VL) || isSplat(VL))
-  {
-    newTreeEntry(VL, false, parentNode);
-    return;
-  }
+  
 
   // Check if this is a duplicate of another scalar in the tree.
   if (ScalarToTreeEntry.count(VL[0]))
@@ -180,7 +182,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
     {
       if (TE->Scalars[idx_vl] != VL[idx_vl])
       {
-        newTreeEntry(VL, false, parentNode); //partial overlap
+        newTreeEntry(VL, false, parentNodeIdx); //partial overlap
         return;
       }
     }
@@ -193,7 +195,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   if (!DT->isReachableFromEntry(BB))
   {
     dbg_executes(errs() << "MySLP: buildTree not reachable block\n";);
-    newTreeEntry(VL, false, parentNode);
+    newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
 
@@ -204,7 +206,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
     if (uniqueVLElement.count(VL[idx_vl]))
     {
       dbg_executes(errs() << "MySLP: buildTree duplicate item in bundle\n";);
-      newTreeEntry(VL, false, parentNode);
+      newTreeEntry(VL, false, parentNodeIdx);
       return;
     }
     uniqueVLElement.insert(VL[idx_vl]);
@@ -223,7 +225,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   {
     //BS.cancelScheduling(VL);
     dbg_executes(errs() << "MySLP: buildTree cannot schedule\n";);
-    newTreeEntry(VL, false, parentNode); //cannot schedule
+    newTreeEntry(VL, false, parentNodeIdx); //cannot schedule
     return;
   }
 
@@ -233,7 +235,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   {
     dbg_executes(errs() << "shouldn't be here Instruction cast failed\n";);
     BS.cancelScheduling(VL);
-    newTreeEntry(VL, false, parentNode);
+    newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
 
@@ -248,7 +250,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       {
         dbg_executes(errs() << "MySLP: not vectorized due to LoadInst is not simple\n";);
         BS.cancelScheduling(VL);
-        newTreeEntry(VL, false, parentNode);
+        newTreeEntry(VL, false, parentNodeIdx);
         return;
       }
       if (idx_vl != VL.size() - 1)
@@ -257,12 +259,12 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
         {
           dbg_executes(errs() << "MySLP: not vectorized due to LoadInst does not satisfy isConsecutiveAccess\n";);
           BS.cancelScheduling(VL);
-          newTreeEntry(VL, false, parentNode);
+          newTreeEntry(VL, false, parentNodeIdx);
           return;
         }
       }
     }
-    newTreeEntry(VL, true, parentNode);
+    newTreeEntry(VL, true, parentNodeIdx);
     // for (int idx_operand = 0; idx_operand < dyn_cast<LoadInst>(VL[0])->getNumOperands(); idx_operand++)
     // {
     //   std::vector<Value *> operands;
@@ -283,7 +285,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       {
         dbg_executes(errs() << "MySLP: not vectorized due to StoreInst is not simple\n";);
         BS.cancelScheduling(VL);
-        newTreeEntry(VL, false, parentNode);
+        newTreeEntry(VL, false, parentNodeIdx);
         return;
       }
       if (idx_vl != VL.size() - 1)
@@ -292,12 +294,12 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
         {
           dbg_executes(errs() << "MySLP: not vectorized due to StoreInst does not satisfy isConsecutiveAccess\n";);
           BS.cancelScheduling(VL);
-          newTreeEntry(VL, false, parentNode);
+          newTreeEntry(VL, false, parentNodeIdx);
           return;
         }
       }
     }
-    TreeEntry *thisNode = newTreeEntry(VL, true, parentNode);
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
     // for (int idx_operand = 0; idx_operand < dyn_cast<StoreInst>(VL[0])->getNumOperands(); idx_operand++)
     // {
     std::vector<Value *> operands;
@@ -305,7 +307,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
     {
       operands.push_back(dyn_cast<StoreInst>(VL[idx_vl])->getOperand(0));
     }
-    buildTree_rec(operands, Depth + 1, thisNode);
+    buildTree_rec(operands, Depth + 1, thisNode->idx);
     //}
     return;
   }
@@ -321,11 +323,11 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       {
         //not the same predicate or same type cond
         BS.cancelScheduling(VL);
-        newTreeEntry(VL, false, parentNode);
+        newTreeEntry(VL, false, parentNodeIdx);
         return;
       }
     }
-    TreeEntry *thisNode = newTreeEntry(VL, true, parentNode);
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
     for (int idx_operand = 0; idx_operand < VL0->getNumOperands(); idx_operand++)
     {
       std::vector<Value *> operands;
@@ -333,7 +335,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       {
         operands.push_back(dyn_cast<CmpInst>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNode);
+      buildTree_rec(operands, Depth + 1, thisNode->idx);
     }
     return;
   }
@@ -360,7 +362,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
   case Instruction::Xor:
   {
     //build for each operand
-    TreeEntry *thisNode = newTreeEntry(VL, true, parentNode);
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
     for (int idx_operand = 0; idx_operand < VL0->getNumOperands(); idx_operand++)
     {
       std::vector<Value *> operands;
@@ -368,7 +370,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       {
         operands.push_back(dyn_cast<Instruction>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNode);
+      buildTree_rec(operands, Depth + 1, thisNode->idx);
     }
     return;
   }
@@ -392,7 +394,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
     if (!isValidElementType(SrcTy))
     {
       BS.cancelScheduling(VL);
-      newTreeEntry(VL, false, parentNode);
+      newTreeEntry(VL, false, parentNodeIdx);
       return;
     }
     for (int idx = 1; idx < VL.size(); idx++)
@@ -401,11 +403,11 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       if ((curr_type != SrcTy) || (!isValidElementType(curr_type)))
       { //not the same type or invalid vector type
         BS.cancelScheduling(VL);
-        newTreeEntry(VL, false, parentNode);
+        newTreeEntry(VL, false, parentNodeIdx);
         return;
       }
     }
-    TreeEntry *thisNode = newTreeEntry(VL, true, parentNode);
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
     for (int idx_operand = 0; idx_operand < VL0->getNumOperands(); idx_operand++)
     {
       std::vector<Value *> operands;
@@ -413,7 +415,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, TreeEntry *par
       {
         operands.push_back(dyn_cast<Instruction>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNode);
+      buildTree_rec(operands, Depth + 1, thisNode->idx);
     }
     return;
   }
@@ -523,7 +525,7 @@ void BoUpSLP::buildTree(ArrayRef<Value *> Roots)
     dbg_executes(errs() << *siter << ", ";);
   }
   dbg_executes(errs() << "\n";);
-  buildTree_rec(Roots, 0, NULL);
+  buildTree_rec(Roots, 0, -1);
   calcExternalUses();
 }
 

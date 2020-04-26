@@ -493,7 +493,7 @@ private:
   
 
   /// This is the recursive part of buildTree.
-  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth, TreeEntry *parent);
+  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth, int parentIdx);
 
   /// Vectorize a single entry in the tree.
   Value *do_vectorizeTree_rec(TreeEntry *E);
@@ -551,13 +551,17 @@ private:
 
 
   /// Create a new VectorizableTree entry.
-  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized, TreeEntry *parent)
+  TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized, int parentIdx)//BugFixed: change TreeEntry* parent to parentIdx as vector will need to grow and change migrate in memory.
   {
     EntryChildrenEntries.push_back({});
-    EntryChildrenID.push_back({});
+    EntryChildrenID.push_back(std::vector<int>());
     VectorizableTree.push_back(TreeEntry());
     int idx = VectorizableTree.size() - 1;
     TreeEntry *Last = &VectorizableTree[idx];
+    TreeEntry * parent = NULL;
+    if (parentIdx>=0){//Skip the parent children push back if this newTreeEntry is creating a root node
+    parent=&VectorizableTree[idx];
+    }
     Last->idx=idx;
     Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
     Last->NeedToGather = !Vectorized;
@@ -589,14 +593,15 @@ private:
     }
     if (parent != NULL) //do nothing if parent is root
     {
-      assert(parent->idx!=idx);
-      EntryChildrenEntries[parent->idx].push_back(&VectorizableTree[idx]);
+      //assert(parent->idx!=idx);
+      //EntryChildrenEntries[parent->idx].push_back(&VectorizableTree[idx]);
       // if (Last->NeedToGather)
       // {
       //   EntryChildrenID[parent->idx].push_back(-1);
       // }
       // else
       // {
+        //assert(parent->idx<EntryChildrenID.size());
         EntryChildrenID[parent->idx].push_back(idx);
       //}
     }
