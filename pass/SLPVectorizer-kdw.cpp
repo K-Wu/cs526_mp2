@@ -1009,7 +1009,7 @@ Value *BoUpSLP::vectorizeTree(SmallBitVector cut)
   SmallBitVector nodesNeedToUnset = setNeedToGather(cut);
 
   descheduleExternalNodes(cut, nodesNeedToUnset);
-  Value *result = vectorizeTree();
+  Value *result = vectorizeTree();//TODO: update ScalarToEntry map to reflect the allNodesInCut so as to keep the correctness of ExternalUses elimination stage
   unsetNeedToGather(nodesNeedToUnset);
   return result;
 }
