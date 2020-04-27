@@ -461,20 +461,26 @@ SmallBitVector BoUpSLP::setNeedToGather(SmallBitVector cut)
   //set its index in the result SmallBitVector
   dbg_executes(errs() << "entering setNeedToGather() \n";);
   SmallBitVector modifiedIndex(VectorizableTree.size());
-  for (auto idx : cut.set_bits())
-  {
-    if (!VectorizableTree[idx].NeedToGather)
+  if(cut.count()==0){//only one node in the graph: root NeedToGather==true
+    modifiedIndex.set(0);
+    VectorizableTree[0].NeedToGather=true;
+  }
+  else{
+    for (auto idx : cut.set_bits())
     {
-      dbg_executes(errs() << "(" << idx << ") children: ";);
-      for (unsigned int childIdx = 0; childIdx < EntryChildrenID[idx].size(); childIdx++)
+      if (!VectorizableTree[idx].NeedToGather)
       {
-        if (!VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather && !cut[EntryChildrenID[idx][childIdx]])
-        { //need to gather
-          dbg_executes(errs() << EntryChildrenID[idx][childIdx] << " , ";);
-          modifiedIndex.set(EntryChildrenID[idx][childIdx]);
-          //assert(EntryChildrenEntries[idx][childIdx]->idx==VectorizableTree[EntryChildrenEntries[idx][childIdx]->idx].idx&&"idx mismatch in EntryChildrenEntries[idx]");
-          VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather = true;
-          //assert(EntryChildrenEntries[idx][childIdx]->idx==EntryChildrenID[idx][childIdx]);
+        dbg_executes(errs() << "(" << idx << ") children: ";);
+        for (unsigned int childIdx = 0; childIdx < EntryChildrenID[idx].size(); childIdx++)
+        {
+          if (!VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather && !cut[EntryChildrenID[idx][childIdx]])
+          { //need to gather
+            dbg_executes(errs() << EntryChildrenID[idx][childIdx] << " , ";);
+            modifiedIndex.set(EntryChildrenID[idx][childIdx]);
+            //assert(EntryChildrenEntries[idx][childIdx]->idx==VectorizableTree[EntryChildrenEntries[idx][childIdx]->idx].idx&&"idx mismatch in EntryChildrenEntries[idx]");
+            VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather = true;
+            //assert(EntryChildrenEntries[idx][childIdx]->idx==EntryChildrenID[idx][childIdx]);
+          }
         }
       }
     }
@@ -523,11 +529,16 @@ void BoUpSLP::calcExternalUses()
 void BoUpSLP::calcExternalUses(SmallBitVector cut)
 {
   assert(ExternalUses.empty() && "ExternalUses non empty before calling calcExternalUses");
+  dbg_executes(errs()<<"calcExternalUses(): ";);
+  dumpSmallBitVector(cut);
+  dbg_executes(errs()<<"\n";);
   for (auto idx_te : cut.set_bits())
   {
     TreeEntry *TE = &VectorizableTree[idx_te];
-    if (TE->NeedToGather)
+    if (TE->NeedToGather){
+      llvm_unreachable("calcExternalUses bumps into NeedToGather leaves according to cut");
       continue; //don't need to extractelement for non-vectorizable leaves use as they are not vectorized.
+      }
     for (unsigned int idx2_scalar = 0; idx2_scalar < TE->Scalars.size(); idx2_scalar++)
     {
       for (User *U : TE->Scalars[idx2_scalar]->users())
@@ -1003,24 +1014,34 @@ Value *BoUpSLP::vectorizeTree(SmallBitVector cut)
   return result;
 }
 
+
+
 //get the cost of subtree indicated by cut
 //cut
-int BoUpSLP::getTreeCost(SmallBitVector cut)
-{
+int BoUpSLP::getTreeCost(SmallBitVector cut){
   dbg_executes(errs() << "getTreeCost(cut) cut ";);
   dumpSmallBitVector(cut);
   dbg_executes(errs() << "\n";);
   SmallBitVector nodesNeedToUnset = setNeedToGather(cut);
 
   SmallBitVector allNodesInCut = cut | nodesNeedToUnset;
-
   std::vector<unsigned int> allNodesInCutVec;
+  
 
   for (auto idx : allNodesInCut.set_bits())
   {
     allNodesInCutVec.push_back(idx);
   }
 
+  int result = do_getTreeCost( allNodesInCutVec);
+
+  unsetNeedToGather(nodesNeedToUnset);
+  return result;
+}
+
+
+int BoUpSLP::do_getTreeCost(std::vector<unsigned int>& allNodesInCutVec)
+{
   int Cost = 0;
   LLVM_DEBUG(dbgs() << "SLP: Calculating cost for tree of size " << allNodesInCutVec.size() << ".\n");
 
@@ -1059,8 +1080,6 @@ int BoUpSLP::getTreeCost(SmallBitVector cut)
   }
 
   LLVM_DEBUG(dbgs() << "SLP: Total Cost " << Cost + ExtractCost << ".\n");
-
-  unsetNeedToGather(nodesNeedToUnset);
 
   return Cost + ExtractCost;
 }
@@ -1175,7 +1194,7 @@ std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
   //printEntries(entriesInLevelOrder);
 
   //enlist subgraphs
-  //TODO: need to deduplicate here
+  //BUGFIXED: need to deduplicate here
   SmallBitVector lastLevelAllNodeCut(VectorizableTree.size());
   for (unsigned int currLevel = 0; currLevel <= levels[levels.size() - 1]; currLevel++)
   {
@@ -1321,7 +1340,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
       unsigned int MaxNumElementInVector = TTI_->getRegisterBitWidth(true);
       std::vector<SmallBitVector> BestCutInEachChunk;
       unsigned int BestNumElementInVector = -1; //if no vectorization is profitable, the final vectorize() step will be automatically skipped
-      int BestCost;
+      int BestCost=0;
 
       //find the best (numElementInVectorRegister, cuts in each chunk)
       for (unsigned int numElementInVector = MinNumElementInVector; numElementInVector <= MaxNumElementInVector; numElementInVector *= 2)
@@ -1329,7 +1348,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
         std::vector<int> CurrNumEleBestCostInEachChunk;
         std::vector<SmallBitVector> CurrNumEleBestCutInEachChunk;
         dbg_executes(errs() << "numElement(" << numElementInVector << ") best cut: ";);
-        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector; chunkIdx++)
+        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector; chunkIdx++)//todo use another for loop to investigate different offset
         {
           std::vector<Value *> chunkSeed(seedPack.cbegin() + chunkIdx * (numElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (numElementInVector));
           dbg_executes(errs() << "chunk instr: ";);
@@ -1373,7 +1392,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
         }
       }
       dbg_executes(errs() << "Global best cut numElement(" << BestNumElementInVector << ") Cost" << BestCost << ": ";);
-      for (unsigned int cutIdx = 0; cutIdx < BestCutInEachChunk.size(); cutIdx++)
+      for (unsigned int cutIdx = 0; cutIdx < BestCutInEachChunk.size(); cutIdx++)//TODO: subtree change (Gather() or undefifying corrupts) due to partial vectorization. only use the best numElement
       {
         dbg_executes(dumpSmallBitVector(BestCutInEachChunk[cutIdx]););
         dbg_executes(errs() << ", ";);

@@ -76,6 +76,8 @@ public:
 
   int getTreeCost(SmallBitVector cut);
 
+  int do_getTreeCost(std::vector<unsigned int>& allNodesInCutVec);
+
   /// Construct a vectorizable tree that starts at \p Roots, ignoring users for
   /// the purpose of scheduling and extraction in the \p UserIgnoreLst.
   void buildTree(ArrayRef<Value *> Roots); //,
