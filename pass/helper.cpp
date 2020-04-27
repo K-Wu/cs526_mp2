@@ -489,8 +489,10 @@ public:
   }
 
   SmallBitVector setNeedToGather(SmallBitVector cut);
+  SmallBitVector setAllOtherNodesNeedToGather(SmallBitVector cut);
+  void deleteNodesFromScalarMap(SmallBitVector nodesNeedToVirtuallyDeleteFromTree);
   void unsetNeedToGather(SmallBitVector nodesNeedToUnset);
-  void descheduleExternalNodes(SmallBitVector cut, SmallBitVector nodesNeedToUnsetNeedToGather);
+  void descheduleExternalNodes(SmallBitVector cut);
   void printVectorizableTree();
 
 private:
@@ -661,7 +663,8 @@ private:
     // Which lane does the scalar belong to.
     int Lane;
   };
-  typedef SmallVector<ExternalUser, 16> UserList;
+  //typedef SmallVector<ExternalUser, 16> UserList;
+  using UserList =  std::vector<ExternalUser> ;
 
   /// A list of values that need to extracted out of the tree.
   /// This list holds pairs of (Internal Scalar : External User).

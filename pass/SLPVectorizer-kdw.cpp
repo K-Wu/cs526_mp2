@@ -110,7 +110,7 @@ void BoUpSLP::printVectorizableTree()
 }
 
 //we only need to deschedule nodes in cut and nodes whose NeedToGather is set because nodes in the NeedToGather won't be scheduled.
-void BoUpSLP::descheduleExternalNodes(SmallBitVector cut, SmallBitVector nodesNeedToUnsetNeedToGather)
+void BoUpSLP::descheduleExternalNodes(SmallBitVector cut)
 {
   for (int idx = 0; idx < VectorizableTree.size(); idx++)
   {
@@ -129,7 +129,7 @@ void BoUpSLP::descheduleExternalNodes(SmallBitVector cut, SmallBitVector nodesNe
   }
 }
 
-void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNodeIdx)
+void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNodeIdx)//TODO: add ignore usees as vectorization in previous chunk will invalidate some uses
 {
   dbg_executes(errs() << "MySLP buildtree_rec entry bundle: ";);
   for (int idx = 0; idx < VL.size(); idx++)
@@ -154,10 +154,11 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
   }
   for (int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
   {
+    
     if (StoreInst *SI = dyn_cast<StoreInst>(VL[idx_vl]))
     {
       //store instruction needs and only needs to check its store pointer
-      if (!isValidElementType(SI->getPointerOperand()->getType()))
+      if (!isValidElementType(SI->getPointerOperand()->getType())||SI->getPointerOperand()->getType()->isVectorTy())
       {
         dbg_executes(errs() << "MySLP: buildTree store not valid type\n";);
         newTreeEntry(VL, false, parentNodeIdx);
@@ -166,7 +167,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     }
     else
     {
-      if (!isValidElementType(VL[idx_vl]->getType()))
+      if (!isValidElementType(VL[idx_vl]->getType())||VL[idx_vl]->getType()->isVectorTy())
       {
         dbg_executes(errs() << "MySLP: buildTree not valid type\n";);
         newTreeEntry(VL, false, parentNodeIdx);
@@ -450,7 +451,24 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
   }
 }
 
-//set NeedToGather for each of the children nodes of the cut
+// set NeedToGather for all nodes other than nodes in the cut and nodes who are originally NeedToGather leaves
+// return the nodes indices whose NeedToGather flag is modified
+SmallBitVector BoUpSLP::setAllOtherNodesNeedToGather(SmallBitVector cut)
+{
+  SmallBitVector modifiedIndex(VectorizableTree.size());
+  for (unsigned int idx=0;idx<VectorizableTree.size();idx++){
+    if (cut[idx])
+      continue;
+    if (VectorizableTree[idx].NeedToGather)
+      continue;
+    modifiedIndex.set(idx);
+    VectorizableTree[idx].NeedToGather=true;
+  }
+  
+  return modifiedIndex;
+}
+
+//set NeedToGather for each of the children nodes of the cut if it is not a NeedToGather leave originally in the tree, i.e. its NeedToGather is not set
 // return the nodes indices whose NeedToGather flag is modified
 SmallBitVector BoUpSLP::setNeedToGather(SmallBitVector cut)
 {
@@ -509,6 +527,7 @@ void BoUpSLP::unsetNeedToGather(SmallBitVector nodesNeedToUnset)
 
 void BoUpSLP::calcExternalUses()
 {
+  dbg_executes(errs()<<"calcExternalUses(): ";);
   assert(ExternalUses.empty() && "ExternalUses non empty before calling calcExternalUses");
   for (unsigned int idx_te = 0; idx_te < VectorizableTree.size(); idx_te++)
   {
@@ -519,8 +538,10 @@ void BoUpSLP::calcExternalUses()
     {
       for (User *U : TE->Scalars[idx2_scalar]->users())
       {
-        if (!ScalarToTreeEntry[TE->Scalars[idx2_scalar]])
-          ExternalUses.push_back(ExternalUser(TE->Scalars[idx2_scalar], U, idx2_scalar));
+        if (!ScalarToTreeEntry[U]){
+          ExternalUses.emplace_back(TE->Scalars[idx2_scalar], U, idx2_scalar);
+          dbg_executes(errs()<<"calcExternalUses("<<ExternalUses.size()<<") ExtractElement for (Usee, User): ("<<*(TE->Scalars[idx2_scalar])<<","<<*U<<")\n";);
+        }
       }
     }
   }
@@ -529,7 +550,7 @@ void BoUpSLP::calcExternalUses()
 void BoUpSLP::calcExternalUses(SmallBitVector cut)
 {
   assert(ExternalUses.empty() && "ExternalUses non empty before calling calcExternalUses");
-  dbg_executes(errs()<<"calcExternalUses(): ";);
+  dbg_executes(errs()<<"calcExternalUses(SmallBitVector cut): ";);
   dumpSmallBitVector(cut);
   dbg_executes(errs()<<"\n";);
   for (auto idx_te : cut.set_bits())
@@ -543,8 +564,13 @@ void BoUpSLP::calcExternalUses(SmallBitVector cut)
     {
       for (User *U : TE->Scalars[idx2_scalar]->users())
       {
-        if (!ScalarToTreeEntry[TE->Scalars[idx2_scalar]] || !cut[ScalarToTreeEntry[TE->Scalars[idx2_scalar]]])
-          ExternalUses.push_back(ExternalUser(TE->Scalars[idx2_scalar], U, idx2_scalar));
+        if (!ScalarToTreeEntry[U] || !cut[ScalarToTreeEntry[U]]){
+          ExternalUses.emplace_back(TE->Scalars[idx2_scalar], U, idx2_scalar);
+          dbg_executes(errs()<<"calcExternalUses("<<ExternalUses.size()<<") ExtractElement for (Usee, User): ("<<*(TE->Scalars[idx2_scalar])<<","<<*U<<")\n";);
+        }
+        else{
+          dbg_executes(errs()<<"skipped calcExternalUses("<<ExternalUses.size()<<") ExtractElement for (Usee, User): ("<<*(TE->Scalars[idx2_scalar])<<","<<*U<<")\n";);
+        }
       }
     }
   }
@@ -618,6 +644,15 @@ VectorType *getVectorType(Value *scalar, unsigned int length)
   }
   VectorType *vector_type = VectorType::get(type, length);
   return vector_type;
+}
+
+bool isVectorType(Value* scalar){
+  Type* type =scalar->getType();
+  if(StoreInst *SI=dyn_cast<StoreInst>(scalar))
+  {
+    type=SI->getValueOperand()->getType();
+  }
+  return type->isVectorTy();
 }
 
 // Vectorize a list of scalars. If they are in the tree (and in the same entry),
@@ -924,12 +959,13 @@ Value *BoUpSLP::vectorizeTree()
   // Step 2, we need to ExtractElement from the designated lane of the
   // vectorized value for uses external to the tree, since those scalars are
   // used in some new InsertElement instructions.
+  dbg_executes(errs()<<"before Emit ExtractElement ExternalUses.size(): "<<ExternalUses.size()<<"\n";);
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
        it != e; ++it)
   {
     Value *scalar = it->Scalar;
     llvm::User *U = it->User;
-
+    dbg_executes(errs()<<"Emit ExtractElement before skipping\n";);
     // Skip users that we already handled.
     if (std::find(scalar->user_begin(), scalar->user_end(), U) ==
         scalar->user_end())
@@ -939,6 +975,7 @@ Value *BoUpSLP::vectorizeTree()
     TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
     Value *vector = E->VectorizedValue;
     Value *pos = Builder.getInt32(it->Lane);
+    dbg_executes(errs()<<"Emit ExtractElement for (Usee, User): ("<<*scalar<<","<<*U<<")\n";);
 
     // insert an ExtractElement instruction for this pair of scalar and use
     if (isa<Instruction>(vector))
@@ -1004,13 +1041,23 @@ Value *BoUpSLP::vectorizeTree()
   return VectorizableTree[0].VectorizedValue;
 }
 
+void BoUpSLP::deleteNodesFromScalarMap(SmallBitVector cut){
+  SmallDenseMap<Value *, int> NewScalarToTreeEntry;
+  for (auto idx:cut.set_bits()){
+    for (unsigned int idx_vl=0;idx_vl<VectorizableTree[idx].Scalars.size();idx_vl++){
+      NewScalarToTreeEntry[VectorizableTree[idx].Scalars[idx_vl]]=ScalarToTreeEntry[VectorizableTree[idx].Scalars[idx_vl]];
+    }
+  }
+  ScalarToTreeEntry.swap(NewScalarToTreeEntry);
+}
+
 Value *BoUpSLP::vectorizeTree(SmallBitVector cut)
 {
-  SmallBitVector nodesNeedToUnset = setNeedToGather(cut);
-
-  descheduleExternalNodes(cut, nodesNeedToUnset);
+  SmallBitVector nodesNeedToGather = setNeedToGather(cut);
+  SmallBitVector nodesNeedToVirtuallyDeleteFromTree = setAllOtherNodesNeedToGather(cut);//We need to set all other nodes in the tree to be NeedToGather to deceive the original vectorizeTree() in this wrapper the nodes in the tree but not in the cut shouldn't be undef-ified
+  deleteNodesFromScalarMap(cut);//We need this because Gather() will push_back to ExternalUses use ScalarMap to determine whether nodes are in the tree.
+  descheduleExternalNodes(cut);
   Value *result = vectorizeTree();//TODO: update ScalarToEntry map to reflect the allNodesInCut so as to keep the correctness of ExternalUses elimination stage
-  unsetNeedToGather(nodesNeedToUnset);
   return result;
 }
 
@@ -1406,8 +1453,9 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
         R.buildTree(chunkSeed);
         R.clearExternalUses();
         R.calcExternalUses(BestCutInEachChunk[chunkIdx]);
-        //R.vectorizeTree();
         R.vectorizeTree(BestCutInEachChunk[chunkIdx]);
+        //R.vectorizeTree();
+        
       }
 #endif
     }
