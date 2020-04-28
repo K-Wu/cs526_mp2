@@ -631,13 +631,13 @@ void BoUpSLP::calcExternalUses()
   }
 }
 
-void BoUpSLP::calcExternalUses(SmallBitVector cut)
+void BoUpSLP::calcExternalUses(SmallBitVector cutWithoutDefactoNeedToGather)
 {
   assert(ExternalUses.empty() && "ExternalUses non empty before calling calcExternalUses");
   dbg_executes(errs() << "calcExternalUses(SmallBitVector cut): ";);
-  dumpSmallBitVector(cut);
+  dumpSmallBitVector(cutWithoutDefactoNeedToGather);
   dbg_executes(errs() << "\n";);
-  for (auto idx_te : cut.set_bits())
+  for (auto idx_te : cutWithoutDefactoNeedToGather.set_bits())
   {
     TreeEntry *TE = &VectorizableTree[idx_te];
     if (TE->NeedToGather)
@@ -648,7 +648,7 @@ void BoUpSLP::calcExternalUses(SmallBitVector cut)
     {
       for (User *U : TE->Scalars[idx2_scalar]->users())
       {
-        if (!ScalarToTreeEntry[U] || !cut[ScalarToTreeEntry[U]])
+        if ((!ScalarToTreeEntry[U]||(!cutWithoutDefactoNeedToGather[ScalarToTreeEntry[U]])) || !cutWithoutDefactoNeedToGather[ScalarToTreeEntry[U]])
         {
           ExternalUses.emplace_back(TE->Scalars[idx2_scalar], U, idx2_scalar);
           dbg_executes(errs() << "calcExternalUses(" << ExternalUses.size() << ") ExtractElement for (Usee, User): (" << *(TE->Scalars[idx2_scalar]) << "," << *U << ")\n";);
@@ -1566,10 +1566,26 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
   for (po_iterator<BasicBlock *> it = po_begin(&F.getEntryBlock()); it != po_end(&F.getEntryBlock()); it++)
   {
     BasicBlock *bb = *it;
-    dbg_executes(errs()<<"WARNING: IN Basic Block"<<*bb<<"\n";);
+    
     std::list<std::vector<Value *>> seedPacks = collectStores(bb, R);
+    dbg_executes(errs()<<"WARNING: IN Basic Block seedPacks size("<<seedPacks.size()<<") Before Transformation\n"<<*bb<<"\n";);
+    
     while (!seedPacks.empty())
     {
+      dbg_executes(errs()<<"WARNING: A new transformation iteration begins"<<"\n";);
+      for (BasicBlock::iterator iter=bb->begin();iter!=bb->end();iter++){
+        if (Instruction* I = dyn_cast<Instruction>(iter)){
+          for(User* U:I->users()){
+            if (isa<Instruction>(U) ){
+              dbg_executes(errs()<<"WARNING: (Usee User) "<<*I<<" , "<<*U<<"\n";);
+              dbg_executes(errs()<<"    Usee Basicblock\n";);
+              dbg_executes(errs()<<*(I->getParent())<<"\n";);
+              dbg_executes(errs()<<"    User Basicblock\n";);
+              dbg_executes(errs()<<*(cast<Instruction>(U)->getParent())<<"\n";);
+            }
+          }
+        }
+      }
       std::vector<Value *> seedPack = seedPacks.front();
       seedPacks.pop_front();
       if (seedPack.size() <= 1)
@@ -1623,7 +1639,10 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
           for (int cutIdx = 0; cutIdx < Cuts.size(); cutIdx++)
           {
             R.clearExternalUses();
-            R.calcExternalUses(Cuts[cutIdx]);
+            SmallBitVector cutWithoutDefactoNeedToGather(Cuts[cutIdx]);
+            SmallBitVector needToGatherNotSetYetInCuts=R.collectNeedToGather(Cuts[cutIdx]);
+            cutWithoutDefactoNeedToGather^=needToGatherNotSetYetInCuts;
+            R.calcExternalUses(cutWithoutDefactoNeedToGather);
             int ThisCost = R.getTreeCost(Cuts[cutIdx]);
             if (ThisCost < CurrNumEleBestCost)
             {
@@ -1660,12 +1679,44 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
         //std::set<unsigned int> BestCutSet(BestCutVector.begin(),BestCutVector.end());
         R.buildTree(BestChunkSeeds);
         R.clearExternalUses();
-        R.calcExternalUses(BestCut);
+        SmallBitVector cutWithoutDefactoNeedToGather(BestCut);
+        SmallBitVector needToGatherNotSetYetInCuts=R.collectNeedToGather(BestCut);
+        cutWithoutDefactoNeedToGather^=needToGatherNotSetYetInCuts;
+        R.calcExternalUses(cutWithoutDefactoNeedToGather);
         R.vectorizeTree(BestCut);
       }
       //R.vectorizeTree();
 #endif
+
+
+      dbg_executes(errs()<<"WARNING: IN Basic Block After Transformation\n"<<*bb<<"\n";);
+      for (BasicBlock::iterator iter=bb->begin();iter!=bb->end();iter++){
+        if (Instruction* I = dyn_cast<Instruction>(iter)){
+          std::vector<User*> Iusers;
+          bool violateFlag=false;
+          for(User* U:I->users()){
+            Iusers.push_back(U);
+            if (isa<Instruction>(U) && !DT_->dominates(I,cast<Instruction>(U))){
+              dbg_executes(errs()<<"fatal: (Usee User) "<<*I<<"not dominates "<<*U<<"\n";);
+              dbg_executes(errs()<<"    Usee Basicblock\n";);
+              dbg_executes(errs()<<*(I->getParent())<<"\n";);
+              dbg_executes(errs()<<"    User Basicblock\n";);
+              dbg_executes(errs()<<*(cast<Instruction>(U)->getParent())<<"\n";);
+              violateFlag=true;
+            }
+          }
+          if(violateFlag){
+            dbg_executes(errs()<<"FATAL: Usee " <<*I<<" #users: "<<Iusers.size()<<"\n";);
+            for(User* U:I->users()){
+                dbg_executes(errs()<<"   (Usee User) "<<*I<<" ; "<<*U<<"\n";);
+            }
+          }
+          
+        }
+        
+      }
     }
+    dbg_executes(errs()<<"WARNING: IN Basic Block Final Transformation\n"<<*bb<<"\n";);
   }
 
   return false;
