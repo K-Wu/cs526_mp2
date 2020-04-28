@@ -205,7 +205,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     if (StoreInst *SI = dyn_cast<StoreInst>(VL[idx_vl]))
     {
       //store instruction needs and only needs to check its store pointer
-      if (!isValidElementType(SI->getPointerOperand()->getType()) || SI->getPointerOperand()->getType()->isVectorTy())
+      if (!isValidElementType(SI->getPointerOperand()->getType()) || SI->getValueOperand()->getType()->isVectorTy())
       {
         dbg_executes(errs() << "MySLP: buildTree store not valid type\n";);
         newTreeEntry(VL, false, parentNodeIdx);
@@ -704,44 +704,77 @@ Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty)
 
   // First create a new empty vector.
   DBGDW(Ty->print(errs()););
-  Value *new_vector = UndefValue::get(Ty);
-  for (unsigned int i = 0; i < VL.size(); i++)
-  {
-    auto scalar = VL[i];
-    if (StoreInst *SI = dyn_cast<StoreInst>(scalar)) {
-      scalar = SI->getValueOperand();
-    }
 
-    // Step 1, assemble the new vector by inserting InsertElement instructions
-    DBGDW(scalar->print(errs());errs()<<"\n";);
-    DBGDW(scalar->getType()->print(errs()); errs()<<", "; cast<VectorType>(new_vector->getType())->getElementType()->print(errs()); errs()<< ", " << (scalar->getType() == cast<VectorType>(new_vector->getType())->getElementType()) << "\n";);
+  if (StoreInst *VL0SI = dyn_cast<StoreInst>(VL[0])) {
+    Value *new_vector = UndefValue::get(Ty);
+    for (unsigned int i = 0; i < VL.size(); i++){
+      StoreInst* SI=dyn_cast<StoreInst>(VL[0]);
+      auto scalar = SI->getValueOperand();
+      new_vector = Builder.CreateInsertElement(new_vector, scalar, Builder.getInt32(i));
+      Instruction *I = dyn_cast<Instruction>(new_vector);
 
-    new_vector = Builder.CreateInsertElement(new_vector, scalar, Builder.getInt32(i));
-    Instruction *I = dyn_cast<Instruction>(new_vector);
 
-    // TODO: optimizeGatherSequence()
-
-    // Step 2, after such vectorization, the vectorized value Vec is outside the tree. The in the tree user of the scalar element in the vectorized value Vec needs to be satisfied by ExtractElement.
-    //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses.
-    if (ScalarToTreeEntry.count(scalar))
-    {
-      // Found the scalar in the tree.
-      // Find the corresponding entry of the tree.
-      TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
-      // TODO: put E directly into ExternalUser
-      // Next, find the position of the scalar in E.
-      for (unsigned int pos = 0; pos < E->Scalars.size(); pos++)
+      // Step 2, after such vectorization, the vectorized value Vec is outside the tree. The in the tree user of the scalar element in the vectorized value Vec needs to be satisfied by ExtractElement.
+      //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses.
+      if (ScalarToTreeEntry.count(scalar))
       {
-        if (E->Scalars[pos] == scalar)
+        // Found the scalar in the tree.
+        // Find the corresponding entry of the tree.
+        TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+        // TODO: put E directly into ExternalUser
+        // Next, find the position of the scalar in E.
+        for (unsigned int pos = 0; pos < E->Scalars.size(); pos++)
         {
-          ExternalUses.push_back(ExternalUser(scalar, I, pos));
-          break;
+          if (E->Scalars[pos] == scalar)
+          {
+            ExternalUses.push_back(ExternalUser(scalar, I, pos));
+            break;
+          }
         }
       }
     }
-  }
 
-  return new_vector;
+    
+    return new_vector;
+  }
+  else{
+    Value *new_vector = UndefValue::get(Ty);
+    for (unsigned int i = 0; i < VL.size(); i++)
+    {
+      auto scalar = VL[i];
+      
+
+      // Step 1, assemble the new vector by inserting InsertElement instructions
+      DBGDW(scalar->print(errs());errs()<<"\n";);
+      DBGDW(scalar->getType()->print(errs()); errs()<<", "; cast<VectorType>(new_vector->getType())->getElementType()->print(errs()); errs()<< ", " << (scalar->getType() == cast<VectorType>(new_vector->getType())->getElementType()) << "\n";);
+
+      new_vector = Builder.CreateInsertElement(new_vector, scalar, Builder.getInt32(i));
+      Instruction *I = dyn_cast<Instruction>(new_vector);
+
+      // TODO: optimizeGatherSequence()
+
+      // Step 2, after such vectorization, the vectorized value Vec is outside the tree. The in the tree user of the scalar element in the vectorized value Vec needs to be satisfied by ExtractElement.
+      //Add (User, Usee)=(Vec, VL[i]) to the ExternalUses.
+      if (ScalarToTreeEntry.count(scalar))
+      {
+        // Found the scalar in the tree.
+        // Find the corresponding entry of the tree.
+        TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
+        // TODO: put E directly into ExternalUser
+        // Next, find the position of the scalar in E.
+        for (unsigned int pos = 0; pos < E->Scalars.size(); pos++)
+        {
+          if (E->Scalars[pos] == scalar)
+          {
+            ExternalUses.push_back(ExternalUser(scalar, I, pos));
+            break;
+          }
+        }
+      }
+    }
+    return new_vector;
+  }
+ 
 }
 
 // Given a scalar value. Return the corresponding vector type.
@@ -1097,6 +1130,9 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
     // insert an ExtractElement instruction for this pair of scalar and use
     if (isa<Instruction>(vector))
     {
+      if (StoreInst* SI = dyn_cast<StoreInst>(vector)){
+        vector=SI->getValueOperand();
+      }
       if (PHINode *PH = dyn_cast<PHINode>(U))
       {
         // used in a PHI node
@@ -1115,6 +1151,10 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
       }
       else
       {
+        if (StoreInst* SI = dyn_cast<StoreInst>(vector)){
+          vector=SI->getValueOperand();
+        }
+        dbg_executes(errs()<<"vector not Instruction: "<<*vector<<"\n";);
         Builder.SetInsertPoint(cast<Instruction>(U));
         // create an ExtractElement instruction
         Value *I = Builder.CreateExtractElement(vector, pos);
@@ -1526,7 +1566,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
   for (po_iterator<BasicBlock *> it = po_begin(&F.getEntryBlock()); it != po_end(&F.getEntryBlock()); it++)
   {
     BasicBlock *bb = *it;
-    //dbg_executes(errs()<<"WARNING: "<<*bb<<"\n";);
+    dbg_executes(errs()<<"WARNING: IN Basic Block"<<*bb<<"\n";);
     std::list<std::vector<Value *>> seedPacks = collectStores(bb, R);
     while (!seedPacks.empty())
     {
@@ -1546,29 +1586,29 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
 #ifndef NAIVE_IMPL
       dbg_executes(errs() << "seedPack[0] " << *seedPack[0] << "\n";);
       dbg_executes(errs() << "try to get type: " << *(dyn_cast<StoreInst>(seedPack[0])->getOperand(0)) << "\n";);
-      unsigned int MinNumElementInVector = TTI_->getMinVectorRegisterBitWidth() / DL->getTypeSizeInBits(dyn_cast<StoreInst>(seedPack[0])->getOperand(0)->getType());
-      unsigned int MaxNumElementInVector = TTI_->getRegisterBitWidth(true);
+      int MinNumElementInVector = TTI_->getMinVectorRegisterBitWidth() / DL->getTypeSizeInBits(dyn_cast<StoreInst>(seedPack[0])->getOperand(0)->getType());
+      int MaxNumElementInVector = TTI_->getRegisterBitWidth(true);
       SmallBitVector BestCut;
-      unsigned int BestNumElementInVector = -1; //if no vectorization is profitable, the final vectorize() step will be automatically skipped
+      int BestNumElementInVector = -1; //if no vectorization is profitable, the final vectorize() step will be automatically skipped
       int BestCost = 0;
 
       //find the best (numElementInVectorRegister, cuts in each chunk)
-      for (unsigned int numElementInVector = MinNumElementInVector; numElementInVector <= MaxNumElementInVector; numElementInVector *= 2)
+      for (int numElementInVector = MinNumElementInVector; numElementInVector <= MaxNumElementInVector; numElementInVector *= 2)
       {
         int CurrNumEleBestCost=0;
         SmallBitVector CurrNumEleBestCut(R.getVectorizableTreeSize()); //the default option is not to vectorize
         dbg_executes(errs() << "numElement(" << numElementInVector << ") finding best cut: \n";);
         std::vector<std::vector<Value *>> chunkSeeds;
-        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector; chunkIdx++) //todo use another for loop to investigate different offset
+        for (int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector; chunkIdx++) //todo use another for loop to investigate different offset
         {
           chunkSeeds.emplace_back(seedPack.cbegin() + chunkIdx * (numElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (numElementInVector));
         }
         if (!chunkSeeds.empty())
         {
-          for (unsigned int chunkIdx = 0; chunkIdx < chunkSeeds.size(); chunkIdx++)
+          for (int chunkIdx = 0; chunkIdx < chunkSeeds.size(); chunkIdx++)
           {
             dbg_executes(errs() << "chunk instr: ";);
-            for (unsigned int instrIdx = 0; instrIdx < chunkSeeds[chunkIdx].size(); instrIdx++)
+            for (int instrIdx = 0; instrIdx < chunkSeeds[chunkIdx].size(); instrIdx++)
             {
               dbg_executes(errs() << *chunkSeeds[chunkIdx][instrIdx] << ", ";);
             }
@@ -1580,7 +1620,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
           std::vector<SmallBitVector> Cuts = R.getCuts(AllNeighbourThreshold);
 
           //search for the best cut
-          for (unsigned int cutIdx = 0; cutIdx < Cuts.size(); cutIdx++)
+          for (int cutIdx = 0; cutIdx < Cuts.size(); cutIdx++)
           {
             R.clearExternalUses();
             R.calcExternalUses(Cuts[cutIdx]);
@@ -1611,7 +1651,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
       //apply the best (numElementInVectorRegister, cuts in each chunk)
       if (BestCut.count()!=0){
         std::vector<std::vector<Value *>> BestChunkSeeds;
-        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / BestNumElementInVector; chunkIdx++)
+        for (int chunkIdx = 0; chunkIdx < seedPack.size() / BestNumElementInVector; chunkIdx++)
         {
           BestChunkSeeds.emplace_back(seedPack.cbegin() + chunkIdx * (BestNumElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (BestNumElementInVector));
         }
