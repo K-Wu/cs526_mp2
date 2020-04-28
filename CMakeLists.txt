@@ -4,8 +4,8 @@ project(SLPVectorizer-kdw)
 set(CMAKE_C_FLAGS_DEBUG "-g -DDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG")
 
-set( ENV{CC} /opt/rh/devtoolset-7/root/usr/bin/gcc )
-set( ENV{CXX} /opt/rh/devtoolset-7/root/usr/bin/g++ )
+set( ENV{CC} /usr/bin/cc )
+set( ENV{CXX} /usr/bin/c++ )
 
 find_package(LLVM REQUIRED CONFIG)
 add_definitions(${LLVM_DEFINITIONS})
