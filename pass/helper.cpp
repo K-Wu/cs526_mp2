@@ -68,23 +68,23 @@ public:
   /// Returns the vectorized root.
   void vectorizeTree();
 
-  void vectorizeTree(SmallBitVector cut);
+  void vectorizeTree(const SmallBitVector &cut);
 
   /// \returns the vectorization cost of the subtree that starts at \p VL.
   /// A negative number means that this is profitable.
   int getTreeCost();
 
-  int getTreeCost(SmallBitVector cut);
+  int getTreeCost(const SmallBitVector &cut);
 
-  int do_getTreeCost(std::vector<unsigned int> &allNodesInCutVec);
+  int do_getTreeCost(const std::vector<unsigned int> &allNodesInCutVec);
 
   /// Construct a vectorizable tree that starts at \p Roots, ignoring users for
   /// the purpose of scheduling and extraction in the \p UserIgnoreLst.
   void buildTree(ArrayRef<Value *> Roots, const std::set<unsigned int> &skippedEntryIdxes); //,
                                                                                             //ArrayRef<Value *> UserIgnoreLst = None);
-  void buildTree(std::vector<std::vector<Value *>> Roots, const std::set<unsigned int> &skippedEntryIdxes);
+  void buildTree(const std::vector<std::vector<Value *>> &Roots, const std::set<unsigned int> &skippedEntryIdxes);
   void calcExternalUses();
-  void calcExternalUses(SmallBitVector cut);
+  void calcExternalUses(const SmallBitVector &cut);
 
   /// Clear the internal data structures that are created by 'buildTree'.
   void deleteTree()
@@ -489,17 +489,17 @@ public:
     return VectorizableTree.size();
   }
 
-  SmallBitVector setNeedToGather(SmallBitVector cut);
-  SmallBitVector setAllOtherNodesNeedToGather(SmallBitVector cut);
-  void deleteNodesFromScalarMap(SmallBitVector nodesDontNeedDelete);
-  void unsetNeedToGather(SmallBitVector nodesNeedToUnset);
+  //SmallBitVector setNeedToGather(const SmallBitVector &cut);
+  SmallBitVector setAllOtherNodesNeedToGather(const SmallBitVector &cut);
+  void deleteNodesFromScalarMap(const SmallBitVector &nodesDontNeedDelete);
+  void unsetNeedToGather(const SmallBitVector &nodesNeedToUnset);
   void descheduleExternalNodes(const SmallBitVector &cut, const SmallBitVector &nodesNeedToGather);
   void printVectorizableTree();
-  SmallBitVector collectNeedToGather(SmallBitVector cut);
-  void _setNeedToGather(SmallBitVector nodes);
+  SmallBitVector collectNeedToGather(const SmallBitVector &cut);
+  void _setNeedToGather(const SmallBitVector &nodes);
   void completeCut(SmallBitVector &cut);
-  void enlistNextLevelEachNeighbourCut(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int nextLevelStartPos, unsigned int nextLevelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder, unsigned int maxNumResults);
-  SmallBitVector enlistAllLevelNodeCutInLevel(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int levelStartPos, unsigned int levelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder);
+  void enlistNextLevelEachNeighbourCut(const SmallBitVector &lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int nextLevelStartPos, unsigned int nextLevelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder, unsigned int maxNumResults);
+  SmallBitVector enlistAllLevelNodeCutInLevel(const SmallBitVector &lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int levelStartPos, unsigned int levelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder);
   void descheduleExternalNodes_rec(unsigned int root, const SmallBitVector &nodesNeedToDeschedule);
   void rescheduleNodes(const SmallBitVector &cut);
 

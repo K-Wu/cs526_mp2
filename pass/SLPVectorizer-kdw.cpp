@@ -556,7 +556,7 @@ void BoUpSLP::buildTree_rec(
 // set NeedToGather for all nodes other than nodes in the cut and nodes who are
 // originally NeedToGather leaves return the nodes indices whose NeedToGather
 // flag is modified
-SmallBitVector BoUpSLP::setAllOtherNodesNeedToGather(SmallBitVector cut)
+SmallBitVector BoUpSLP::setAllOtherNodesNeedToGather(const SmallBitVector &cut)
 {
   SmallBitVector modifiedIndex(VectorizableTree.size());
   for (unsigned int idx = 0; idx < VectorizableTree.size(); idx++)
@@ -573,7 +573,7 @@ SmallBitVector BoUpSLP::setAllOtherNodesNeedToGather(SmallBitVector cut)
 }
 
 // set NeedToGather for each node in the nodes
-void BoUpSLP::_setNeedToGather(SmallBitVector nodes)
+void BoUpSLP::_setNeedToGather(const SmallBitVector &nodes)
 {
   dbg_executes(errs() << "entering _setNeedToGather() : ";);
   dbg_executes(dumpSmallBitVector(nodes););
@@ -589,7 +589,7 @@ void BoUpSLP::_setNeedToGather(SmallBitVector nodes)
 // find out the NeedToGather leaves for this cut, i.e. the outermost leaves
 // whose NeedToGather is yet to set. return does not include original
 // NeedToGather leaves
-SmallBitVector BoUpSLP::collectNeedToGather(SmallBitVector cut)
+SmallBitVector BoUpSLP::collectNeedToGather(const SmallBitVector &cut)
 {
   // for each node in cut
   // for each child
@@ -662,7 +662,7 @@ void BoUpSLP::completeCut(SmallBitVector &cut)
 // unset NeedToGather for each of the node indicated by the argument
 // the argument is usually the output of the
 // BoUpSLP::setNeedToGather(SmallBitVector cut)
-void BoUpSLP::unsetNeedToGather(SmallBitVector nodesNeedToUnset)
+void BoUpSLP::unsetNeedToGather(const SmallBitVector &nodesNeedToUnset)
 {
   dbg_executes(errs() << "unsetNeedToGather() ";);
   dumpSmallBitVector(nodesNeedToUnset);
@@ -705,7 +705,7 @@ void BoUpSLP::calcExternalUses()
   }
 }
 
-void BoUpSLP::calcExternalUses(SmallBitVector cutWithoutDefactoNeedToGather)
+void BoUpSLP::calcExternalUses(const SmallBitVector &cutWithoutDefactoNeedToGather)
 {
   assert(ExternalUses.empty() &&
          "ExternalUses non empty before calling calcExternalUses");
@@ -761,7 +761,7 @@ void BoUpSLP::buildTree(ArrayRef<Value *> Root,
   calcExternalUses();
 }
 
-void BoUpSLP::buildTree(std::vector<std::vector<Value *>> Roots,
+void BoUpSLP::buildTree(const std::vector<std::vector<Value *>> &Roots,
                         const std::set<unsigned int> &skippedEntryIdxes = {})
 {
   for (unsigned int idx_bundle = 0; idx_bundle < Roots.size(); idx_bundle++)
@@ -1326,7 +1326,7 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
 // Vectorize the tree from root recursively.
 void BoUpSLP::vectorizeTree() { do_vectorizeTree({0}); }
 
-void BoUpSLP::deleteNodesFromScalarMap(SmallBitVector nodesDontNeedDelete)
+void BoUpSLP::deleteNodesFromScalarMap(const SmallBitVector &nodesDontNeedDelete)
 {
   SmallDenseMap<Value *, int> NewScalarToTreeEntry;
   for (auto idx : nodesDontNeedDelete.set_bits())
@@ -1368,7 +1368,7 @@ void BoUpSLP::rescheduleNodes(const SmallBitVector &cut)
   }
 }
 
-void BoUpSLP::vectorizeTree(SmallBitVector cut)
+void BoUpSLP::vectorizeTree(const SmallBitVector &cut)
 {
   SmallBitVector nodesNeedToGather = collectNeedToGather(cut);
   _setNeedToGather(nodesNeedToGather);
@@ -1402,7 +1402,7 @@ void BoUpSLP::vectorizeTree(SmallBitVector cut)
 
 // get the cost of subtree indicated by cut
 // cut
-int BoUpSLP::getTreeCost(SmallBitVector cut)
+int BoUpSLP::getTreeCost(const SmallBitVector &cut)
 {
   dbg_executes(errs() << "getTreeCost(cut) cut ";);
   dumpSmallBitVector(cut);
@@ -1420,7 +1420,7 @@ int BoUpSLP::getTreeCost(SmallBitVector cut)
   return result;
 }
 
-int BoUpSLP::do_getTreeCost(std::vector<unsigned int> &allNodesInCutVec)
+int BoUpSLP::do_getTreeCost(const std::vector<unsigned int> &allNodesInCutVec)
 {
   int Cost = 0;
   dbg_executes(dbgs() << "SLP: Calculating cost for tree of size "
@@ -1529,7 +1529,7 @@ std::vector<T> unique_index(std::vector<T> sortedArray)
 }
 
 SmallBitVector BoUpSLP::enlistAllLevelNodeCutInLevel(
-    SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts,
+    const SmallBitVector &lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts,
     unsigned int levelStartPos, unsigned int levelEndPos,
     std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder)
 {
@@ -1548,7 +1548,7 @@ SmallBitVector BoUpSLP::enlistAllLevelNodeCutInLevel(
 }
 
 void BoUpSLP::enlistNextLevelEachNeighbourCut(
-    SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts,
+    const SmallBitVector &lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts,
     unsigned int nextLevelStartPos, unsigned int nextLevelEndPos,
     std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder,
     unsigned int maxNumResults)
