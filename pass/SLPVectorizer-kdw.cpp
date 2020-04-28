@@ -54,6 +54,9 @@ using namespace llvm;
   while (0)
 #endif
 
+#define DBGDW(...) \
+    errs() << __FUNCTION__ << ":" << __LINE__ << ": "; __VA_ARGS__
+
 #define DEBUG_TYPE "slpvect-kdw"
 #define SV_NAME "slpvect-kdw"
 
@@ -700,11 +703,19 @@ Value *BoUpSLP::Gather(ArrayRef<Value *> VL, VectorType *Ty)
   // Note: before calling this function, insert point has to be set by the caller.
 
   // First create a new empty vector.
+  DBGDW(Ty->print(errs()););
   Value *new_vector = UndefValue::get(Ty);
   for (unsigned int i = 0; i < VL.size(); i++)
   {
     auto scalar = VL[i];
+    if (StoreInst *SI = dyn_cast<StoreInst>(scalar)) {
+      scalar = SI->getValueOperand();
+    }
+
     // Step 1, assemble the new vector by inserting InsertElement instructions
+    DBGDW(scalar->print(errs());errs()<<"\n";);
+    DBGDW(scalar->getType()->print(errs()); errs()<<", "; cast<VectorType>(new_vector->getType())->getElementType()->print(errs()); errs()<< ", " << (scalar->getType() == cast<VectorType>(new_vector->getType())->getElementType()) << "\n";);
+
     new_vector = Builder.CreateInsertElement(new_vector, scalar, Builder.getInt32(i));
     Instruction *I = dyn_cast<Instruction>(new_vector);
 
@@ -740,8 +751,10 @@ VectorType *getVectorType(Value *scalar, unsigned int length)
   if (StoreInst *SI = dyn_cast<StoreInst>(scalar))
   {
     // If scalar is the ret of a store op, then we use the type of the value being stored.
+    DBGDW(errs()<<"SI\n";);
     type = SI->getValueOperand()->getType();
   }
+  DBGDW(type->print(errs());errs()<<"\n";);
   VectorType *vector_type = VectorType::get(type, length);
   return vector_type;
 }
@@ -768,6 +781,7 @@ Value *BoUpSLP::vectorizeTree_rec(ArrayRef<Value *> VL)
     dbg_executes(errs() << " , " << *(VL[idx]););
   }
   dbg_executes(errs() << "\n";);
+
   auto scalar = VL[0];
   auto length = VL.size();
 
@@ -788,6 +802,7 @@ Value *BoUpSLP::vectorizeTree_rec(ArrayRef<Value *> VL)
   }
   //Case 2, scalars are not in the tree.
   // Create a new vector by gathering
+  DBGDW(errs() << "getVTy\n";);
   auto vector_type = getVectorType(scalar, length);
   return Gather(VL, vector_type);
 }
@@ -805,6 +820,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
   }
 
   Instruction *scalar = cast<Instruction>(E->Scalars[0]);
+  DBGDW(errs() << "getVTy\n";);
   auto vector_type = getVectorType(scalar, E->Scalars.size());
 
   // Case 2, If this entry is marked as NeedToGather, then it is easy. Just Gather it.
@@ -1133,7 +1149,9 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
       {
         scalar->replaceAllUsesWith(UndefValue::get(scalar->getType()));
       }
+      DBGDW(scalar->print(errs());errs()<<"\n";);
       cast<Instruction>(scalar)->eraseFromParent();
+      DBGDW();
     }
   }
 
