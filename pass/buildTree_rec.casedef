@@ -1,0 +1,219 @@
+case Instruction::ExtractValue:
+case Instruction::ExtractElement:
+{
+    bool Reuse = CanReuseExtract(VL, OpCode, TTI);
+    if (Reuse)
+    {
+        LLVM_DEBUG(dbgs() << "SLP: Reusing extract sequence.\n");
+    }
+    else
+    {
+        BS.cancelScheduling(VL);
+    }
+    newTreeEntry(VL, Reuse, parentNodeIdx);
+    return;
+}
+case Instruction::GetElementPtr:
+{
+    // We don't combine GEPs with complicated (nested) indexing.
+    for (unsigned j = 0; j < VL.size(); ++j)
+    {
+        if (cast<Instruction>(VL[j])->getNumOperands() != 2)
+        {
+            LLVM_DEBUG(dbgs() << "SLP: not-vectorizable GEP (nested indexes).\n");
+            BS.cancelScheduling(VL);
+            newTreeEntry(VL, false, parentNodeIdx);
+            return;
+        }
+    }
+
+    // We can't combine several GEPs into one vector if they operate on
+    // different types.
+    Type *Ty0 = cast<Instruction>(VL0)->getOperand(0)->getType();
+    for (unsigned j = 0; j < VL.size(); ++j)
+    {
+        Type *CurTy = cast<Instruction>(VL[j])->getOperand(0)->getType();
+        if (Ty0 != CurTy)
+        {
+            LLVM_DEBUG(dbgs() << "SLP: not-vectorizable GEP (different types).\n");
+            BS.cancelScheduling(VL);
+            newTreeEntry(VL, false, parentNodeIdx);
+            return;
+        }
+    }
+
+    // We don't combine GEPs with non-constant indexes.
+    for (unsigned j = 0; j < VL.size(); ++j)
+    {
+        auto Op = cast<Instruction>(VL[j])->getOperand(1);
+        if (!isa<ConstantInt>(Op))
+        {
+            LLVM_DEBUG(
+                dbgs() << "SLP: not-vectorizable GEP (non-constant indexes).\n");
+            BS.cancelScheduling(VL);
+            newTreeEntry(VL, false, parentNodeIdx);
+            return;
+        }
+    }
+
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
+    LLVM_DEBUG(dbgs() << "SLP: added a vector of GEPs.\n");
+    for (unsigned i = 0, e = 2; i < e; ++i)
+    {
+        SmallVector<Value *, 8> Operands;
+        // Prepare the operand vector.
+        for (Value *j : VL)
+            Operands.push_back(cast<Instruction>(j)->getOperand(i));
+
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+    }
+    return;
+}
+case Instruction::PHI:
+{
+    PHINode *PH = dyn_cast<PHINode>(VL0);
+
+    // Check for terminator values (e.g. invoke).
+    for (unsigned j = 0; j < VL.size(); ++j)
+        for (unsigned i = 0, e = PH->getNumIncomingValues(); i < e; ++i)
+        {
+            Instruction *Term = dyn_cast<Instruction>(
+                cast<PHINode>(VL[j])->getIncomingValueForBlock(PH->getIncomingBlock(i)));
+            if (Term)
+            {
+                LLVM_DEBUG(dbgs() << "SLP: Need to swizzle PHINodes (TerminatorInst use).\n");
+                BS.cancelScheduling(VL);
+                newTreeEntry(VL, false, parentNodeIdx);
+                return;
+            }
+        }
+
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
+    LLVM_DEBUG(dbgs() << "SLP: added a vector of PHINodes.\n");
+
+    for (unsigned i = 0, e = PH->getNumIncomingValues(); i < e; ++i)
+    {
+        SmallVector<Value *, 8> Operands;
+        // Prepare the operand vector.
+        for (Value *j : VL)
+            Operands.push_back(cast<PHINode>(j)->getIncomingValueForBlock(
+                PH->getIncomingBlock(i)));
+
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+    }
+    return;
+}
+case Instruction::Call:
+{
+    // Check if the calls are all to the same vectorizable intrinsic.
+    CallInst *CI = cast<CallInst>(VL[0]);
+    // Check if this is an Intrinsic call or something that can be
+    // represented by an intrinsic call
+    Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+    if (!isTriviallyVectorizable(ID))
+    {
+        BS.cancelScheduling(VL);
+        newTreeEntry(VL, false, parentNodeIdx);
+        LLVM_DEBUG(dbgs() << "SLP: Non-vectorizable call.\n");
+        return;
+    }
+    Function *Int = CI->getCalledFunction();
+    Value *A1I = nullptr;
+    if (hasVectorInstrinsicScalarOpd(ID, 1))
+        A1I = CI->getArgOperand(1);
+    for (unsigned i = 1, e = VL.size(); i != e; ++i)
+    {
+        CallInst *CI2 = dyn_cast<CallInst>(VL[i]);
+        if (!CI2 || CI2->getCalledFunction() != Int ||
+            getVectorIntrinsicIDForCall(CI2, TLI) != ID ||
+            !CI->hasIdenticalOperandBundleSchema(*CI2))
+        {
+            BS.cancelScheduling(VL);
+            newTreeEntry(VL, false, parentNodeIdx);
+            LLVM_DEBUG(dbgs() << "SLP: mismatched calls:" << *CI << "!=" << *VL[i]
+                              << "\n");
+            return;
+        }
+        // ctlz,cttz and powi are special intrinsics whose second argument
+        // should be same in order for them to be vectorized.
+        if (hasVectorInstrinsicScalarOpd(ID, 1))
+        {
+            Value *A1J = CI2->getArgOperand(1);
+            if (A1I != A1J)
+            {
+                BS.cancelScheduling(VL);
+                newTreeEntry(VL, false, parentNodeIdx);
+                LLVM_DEBUG(dbgs() << "SLP: mismatched arguments in call:" << *CI
+                                  << " argument " << A1I << "!=" << A1J
+                                  << "\n");
+                return;
+            }
+        }
+        // Verify that the bundle operands are identical between the two calls.
+        if (CI->hasOperandBundles() &&
+            !std::equal(CI->op_begin() + CI->getBundleOperandsStartIndex(),
+                        CI->op_begin() + CI->getBundleOperandsEndIndex(),
+                        CI2->op_begin() + CI2->getBundleOperandsStartIndex()))
+        {
+            BS.cancelScheduling(VL);
+            newTreeEntry(VL, false, parentNodeIdx);
+            LLVM_DEBUG(dbgs() << "SLP: mismatched bundle operands in calls:" << *CI << "!="
+                              << *VL[i] << '\n');
+            return;
+        }
+    }
+
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
+    for (unsigned i = 0, e = CI->getNumArgOperands(); i != e; ++i)
+    {
+        SmallVector<Value *, 8> Operands;
+        // Prepare the operand vector.
+        for (Value *j : VL)
+        {
+            CallInst *CI2 = dyn_cast<CallInst>(j);
+            Operands.push_back(CI2->getArgOperand(i));
+        }
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+    }
+    return;
+}
+case Instruction::ShuffleVector:
+{
+    // If this is not an alternate sequence of opcode like add-sub
+    // then do not vectorize this instruction.
+    // if (!isAltShuffle)
+    // {
+    //     BS.cancelScheduling(VL);
+    //     newTreeEntry(VL, false);
+    //     LLVM_DEBUG(dbgs() << "SLP: ShuffleVector are not vectorized.\n");
+    //     return;
+    // }
+    TreeEntry *thisNode = newTreeEntry(VL, true, parentNodeIdx);
+    int thisNodeIdx = thisNode->idx;
+    LLVM_DEBUG(dbgs() << "SLP: added a ShuffleVector op.\n");
+
+    // Reorder operands if reordering would enable vectorization.
+    if (isa<BinaryOperator>(VL0))
+    {
+        SmallVector<Value *, 8> Left, Right;
+        //reorderAltShuffleOperands(VL, Left, Right);
+        //TODO: add reorder here if needed
+        buildTree_rec(Left, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+        buildTree_rec(Right, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+        return;
+    }
+
+    for (unsigned i = 0, e = VL0->getNumOperands(); i < e; ++i)
+    {
+        SmallVector<Value *, 8> Operands;
+        // Prepare the operand vector.
+        for (Value *j : VL)
+            Operands.push_back(cast<Instruction>(j)->getOperand(i));
+
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+    }
+    return;
+}
