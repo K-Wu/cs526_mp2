@@ -62,6 +62,14 @@ using namespace llvm;
 //{
 #include "helper.cpp"
 
+static std::vector<unsigned int> convertSmallBitVectorToVector(SmallBitVector BestCut){
+  std::vector<unsigned int> result;
+  for (auto idx:BestCut.set_bits()){
+    result.push_back(idx);
+  }
+  return result;
+}
+
 struct lessThanSmallBitVector
 {
   bool operator()(const SmallBitVector &a, const SmallBitVector b) const
@@ -82,7 +90,7 @@ static void uniquePushBackSmallBitVector(std::vector<SmallBitVector> &cuts, Smal
   cuts.push_back(element);
 }
 
-static void dumpSmallBitVector(SmallBitVector &BV)
+static void dumpSmallBitVector(const SmallBitVector &BV)
 {
   errs() << "{";
   for (unsigned VI : BV.set_bits())
@@ -99,7 +107,7 @@ void BoUpSLP::printVectorizableTree()
   dbg_executes(errs() << "printing vectorizableTree\n";);
   for (unsigned int idx = 0; idx < VectorizableTree.size(); idx++)
   {
-    dbg_executes(errs() << "idx(" << idx << "," << VectorizableTree[idx].idx << ") " << *VectorizableTree[idx].Scalars[0] << "\n";);
+    dbg_executes(errs() << "idx(" << idx << "," << VectorizableTree[idx].idx << ") NeedToGather(" << VectorizableTree[idx].NeedToGather << ")" << *VectorizableTree[idx].Scalars[0] << "\n";);
     dbg_executes(errs() << "idx(" << idx << ") children: ";);
     for (unsigned int childIdx = 0; childIdx < EntryChildrenID[idx].size(); childIdx++)
     {
@@ -109,14 +117,12 @@ void BoUpSLP::printVectorizableTree()
   }
 }
 
-//we only need to deschedule nodes in cut and nodes whose NeedToGather is set because nodes in the NeedToGather won't be scheduled.
-void BoUpSLP::descheduleExternalNodes(SmallBitVector cut)
-{
-  for (int idx = 0; idx < VectorizableTree.size(); idx++)
-  {
-    if ((!cut[idx]) && (!VectorizableTree[idx].NeedToGather))
-    {
-      BasicBlock *BB = getSameBlock(VectorizableTree[idx].Scalars);
+void BoUpSLP::descheduleExternalNodes_rec(unsigned int root, const SmallBitVector& nodesNeedToDeschedule){
+  for(unsigned int childIdx=EntryChildrenID[root].size()-1;childIdx>=0;childIdx--){
+    descheduleExternalNodes_rec(EntryChildrenID[root][childIdx], nodesNeedToDeschedule);
+  }
+  if((nodesNeedToDeschedule[root]) &&(!VectorizableTree[root].NeedToGather)){
+    BasicBlock *BB = getSameBlock(VectorizableTree[root].Scalars);
       // if (!BlocksSchedules.count(BB))
       // {
       //   BlocksSchedules[BB] = llvm::make_unique<BlockScheduling>(BB);
@@ -124,14 +130,44 @@ void BoUpSLP::descheduleExternalNodes(SmallBitVector cut)
       assert(BlocksSchedules.count(BB) && "unexpected in descheduleExternalNodes()");
       auto &BSRef = BlocksSchedules[BB];
       auto &BS = *BSRef.get();
-      BS.cancelScheduling(VectorizableTree[idx].Scalars);
+      BS.cancelScheduling(VectorizableTree[root].Scalars);
+  }
+
+}
+
+//we won't deschedule nodes in nodesNeedToDeschedule who are not scheduled, i.e., NeedToGather==true
+void BoUpSLP::descheduleExternalNodes(const SmallBitVector& cut, const SmallBitVector& nodesNeedToGather)
+{
+  //DFS deschedule
+  // for(unsigned rootIdx=rootIdxes.size()-1;rootIdx>=0;rootIdx--){
+  //   descheduleExternalNodes_rec(rootIdxes[rootIdx],nodesNeedToDeschedule);
+  // }
+ 
+  for(int root=VectorizableTree.size()-1;root>=0;root--){
+    dbg_executes(dbgs()<<"size: "<<VectorizableTree.size()<<","<<root<<"\n";);
+    if(nodesNeedToGather[root]||(!cut[root]&&!VectorizableTree[root].NeedToGather)){
+      dbg_executes(dbgs()<<"descheduled "<<root<<"\n";);
+      BasicBlock *BB = getSameBlock(VectorizableTree[root].Scalars);
+        // if (!BlocksSchedules.count(BB))
+        // {
+        //   BlocksSchedules[BB] = llvm::make_unique<BlockScheduling>(BB);
+        // }
+        assert(BlocksSchedules.count(BB) && "unexpected in descheduleExternalNodes()");
+        auto &BSRef = BlocksSchedules[BB];
+        auto &BS = *BSRef.get();
+        BS.cancelScheduling(VectorizableTree[root].Scalars);
     }
   }
 }
 
-void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNodeIdx)//TODO: add ignore usees as vectorization in previous chunk will invalidate some uses
+void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNodeIdx, const std::set<unsigned int>& skippedEntryIdxes) //TODO: add ignore usees as vectorization in previous chunk will invalidate some uses
 {
   dbg_executes(errs() << "MySLP buildtree_rec entry bundle: ";);
+  if (skippedEntryIdxes.find(VectorizableTree.size())!=skippedEntryIdxes.end()){
+    dbg_executes(errs() << "MySLP: buildTree skip entry in skippedEntryIdxes set\n";);
+    newTreeEntry(VL, false, parentNodeIdx);
+    return;
+  }
   for (int idx = 0; idx < VL.size(); idx++)
   {
     dbg_executes(errs() << " , " << *(VL[idx]););
@@ -152,13 +188,21 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     newTreeEntry(VL, false, parentNodeIdx);
     return;
   }
-  for (int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
+  for (unsigned int idx_vl = 0; idx_vl < VL.size(); idx_vl++){
+    if (ScalarToTreeEntry.count(VL[idx_vl])){
+      dbg_executes(errs() << "MySLP: buildTree bundle not vectorized because already in Tree because of the multiple root\n";);
+      newTreeEntry(VL, false, parentNodeIdx);
+      return;
+    }
+  }
+
+  for (unsigned int idx_vl = 0; idx_vl < VL.size(); idx_vl++)
   {
-    
+
     if (StoreInst *SI = dyn_cast<StoreInst>(VL[idx_vl]))
     {
       //store instruction needs and only needs to check its store pointer
-      if (!isValidElementType(SI->getPointerOperand()->getType())||SI->getPointerOperand()->getType()->isVectorTy())
+      if (!isValidElementType(SI->getPointerOperand()->getType()) || SI->getPointerOperand()->getType()->isVectorTy())
       {
         dbg_executes(errs() << "MySLP: buildTree store not valid type\n";);
         newTreeEntry(VL, false, parentNodeIdx);
@@ -167,7 +211,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     }
     else
     {
-      if (!isValidElementType(VL[idx_vl]->getType())||VL[idx_vl]->getType()->isVectorTy())
+      if (!isValidElementType(VL[idx_vl]->getType()) || VL[idx_vl]->getType()->isVectorTy())
       {
         dbg_executes(errs() << "MySLP: buildTree not valid type\n";);
         newTreeEntry(VL, false, parentNodeIdx);
@@ -327,7 +371,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
     {
       operands.push_back(dyn_cast<StoreInst>(VL[idx_vl])->getOperand(0));
     }
-    buildTree_rec(operands, Depth + 1, thisNodeIdx);
+    buildTree_rec(operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     //}
     return;
   }
@@ -356,7 +400,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       {
         operands.push_back(dyn_cast<CmpInst>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNodeIdx);
+      buildTree_rec(operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
   }
@@ -392,7 +436,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       {
         operands.push_back(dyn_cast<Instruction>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNodeIdx);
+      buildTree_rec(operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
   }
@@ -438,7 +482,7 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
       {
         operands.push_back(dyn_cast<Instruction>(VL[idx_vl])->getOperand(idx_operand));
       }
-      buildTree_rec(operands, Depth + 1, thisNodeIdx);
+      buildTree_rec(operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
   }
@@ -456,58 +500,94 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth, int parentNode
 SmallBitVector BoUpSLP::setAllOtherNodesNeedToGather(SmallBitVector cut)
 {
   SmallBitVector modifiedIndex(VectorizableTree.size());
-  for (unsigned int idx=0;idx<VectorizableTree.size();idx++){
+  for (unsigned int idx = 0; idx < VectorizableTree.size(); idx++)
+  {
     if (cut[idx])
       continue;
     if (VectorizableTree[idx].NeedToGather)
       continue;
     modifiedIndex.set(idx);
-    VectorizableTree[idx].NeedToGather=true;
+    VectorizableTree[idx].NeedToGather = true;
   }
-  
+
   return modifiedIndex;
 }
 
-//set NeedToGather for each of the children nodes of the cut if it is not a NeedToGather leave originally in the tree, i.e. its NeedToGather is not set
-// return the nodes indices whose NeedToGather flag is modified
-SmallBitVector BoUpSLP::setNeedToGather(SmallBitVector cut)
+//set NeedToGather for each node in the nodes
+void BoUpSLP::_setNeedToGather(SmallBitVector nodes)
+{
+  dbg_executes(errs() << "entering _setNeedToGather() : ";);
+  dbg_executes(dumpSmallBitVector(nodes););
+  for (auto idx : nodes.set_bits())
+  {
+    assert(!VectorizableTree[idx].NeedToGather && "_setNeedToGather bumps into NeedToGather leaf");
+    VectorizableTree[idx].NeedToGather = true;
+  }
+}
+
+//the input cut should be complete(including all the nodes that need to gather)
+//find out the NeedToGather leaves for this cut, i.e. the outermost leaves whose NeedToGather is yet to set.
+//return does not include original NeedToGather leaves
+SmallBitVector BoUpSLP::collectNeedToGather(SmallBitVector cut)
 {
   //for each node in cut
   //for each child
   //if not NeedToGather
   //set NeedToGather
   //set its index in the result SmallBitVector
-  dbg_executes(errs() << "entering setNeedToGather() \n";);
+  dbg_executes(errs() << "entering collectNeedToGather() \n";);
   SmallBitVector modifiedIndex(VectorizableTree.size());
-  if(cut.count()==0){//only one node in the graph: root NeedToGather==true
-    modifiedIndex.set(0);
-    VectorizableTree[0].NeedToGather=true;
-  }
-  else{
-    for (auto idx : cut.set_bits())
+  assert(cut.count() != 0 && "cut should not be empty in collectNeedToGather");
+
+  for (auto idx : cut.set_bits())
+  {
+
+    if (!VectorizableTree[idx].NeedToGather)
     {
-      if (!VectorizableTree[idx].NeedToGather)
+      dbg_executes(errs() << "(" << idx << ") children: ";);
+      bool isNeedToGatherLeaf = true;
+      for (unsigned int childIdx = 0; childIdx < EntryChildrenID[idx].size(); childIdx++)
       {
-        dbg_executes(errs() << "(" << idx << ") children: ";);
-        for (unsigned int childIdx = 0; childIdx < EntryChildrenID[idx].size(); childIdx++)
-        {
-          if (!VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather && !cut[EntryChildrenID[idx][childIdx]])
-          { //need to gather
-            dbg_executes(errs() << EntryChildrenID[idx][childIdx] << " , ";);
-            modifiedIndex.set(EntryChildrenID[idx][childIdx]);
-            //assert(EntryChildrenEntries[idx][childIdx]->idx==VectorizableTree[EntryChildrenEntries[idx][childIdx]->idx].idx&&"idx mismatch in EntryChildrenEntries[idx]");
-            VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather = true;
-            //assert(EntryChildrenEntries[idx][childIdx]->idx==EntryChildrenID[idx][childIdx]);
-          }
+        if (cut[EntryChildrenID[idx][childIdx]])
+        { //need to gather
+          isNeedToGatherLeaf = false;
         }
+        else if (VectorizableTree[EntryChildrenID[idx][childIdx]].NeedToGather)
+        {
+          assert(cut[EntryChildrenID[idx][childIdx]] && "cut should be complete (including all the nodes that need to gather)");
+          isNeedToGatherLeaf = false;
+        }
+      }
+      if (isNeedToGatherLeaf)
+      {
+        dbg_executes(errs() << idx << " , ";);
+        modifiedIndex.set(idx);
+        //assert(EntryChildrenEntries[idx][childIdx]->idx==VectorizableTree[EntryChildrenEntries[idx][childIdx]->idx].idx&&"idx mismatch in EntryChildrenEntries[idx]");
+        //assert(EntryChildrenEntries[idx][childIdx]->idx==EntryChildrenID[idx][childIdx]);
       }
     }
   }
 
-  dbg_executes(errs() << "\nsetNeedToGather() ";);
+  dbg_executes(errs() << "\ncollectNeedToGather() ";);
   dumpSmallBitVector(modifiedIndex);
   dbg_executes(errs() << "\n";);
   return modifiedIndex;
+}
+
+//include all the NeedToGather nodes who are the instant children of one node in the cut
+void BoUpSLP::completeCut(SmallBitVector &cut)
+{
+  for (auto nodeIdx : cut.set_bits())
+  {
+    if (!VectorizableTree[nodeIdx].NeedToGather)
+    { //ignore nodes without children
+      for (unsigned int childIdx = 0; childIdx < EntryChildrenID[nodeIdx].size(); childIdx++)
+      {
+        if (VectorizableTree[EntryChildrenID[nodeIdx][childIdx]].NeedToGather)
+          cut[EntryChildrenID[nodeIdx][childIdx]] = true;
+      }
+    }
+  }
 }
 
 //unset NeedToGather for each of the node indicated by the argument
@@ -527,7 +607,7 @@ void BoUpSLP::unsetNeedToGather(SmallBitVector nodesNeedToUnset)
 
 void BoUpSLP::calcExternalUses()
 {
-  dbg_executes(errs()<<"calcExternalUses(): ";);
+  dbg_executes(errs() << "calcExternalUses(): ";);
   assert(ExternalUses.empty() && "ExternalUses non empty before calling calcExternalUses");
   for (unsigned int idx_te = 0; idx_te < VectorizableTree.size(); idx_te++)
   {
@@ -538,9 +618,10 @@ void BoUpSLP::calcExternalUses()
     {
       for (User *U : TE->Scalars[idx2_scalar]->users())
       {
-        if (!ScalarToTreeEntry[U]){
+        if (!ScalarToTreeEntry[U])
+        {
           ExternalUses.emplace_back(TE->Scalars[idx2_scalar], U, idx2_scalar);
-          dbg_executes(errs()<<"calcExternalUses("<<ExternalUses.size()<<") ExtractElement for (Usee, User): ("<<*(TE->Scalars[idx2_scalar])<<","<<*U<<")\n";);
+          dbg_executes(errs() << "calcExternalUses(" << ExternalUses.size() << ") ExtractElement for (Usee, User): (" << *(TE->Scalars[idx2_scalar]) << "," << *U << ")\n";);
         }
       }
     }
@@ -550,41 +631,60 @@ void BoUpSLP::calcExternalUses()
 void BoUpSLP::calcExternalUses(SmallBitVector cut)
 {
   assert(ExternalUses.empty() && "ExternalUses non empty before calling calcExternalUses");
-  dbg_executes(errs()<<"calcExternalUses(SmallBitVector cut): ";);
+  dbg_executes(errs() << "calcExternalUses(SmallBitVector cut): ";);
   dumpSmallBitVector(cut);
-  dbg_executes(errs()<<"\n";);
+  dbg_executes(errs() << "\n";);
   for (auto idx_te : cut.set_bits())
   {
     TreeEntry *TE = &VectorizableTree[idx_te];
-    if (TE->NeedToGather){
-      llvm_unreachable("calcExternalUses bumps into NeedToGather leaves according to cut");
+    if (TE->NeedToGather)
+    {
       continue; //don't need to extractelement for non-vectorizable leaves use as they are not vectorized.
-      }
+    }
     for (unsigned int idx2_scalar = 0; idx2_scalar < TE->Scalars.size(); idx2_scalar++)
     {
       for (User *U : TE->Scalars[idx2_scalar]->users())
       {
-        if (!ScalarToTreeEntry[U] || !cut[ScalarToTreeEntry[U]]){
+        if (!ScalarToTreeEntry[U] || !cut[ScalarToTreeEntry[U]])
+        {
           ExternalUses.emplace_back(TE->Scalars[idx2_scalar], U, idx2_scalar);
-          dbg_executes(errs()<<"calcExternalUses("<<ExternalUses.size()<<") ExtractElement for (Usee, User): ("<<*(TE->Scalars[idx2_scalar])<<","<<*U<<")\n";);
+          dbg_executes(errs() << "calcExternalUses(" << ExternalUses.size() << ") ExtractElement for (Usee, User): (" << *(TE->Scalars[idx2_scalar]) << "," << *U << ")\n";);
         }
-        else{
-          dbg_executes(errs()<<"skipped calcExternalUses("<<ExternalUses.size()<<") ExtractElement for (Usee, User): ("<<*(TE->Scalars[idx2_scalar])<<","<<*U<<")\n";);
+        else
+        {
+          dbg_executes(errs() << "skipped calcExternalUses(" << ExternalUses.size() << ") ExtractElement for (Usee, User): (" << *(TE->Scalars[idx2_scalar]) << "," << *U << ")\n";);
         }
       }
     }
   }
 }
 
-void BoUpSLP::buildTree(ArrayRef<Value *> Roots)
+void BoUpSLP::buildTree(ArrayRef<Value *> Root,const std::set<unsigned int>& skippedEntryIdxes={})
 {
+  rootIdxes.push_back(0);
   dbg_executes(errs() << "WARNING: STOREVL: ";);
-  for (auto siter = Roots.begin(); siter != Roots.end(); siter++)
+  for (auto siter = Root.begin(); siter != Root.end(); siter++)
   {
     dbg_executes(errs() << *siter << ", ";);
   }
   dbg_executes(errs() << "\n";);
-  buildTree_rec(Roots, 0, -1);
+  buildTree_rec(Root, 0, -1,skippedEntryIdxes);
+  calcExternalUses();
+}
+
+void BoUpSLP::buildTree(std::vector<std::vector<Value *>> Roots,const std::set<unsigned int>& skippedEntryIdxes={})
+{
+  for (unsigned int idx_bundle = 0; idx_bundle < Roots.size(); idx_bundle++)
+  {
+    rootIdxes.push_back(VectorizableTree.size());
+    dbg_executes(errs() << "WARNING2: STOREVL: ";);
+    for (auto siter = Roots[idx_bundle].begin(); siter != Roots[idx_bundle].end(); siter++)
+    {
+      dbg_executes(errs() << *siter << ", ";);
+    }
+    dbg_executes(errs() << "\n";);
+    buildTree_rec(Roots[idx_bundle], 0, -1,skippedEntryIdxes);
+  }
   calcExternalUses();
 }
 
@@ -646,11 +746,12 @@ VectorType *getVectorType(Value *scalar, unsigned int length)
   return vector_type;
 }
 
-bool isVectorType(Value* scalar){
-  Type* type =scalar->getType();
-  if(StoreInst *SI=dyn_cast<StoreInst>(scalar))
+bool isVectorType(Value *scalar)
+{
+  Type *type = scalar->getType();
+  if (StoreInst *SI = dyn_cast<StoreInst>(scalar))
   {
-    type=SI->getValueOperand()->getType();
+    type = SI->getValueOperand()->getType();
   }
   return type->isVectorTy();
 }
@@ -943,8 +1044,7 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
   return nullptr;
 }
 
-// Vectorize the tree from root recursively.
-Value *BoUpSLP::vectorizeTree()
+Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
 {
   // Schedule all blocks
   for (auto &BSIter : BlocksSchedules)
@@ -954,18 +1054,19 @@ Value *BoUpSLP::vectorizeTree()
 
   // Step 1, recursively vectorize starting from the root.
   Builder.SetInsertPoint(&F->getEntryBlock().front());
-  do_vectorizeTree_rec(&VectorizableTree[0]);
+  for (unsigned idx = 0; idx < rootIdxes.size(); idx++)
+    do_vectorizeTree_rec(&VectorizableTree[rootIdxes[idx]]);
 
   // Step 2, we need to ExtractElement from the designated lane of the
   // vectorized value for uses external to the tree, since those scalars are
   // used in some new InsertElement instructions.
-  dbg_executes(errs()<<"before Emit ExtractElement ExternalUses.size(): "<<ExternalUses.size()<<"\n";);
+  dbg_executes(errs() << "before Emit ExtractElement ExternalUses.size(): " << ExternalUses.size() << "\n";);
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
        it != e; ++it)
   {
     Value *scalar = it->Scalar;
     llvm::User *U = it->User;
-    dbg_executes(errs()<<"Emit ExtractElement before skipping\n";);
+    dbg_executes(errs() << "Emit ExtractElement before skipping\n";);
     // Skip users that we already handled.
     if (std::find(scalar->user_begin(), scalar->user_end(), U) ==
         scalar->user_end())
@@ -975,7 +1076,7 @@ Value *BoUpSLP::vectorizeTree()
     TreeEntry *E = &VectorizableTree[ScalarToTreeEntry[scalar]];
     Value *vector = E->VectorizedValue;
     Value *pos = Builder.getInt32(it->Lane);
-    dbg_executes(errs()<<"Emit ExtractElement for (Usee, User): ("<<*scalar<<","<<*U<<")\n";);
+    dbg_executes(errs() << "Emit ExtractElement for (Usee, User): (" << *scalar << "," << *U << ")\n";);
 
     // insert an ExtractElement instruction for this pair of scalar and use
     if (isa<Instruction>(vector))
@@ -1041,56 +1142,96 @@ Value *BoUpSLP::vectorizeTree()
   return VectorizableTree[0].VectorizedValue;
 }
 
-void BoUpSLP::deleteNodesFromScalarMap(SmallBitVector cut){
+// Vectorize the tree from root recursively.
+void BoUpSLP::vectorizeTree()
+{
+  do_vectorizeTree({0});
+}
+
+void BoUpSLP::deleteNodesFromScalarMap(SmallBitVector nodesDontNeedDelete)
+{
   SmallDenseMap<Value *, int> NewScalarToTreeEntry;
-  for (auto idx:cut.set_bits()){
-    for (unsigned int idx_vl=0;idx_vl<VectorizableTree[idx].Scalars.size();idx_vl++){
-      NewScalarToTreeEntry[VectorizableTree[idx].Scalars[idx_vl]]=ScalarToTreeEntry[VectorizableTree[idx].Scalars[idx_vl]];
+  for (auto idx : nodesDontNeedDelete.set_bits())
+  {
+    if (!VectorizableTree[idx].NeedToGather){
+      for (unsigned int idx_vl = 0; idx_vl < VectorizableTree[idx].Scalars.size(); idx_vl++)
+      {
+        NewScalarToTreeEntry[VectorizableTree[idx].Scalars[idx_vl]] = idx;
+      }
     }
+    
   }
   ScalarToTreeEntry.swap(NewScalarToTreeEntry);
 }
 
-Value *BoUpSLP::vectorizeTree(SmallBitVector cut)
-{
-  SmallBitVector nodesNeedToGather = setNeedToGather(cut);
-  SmallBitVector nodesNeedToVirtuallyDeleteFromTree = setAllOtherNodesNeedToGather(cut);//We need to set all other nodes in the tree to be NeedToGather to deceive the original vectorizeTree() in this wrapper the nodes in the tree but not in the cut shouldn't be undef-ified
-  deleteNodesFromScalarMap(cut);//We need this because Gather() will push_back to ExternalUses use ScalarMap to determine whether nodes are in the tree.
-  descheduleExternalNodes(cut);
-  Value *result = vectorizeTree();//TODO: update ScalarToEntry map to reflect the allNodesInCut so as to keep the correctness of ExternalUses elimination stage
-  return result;
+void BoUpSLP::rescheduleNodes(const SmallBitVector& cut){
+  for (auto &Iter : BlocksSchedules)
+    {
+      BlockScheduling *BS = Iter.second.get();
+      BS->clear();
+    }
+  for(auto idx:cut.set_bits()){
+    if(VectorizableTree[idx].NeedToGather)
+      continue;
+    ValueList  VL=VectorizableTree[idx].Scalars;
+    BasicBlock *BB = getSameBlock(VL);
+    if (!BlocksSchedules.count(BB))
+    {
+      BlocksSchedules[BB] = llvm::make_unique<BlockScheduling>(BB);
+    }
+    auto &BSRef = BlocksSchedules[BB];
+    auto &BS = *BSRef.get();
+
+    dbg_executes(errs() << "WARNING: BS " << BS.BB << "\n";);
+    BS.tryScheduleBundle(VL, this);
+  }
 }
 
-
+void BoUpSLP::vectorizeTree(SmallBitVector cut)
+{
+  SmallBitVector nodesNeedToGather = collectNeedToGather(cut);
+  _setNeedToGather(nodesNeedToGather);
+  SmallBitVector nodesNeedToDeschedule(VectorizableTree.size(),true);
+  nodesNeedToDeschedule^=cut;
+  nodesNeedToDeschedule^=nodesNeedToGather;
+  SmallBitVector nodesDontNeedDelete(cut);
+  nodesDontNeedDelete^=nodesNeedToGather;
+  deleteNodesFromScalarMap(nodesDontNeedDelete);
+  dbg_executes(errs()<<"vectorizeTree(SmallBitVector cut) nodesNeedToDeschedule:\n";);
+  dbg_executes(dumpSmallBitVector(nodesNeedToDeschedule););
+  dbg_executes(errs()<<"vectorizeTree(SmallBitVector cut) nodesDontNeedDelete:\n";);
+  dbg_executes(dumpSmallBitVector(nodesDontNeedDelete););
+  rescheduleNodes(cut);
+  //descheduleExternalNodes(cut, nodesNeedToGather);
+  SmallBitVector nodesNeedToVirtuallyDeleteFromTree = setAllOtherNodesNeedToGather(cut); //We need to set all other nodes in the tree to be NeedToGather to deceive the original vectorizeTree() in this wrapper the nodes in the tree but not in the cut shouldn't be undef-ified
+                                                           //We need this because Gather() will push_back to ExternalUses use ScalarMap to determine whether nodes are in the tree.
+  
+  Value *result = do_vectorizeTree(rootIdxes); //TODO: update ScalarToEntry map to reflect the allNodesInCut so as to keep the correctness of ExternalUses elimination stage
+}
 
 //get the cost of subtree indicated by cut
 //cut
-int BoUpSLP::getTreeCost(SmallBitVector cut){
+int BoUpSLP::getTreeCost(SmallBitVector cut)
+{
   dbg_executes(errs() << "getTreeCost(cut) cut ";);
   dumpSmallBitVector(cut);
   dbg_executes(errs() << "\n";);
-  SmallBitVector nodesNeedToUnset = setNeedToGather(cut);
+  SmallBitVector nodesNeedToUnset = collectNeedToGather(cut);
+  _setNeedToGather(nodesNeedToUnset);
 
-  SmallBitVector allNodesInCut = cut | nodesNeedToUnset;
-  std::vector<unsigned int> allNodesInCutVec;
-  
+  // assert( cut | nodesNeedToUnset);
+  std::vector<unsigned int> allNodesInCutVec=convertSmallBitVectorToVector(cut);
 
-  for (auto idx : allNodesInCut.set_bits())
-  {
-    allNodesInCutVec.push_back(idx);
-  }
-
-  int result = do_getTreeCost( allNodesInCutVec);
+  int result = do_getTreeCost(allNodesInCutVec);
 
   unsetNeedToGather(nodesNeedToUnset);
   return result;
 }
 
-
-int BoUpSLP::do_getTreeCost(std::vector<unsigned int>& allNodesInCutVec)
+int BoUpSLP::do_getTreeCost(std::vector<unsigned int> &allNodesInCutVec)
 {
   int Cost = 0;
-  LLVM_DEBUG(dbgs() << "SLP: Calculating cost for tree of size " << allNodesInCutVec.size() << ".\n");
+  dbg_executes(dbgs() << "SLP: Calculating cost for tree of size " << allNodesInCutVec.size() << ".\n";);
 
   // We only vectorize tiny trees if it is fully vectorizable.
   if (allNodesInCutVec.size() < 3 && !isFullyVectorizableTinyTree(allNodesInCutVec))
@@ -1099,7 +1240,8 @@ int BoUpSLP::do_getTreeCost(std::vector<unsigned int>& allNodesInCutVec)
     {
       assert(!ExternalUses.size() && "We should not have any external users");
     }
-    return INT_MAX;
+    //return INT_MAX;
+    return -1;
   }
 
   unsigned BundleWidth = VectorizableTree[0].Scalars.size();
@@ -1137,9 +1279,12 @@ void BoUpSLP::levelOrderTraverse(std::vector<unsigned int> &levels, std::vector<
   entries.clear();
   std::list<TreeEntry *> workList;
   std::list<unsigned int> workListLevel;
-
-  workList.push_back(&VectorizableTree[0]);
-  workListLevel.push_back(0);
+  assert(rootIdxes.size() != 0 && "levelOrderTraverse() bumps into empty rootIdxes");
+  for (unsigned rootIdx = 0; rootIdx < rootIdxes.size(); rootIdx++)
+  {
+    workList.push_back(&VectorizableTree[rootIdxes[rootIdx]]);
+    workListLevel.push_back(0);
+  }
   while (!workList.empty())
   {
     TreeEntry *currEntry = workList.front();
@@ -1152,11 +1297,10 @@ void BoUpSLP::levelOrderTraverse(std::vector<unsigned int> &levels, std::vector<
     { //handle the case where root node NeedToGather
       for (unsigned childIdx = 0; childIdx < EntryChildrenID[currEntry->idx].size(); childIdx++)
       {
-        if (!VectorizableTree[EntryChildrenID[currEntry->idx][childIdx]].NeedToGather)
-        { //is not NeedToGather leave
-          workList.push_back(&VectorizableTree[EntryChildrenID[currEntry->idx][childIdx]]);
-          workListLevel.push_back(currLevel + 1);
-        }
+        //We need to include NeedToGather leaves now//if (!VectorizableTree[EntryChildrenID[currEntry->idx][childIdx]].NeedToGather)//is not NeedToGather leave
+
+        workList.push_back(&VectorizableTree[EntryChildrenID[currEntry->idx][childIdx]]);
+        workListLevel.push_back(currLevel + 1);
       }
     }
   }
@@ -1182,32 +1326,29 @@ std::vector<T> unique_index(std::vector<T> sortedArray)
   return result;
 }
 
-static SmallBitVector enlistAllLevelNodeCutInLevel(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int levelStartPos, unsigned int levelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder)
+SmallBitVector BoUpSLP::enlistAllLevelNodeCutInLevel(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int levelStartPos, unsigned int levelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder)
 {
   SmallBitVector result(lastLevelAllNodeCut);
+  dbg_executes(dumpSmallBitVector(result););
   for (unsigned int idx = levelStartPos; idx < levelEndPos; idx++)
   {
-    assert(((idx == 0) || (!entriesInLevelOrder[idx]->NeedToGather)) && "NeedToGather leaves shouldn't be incldued in level order");
-    if (!entriesInLevelOrder[idx]->NeedToGather)
-      result.set(entriesInLevelOrder[idx]->idx);
+    dbg_executes(dbgs()<<"enlistAllLevelNodeCutInLevel("<<entriesInLevelOrder[idx]->idx<<")\n";);
+    result.set(entriesInLevelOrder[idx]->idx);
   }
-  if (levelEndPos - levelStartPos != 1)
-  {
-    assert(result != lastLevelAllNodeCut && "SmallBitVector doesn't use copy constructor");
-  }
+  
+  completeCut(result);
   uniquePushBackSmallBitVector(cuts, result);
   return result;
 }
 
-static void enlistNextLevelEachNeighbourCut(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int nextLevelStartPos, unsigned int nextLevelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder, unsigned int maxNumResults)
+void BoUpSLP::enlistNextLevelEachNeighbourCut(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int nextLevelStartPos, unsigned int nextLevelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder, unsigned int maxNumResults)
 {
 
   for (unsigned int idx = nextLevelStartPos; idx < std::min(nextLevelEndPos, nextLevelStartPos + maxNumResults); idx++)
   {
     SmallBitVector currResult(lastLevelAllNodeCut);
-    assert(!entriesInLevelOrder[idx]->NeedToGather && "NeedToGather leaves shouldn't be incldued in level order");
     currResult.set(entriesInLevelOrder[idx]->idx);
-    assert(currResult != lastLevelAllNodeCut && "SmallBitVector doesn't use copy constructor || level order traverse repetitively enlist some entry");
+    completeCut(currResult);
     uniquePushBackSmallBitVector(cuts, currResult);
   }
 }
@@ -1221,10 +1362,11 @@ static void printEntries(ArrayRef<BoUpSLP::TreeEntry *> entries)
 }
 
 //won't return cut with no nodes
+//todo: cut now involve NeedToGather leaves
 //the cut SmallBitVector doesn't involve NeedToGather leaves, i.e., those bits corresponding to NeedToGather leaves won't be set even if they are in this cut.
 std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
 {
-
+  dbg_executes(errs() << "entering getCuts rootIdxes size(" << rootIdxes.size() << ")\n";);
   std::vector<SmallBitVector> levelAllNodesCuts;
   std::list<TreeEntry *> workList;
   std::list<SmallBitVector> workListAlreadyInCut;
@@ -1247,7 +1389,7 @@ std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
   {
     lastLevelAllNodeCut = enlistAllLevelNodeCutInLevel(lastLevelAllNodeCut, levelAllNodesCuts, unique_level_idx[currLevel], unique_level_idx[currLevel + 1], entriesInLevelOrder);
   }
-  std::vector<SmallBitVector> results(levelAllNodesCuts.begin(), levelAllNodesCuts.end());
+  std::vector<SmallBitVector> results(levelAllNodesCuts.begin() + 1, levelAllNodesCuts.end());
   for (unsigned int currLevel = 0; currLevel < levels[levels.size() - 1]; currLevel++)
   {
     if ((results.size() - levels[levels.size() - 1] - 1) < allNeighbourThreshold)
@@ -1272,7 +1414,10 @@ std::vector<SmallBitVector> BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
   //     }
   //   }
   // }
-
+  dbg_executes(errs()<<"getCuts() returns: \n";);
+  dbg_executes({for (unsigned int cutIdx=0;cutIdx<results.size();cutIdx++)
+  dumpSmallBitVector(results[cutIdx]);});
+  dbg_executes(errs()<<"getCuts() exit: \n";);
   return results;
 }
 
@@ -1380,83 +1525,87 @@ bool runImpl(Function &F, ScalarEvolution *SE_,
       R.vectorizeTree();
 #endif
 
-#ifndef TSLP_IMPL
+#ifndef NAIVE_IMPL
       dbg_executes(errs() << "seedPack[0] " << *seedPack[0] << "\n";);
       dbg_executes(errs() << "try to get type: " << *(dyn_cast<StoreInst>(seedPack[0])->getOperand(0)) << "\n";);
       unsigned int MinNumElementInVector = TTI_->getMinVectorRegisterBitWidth() / DL->getTypeSizeInBits(dyn_cast<StoreInst>(seedPack[0])->getOperand(0)->getType());
       unsigned int MaxNumElementInVector = TTI_->getRegisterBitWidth(true);
-      std::vector<SmallBitVector> BestCutInEachChunk;
+      SmallBitVector BestCut;
       unsigned int BestNumElementInVector = -1; //if no vectorization is profitable, the final vectorize() step will be automatically skipped
-      int BestCost=0;
+      int BestCost = 0;
 
       //find the best (numElementInVectorRegister, cuts in each chunk)
       for (unsigned int numElementInVector = MinNumElementInVector; numElementInVector <= MaxNumElementInVector; numElementInVector *= 2)
       {
-        std::vector<int> CurrNumEleBestCostInEachChunk;
-        std::vector<SmallBitVector> CurrNumEleBestCutInEachChunk;
-        dbg_executes(errs() << "numElement(" << numElementInVector << ") best cut: ";);
-        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector; chunkIdx++)//todo use another for loop to investigate different offset
+        int CurrNumEleBestCost=0;
+        SmallBitVector CurrNumEleBestCut(R.getVectorizableTreeSize()); //the default option is not to vectorize
+        dbg_executes(errs() << "numElement(" << numElementInVector << ") finding best cut: \n";);
+        std::vector<std::vector<Value *>> chunkSeeds;
+        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector; chunkIdx++) //todo use another for loop to investigate different offset
         {
-          std::vector<Value *> chunkSeed(seedPack.cbegin() + chunkIdx * (numElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (numElementInVector));
-          dbg_executes(errs() << "chunk instr: ";);
-          for (unsigned int instrIdx = 0; instrIdx < chunkSeed.size(); instrIdx++)
+          chunkSeeds.emplace_back(seedPack.cbegin() + chunkIdx * (numElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (numElementInVector));
+        }
+        if (!chunkSeeds.empty())
+        {
+          for (unsigned int chunkIdx = 0; chunkIdx < chunkSeeds.size(); chunkIdx++)
           {
-            dbg_executes(errs() << *chunkSeed[instrIdx] << ", ";);
+            dbg_executes(errs() << "chunk instr: ";);
+            for (unsigned int instrIdx = 0; instrIdx < chunkSeeds[chunkIdx].size(); instrIdx++)
+            {
+              dbg_executes(errs() << *chunkSeeds[chunkIdx][instrIdx] << ", ";);
+            }
+            dbg_executes(errs() << "\n";);
           }
-          dbg_executes(errs() << "\n";);
           R.deleteTree();
-          R.buildTree(chunkSeed);
+          R.buildTree(chunkSeeds);
           R.printVectorizableTree();
           std::vector<SmallBitVector> Cuts = R.getCuts(AllNeighbourThreshold);
 
           //search for the best cut
-          int CurrChunkBestCost = 0;
-          SmallBitVector CurrChunkBestCut(R.getVectorizableTreeSize()); //the default option is not to vectorize
           for (unsigned int cutIdx = 0; cutIdx < Cuts.size(); cutIdx++)
           {
             R.clearExternalUses();
             R.calcExternalUses(Cuts[cutIdx]);
             int ThisCost = R.getTreeCost(Cuts[cutIdx]);
-            if (ThisCost < CurrChunkBestCost)
+            if (ThisCost < CurrNumEleBestCost)
             {
-              CurrChunkBestCost = ThisCost;
-              CurrChunkBestCut = Cuts[cutIdx];
+              CurrNumEleBestCost = ThisCost;
+              CurrNumEleBestCut = Cuts[cutIdx];
             }
           }
-          CurrNumEleBestCostInEachChunk.push_back(CurrChunkBestCost);
-          CurrNumEleBestCutInEachChunk.push_back(CurrChunkBestCut);
-          dbg_executes(dumpSmallBitVector(CurrChunkBestCut););
-          dbg_executes(errs() << "(" << CurrChunkBestCost << "), ";);
-        }
-        dbg_executes(errs() << "\n";);
+          dbg_executes(errs() << "numElement(" << numElementInVector << ") found best cut: (";);
+          dbg_executes(dumpSmallBitVector(CurrNumEleBestCut););
+          dbg_executes(errs()<< CurrNumEleBestCost << ")\n";);
 
-        int CurrNumEleBestCost = std::accumulate(CurrNumEleBestCostInEachChunk.begin(), CurrNumEleBestCostInEachChunk.end(), 0);
-        if (CurrNumEleBestCost < BestCost)
-        {
-          BestCost = CurrNumEleBestCost;
-          BestCutInEachChunk = CurrNumEleBestCutInEachChunk;
-          BestNumElementInVector = numElementInVector;
+
+          if (CurrNumEleBestCost < BestCost)
+          {
+            BestCost = CurrNumEleBestCost;
+            BestCut = CurrNumEleBestCut;
+            BestNumElementInVector = numElementInVector;
+          }
         }
       }
       dbg_executes(errs() << "Global best cut numElement(" << BestNumElementInVector << ") Cost" << BestCost << ": ";);
-      for (unsigned int cutIdx = 0; cutIdx < BestCutInEachChunk.size(); cutIdx++)//TODO: subtree change (Gather() or undefifying corrupts) due to partial vectorization. only use the best numElement
-      {
-        dbg_executes(dumpSmallBitVector(BestCutInEachChunk[cutIdx]););
-        dbg_executes(errs() << ", ";);
-      }
-      dbg_executes(errs() << "\n";);
+
+      dbg_executes(dumpSmallBitVector(BestCut);); //TODO: subtree change (Gather() or undefifying corrupts) due to partial vectorization. only use the best numElementzzzzzzzz
+
       //apply the best (numElementInVectorRegister, cuts in each chunk)
-      for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / BestNumElementInVector; chunkIdx++)
-      {
+      if (BestCut.count()!=0){
+        std::vector<std::vector<Value *>> BestChunkSeeds;
+        for (unsigned int chunkIdx = 0; chunkIdx < seedPack.size() / BestNumElementInVector; chunkIdx++)
+        {
+          BestChunkSeeds.emplace_back(seedPack.cbegin() + chunkIdx * (BestNumElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (BestNumElementInVector));
+        }
         R.deleteTree();
-        std::vector<Value *> chunkSeed(seedPack.cbegin() + chunkIdx * (BestNumElementInVector), seedPack.cbegin() + (chunkIdx + 1) * (BestNumElementInVector));
-        R.buildTree(chunkSeed);
+        //std::vector<unsigned int> BestCutVector=convertSmallBitVectorToVector(BestCut);
+        //std::set<unsigned int> BestCutSet(BestCutVector.begin(),BestCutVector.end());
+        R.buildTree(BestChunkSeeds);
         R.clearExternalUses();
-        R.calcExternalUses(BestCutInEachChunk[chunkIdx]);
-        R.vectorizeTree(BestCutInEachChunk[chunkIdx]);
-        //R.vectorizeTree();
-        
+        R.calcExternalUses(BestCut);
+        R.vectorizeTree(BestCut);
       }
+      //R.vectorizeTree();
 #endif
     }
   }

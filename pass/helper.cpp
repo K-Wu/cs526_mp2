@@ -66,9 +66,9 @@ public:
 
   /// \brief Vectorize the tree that starts with the elements in \p VL.
   /// Returns the vectorized root.
-  Value *vectorizeTree();
+  void vectorizeTree();
 
-  Value *vectorizeTree(SmallBitVector cut);
+  void vectorizeTree(SmallBitVector cut);
 
   /// \returns the vectorization cost of the subtree that starts at \p VL.
   /// A negative number means that this is profitable.
@@ -76,13 +76,13 @@ public:
 
   int getTreeCost(SmallBitVector cut);
 
-  int do_getTreeCost(std::vector<unsigned int>& allNodesInCutVec);
+  int do_getTreeCost(std::vector<unsigned int> &allNodesInCutVec);
 
   /// Construct a vectorizable tree that starts at \p Roots, ignoring users for
   /// the purpose of scheduling and extraction in the \p UserIgnoreLst.
-  void buildTree(ArrayRef<Value *> Roots); //,
+  void buildTree(ArrayRef<Value *> Roots,const std::set<unsigned int>& skippedEntryIdxes); //,
                                            //ArrayRef<Value *> UserIgnoreLst = None);
-
+  void buildTree(std::vector<std::vector<Value *>> Roots,const std::set<unsigned int>& skippedEntryIdxes);
   void calcExternalUses();
   void calcExternalUses(SmallBitVector cut);
 
@@ -96,6 +96,7 @@ public:
     MemBarrierIgnoreList.clear();
     EntryChildrenEntries.clear();
     EntryChildrenID.clear();
+    rootIdxes.clear();
     for (auto &Iter : BlocksSchedules)
     {
       BlockScheduling *BS = Iter.second.get();
@@ -490,17 +491,26 @@ public:
 
   SmallBitVector setNeedToGather(SmallBitVector cut);
   SmallBitVector setAllOtherNodesNeedToGather(SmallBitVector cut);
-  void deleteNodesFromScalarMap(SmallBitVector nodesNeedToVirtuallyDeleteFromTree);
+  void deleteNodesFromScalarMap(SmallBitVector nodesDontNeedDelete);
   void unsetNeedToGather(SmallBitVector nodesNeedToUnset);
-  void descheduleExternalNodes(SmallBitVector cut);
+  void descheduleExternalNodes(const SmallBitVector& cut, const SmallBitVector& nodesNeedToGather);
   void printVectorizableTree();
+  SmallBitVector collectNeedToGather(SmallBitVector cut);
+  void _setNeedToGather(SmallBitVector nodes);
+  void completeCut(SmallBitVector &cut);
+  void enlistNextLevelEachNeighbourCut(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int nextLevelStartPos, unsigned int nextLevelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder, unsigned int maxNumResults);
+  SmallBitVector enlistAllLevelNodeCutInLevel(SmallBitVector lastLevelAllNodeCut, std::vector<SmallBitVector> &cuts, unsigned int levelStartPos, unsigned int levelEndPos, std::vector<BoUpSLP::TreeEntry *> &entriesInLevelOrder);
+  void descheduleExternalNodes_rec(unsigned int root, const SmallBitVector& nodesNeedToDeschedule);
+  void rescheduleNodes(const SmallBitVector& cut);
 
 private:
   /// This is the recursive part of buildTree.
-  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth, int parentIdx);
+  void buildTree_rec(ArrayRef<Value *> Roots, unsigned Depth, int parentIdx, const std::set<unsigned int>& skippedEntryIdxes);
 
   /// Vectorize a single entry in the tree.
   Value *do_vectorizeTree_rec(TreeEntry *E);
+
+  Value *do_vectorizeTree(ArrayRef<unsigned int> rootIdxes);
 
   /// Vectorize a single entry in the tree, starting in \p VL.
   Value *vectorizeTree_rec(ArrayRef<Value *> VL);
@@ -551,6 +561,7 @@ private:
 
   std::vector<std::vector<TreeEntry *>> EntryChildrenEntries;
   std::vector<std::vector<int>> EntryChildrenID;
+  std::vector<unsigned int> rootIdxes;
 
   /// Create a new VectorizableTree entry.
   TreeEntry *newTreeEntry(ArrayRef<Value *> VL, bool Vectorized, int parentIdx) //BugFixed: change TreeEntry* parent to parentIdx as vector will need to grow and change migrate in memory.
@@ -562,7 +573,6 @@ private:
     TreeEntry *Last = &VectorizableTree[idx];
     Last->idx = idx;
     Last->Scalars.insert(Last->Scalars.begin(), VL.begin(), VL.end());
-    Last->NeedToGather = !Vectorized;
     if (Vectorized)
     {
       dbg_executes(errs() << "vectorized tree entry: ";);
@@ -581,11 +591,20 @@ private:
     {
       for (int i = 0, e = VL.size(); i != e; ++i)
       {
-        assert(!ScalarToTreeEntry.count(VL[i]) && "Scalar already in tree!");
+        if(ScalarToTreeEntry.count(VL[i])){
+          assert(0&&"Scalar already in tree!");
+          dbg_executes(errs()<<"Scalar already in tree! switch to non-vectorized, i.e. use gather, for this node;\n";);
+          Vectorized=false;
+        }
+      }
+    }
+    Last->NeedToGather = !Vectorized;
+    if(Vectorized){
+      for (int i = 0, e = VL.size(); i != e; ++i){
         ScalarToTreeEntry[VL[i]] = idx;
       }
     }
-    else
+    if (!Vectorized)
     {
       MustGather.insert(VL.begin(), VL.end());
     }
@@ -664,10 +683,7 @@ private:
     int Lane;
   };
   //typedef SmallVector<ExternalUser, 16> UserList;
-  using UserList =  std::vector<ExternalUser> ;
-
-  /// A list of values that need to extracted out of the tree.
-  /// This list holds pairs of (Internal Scalar : External User).
+  using UserList = std::vector<ExternalUser>;
   UserList ExternalUses;
 
   /// A list of instructions to ignore while sinking
@@ -1564,7 +1580,7 @@ int BoUpSLP::getTreeCost()
     {
       assert(!ExternalUses.size() && "We should not have any external users");
     }
-    return INT_MAX;
+    return -1;//INT_MAX;
   }
 
   unsigned BundleWidth = VectorizableTree[0].Scalars.size();

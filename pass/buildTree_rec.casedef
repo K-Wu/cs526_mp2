@@ -66,7 +66,7 @@ case Instruction::GetElementPtr:
         for (Value *j : VL)
             Operands.push_back(cast<Instruction>(j)->getOperand(i));
 
-        buildTree_rec(Operands, Depth + 1, thisNodeIdx);
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
 }
@@ -101,7 +101,7 @@ case Instruction::PHI:
             Operands.push_back(cast<PHINode>(j)->getIncomingValueForBlock(
                 PH->getIncomingBlock(i)));
 
-        buildTree_rec(Operands, Depth + 1, thisNodeIdx);
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
 }
@@ -176,7 +176,7 @@ case Instruction::Call:
             CallInst *CI2 = dyn_cast<CallInst>(j);
             Operands.push_back(CI2->getArgOperand(i));
         }
-        buildTree_rec(Operands, Depth + 1, thisNodeIdx);
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
 }
@@ -201,8 +201,8 @@ case Instruction::ShuffleVector:
         SmallVector<Value *, 8> Left, Right;
         //reorderAltShuffleOperands(VL, Left, Right);
         //TODO: add reorder here if needed
-        buildTree_rec(Left, Depth + 1, thisNodeIdx);
-        buildTree_rec(Right, Depth + 1, thisNodeIdx);
+        buildTree_rec(Left, Depth + 1, thisNodeIdx, skippedEntryIdxes);
+        buildTree_rec(Right, Depth + 1, thisNodeIdx, skippedEntryIdxes);
         return;
     }
 
@@ -213,7 +213,7 @@ case Instruction::ShuffleVector:
         for (Value *j : VL)
             Operands.push_back(cast<Instruction>(j)->getOperand(i));
 
-        buildTree_rec(Operands, Depth + 1, thisNodeIdx);
+        buildTree_rec(Operands, Depth + 1, thisNodeIdx, skippedEntryIdxes);
     }
     return;
 }
