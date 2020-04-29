@@ -1250,6 +1250,7 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
   // Step 2, we need to ExtractElement from the designated lane of the
   // vectorized value for uses external to the tree, since those scalars are
   // used in some new InsertElement instructions.
+  std::vector<Value*> ExtractElementInsts;
   dbg_executes(errs() << "before Emit ExtractElement ExternalUses.size(): "
                       << ExternalUses.size() << "\n";);
   for (UserList::iterator it = ExternalUses.begin(), e = ExternalUses.end();
@@ -1290,6 +1291,7 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
             Builder.SetInsertPoint(PH->getIncomingBlock(i)->getTerminator());
             // create an ExtractElement instruction
             Value *I = Builder.CreateExtractElement(vector, pos);
+            ExtractElementInsts.push_back(I);
             // replace use
             PH->setOperand(i, I);
           }
@@ -1305,6 +1307,7 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
         Builder.SetInsertPoint(cast<Instruction>(U));
         // create an ExtractElement instruction
         Value *I = Builder.CreateExtractElement(vector, pos);
+        ExtractElementInsts.push_back(I);
         // replace use
         U->replaceUsesOfWith(scalar, I);
       }
@@ -1314,6 +1317,7 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
       Builder.SetInsertPoint(&F->getEntryBlock().front());
       // create an ExtractElement instruction
       Value *I = Builder.CreateExtractElement(vector, pos);
+      ExtractElementInsts.push_back(I);
       // replace use
       U->replaceUsesOfWith(scalar, I);
     }
@@ -1345,6 +1349,15 @@ Value *BoUpSLP::do_vectorizeTree(ArrayRef<unsigned int> rootIdxes)
   }
 
   Builder.ClearInsertionPoint();
+
+  //clean up unused ExtractElement because of the instruction erasure.
+  for (unsigned int idx=0;idx<ExtractElementInsts.size();idx++){
+    if (Instruction* EEI=dyn_cast<Instruction>(ExtractElementInsts[idx])){
+    if (!ExtractElementInsts[idx]->hasNUsesOrMore(1)){
+      EEI->eraseFromParent();
+    }
+    }
+  }
 
   return VectorizableTree[0].VectorizedValue;
 }
