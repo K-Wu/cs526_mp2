@@ -36,6 +36,9 @@
 #include <list>
 #include <unordered_map>
 #include <vector>
+#include <iterator>
+
+#define NAIVE_IMPL
 
 using namespace llvm;
 #define DEBUGKWU
@@ -544,7 +547,21 @@ void BoUpSLP::buildTree_rec(
     return;
   }
 // do not deal with
+#ifndef NAIVE_IMPL
 #include "buildTree_rec.casedef"
+#else
+  case Instruction::ExtractValue:
+  case Instruction::ExtractElement:
+  case Instruction::GetElementPtr:
+  case Instruction::PHI:
+  case Instruction::Call:
+  case Instruction::ShuffleVector:
+  {
+    BS.cancelScheduling(VL);
+    newTreeEntry(VL, false, parentNodeIdx);
+    return;
+  }
+#endif
   default:
   { // TODO: what about alloca, atomic operations that bump into this
     // scheme?
@@ -1201,7 +1218,16 @@ Value *BoUpSLP::do_vectorizeTree_rec(TreeEntry *E)
     return V;
   }
 // the following are either not implemented or copied from the source code
+#ifndef NAIVE_IMPL
 #include "vectorizeTree_rec.casedef"
+#else
+case Instruction::GetElementPtr:
+case Instruction::Call:
+case Instruction::ShuffleVector:
+case Instruction::ExtractElement:
+case Instruction::ExtractValue:
+case Instruction::PHI:
+#endif
   default:
     llvm_unreachable("unknown inst");
   }
@@ -1733,7 +1759,7 @@ bool runImpl(Function &F, ScalarEvolution *SE_, TargetTransformInfo *TTI_,
 
   if (!DL)
     return false;
-  // don't vectorize if no vector registers
+  //todo: don't vectorize if no vector registers
   // if (TTI_->getNumberOfRegisters(true))
   //  return false;
 
@@ -1777,11 +1803,25 @@ bool runImpl(Function &F, ScalarEvolution *SE_, TargetTransformInfo *TTI_,
         continue;
 
 #ifdef NAIVE_IMPL
-      R.deleteTree();
-      R.buildTree(seedPack);
-      R.clearExternalUses();
-      R.calcExternalUses();
-      R.vectorizeTree();
+      int MinNumElementInVector =
+          TTI_->getMinVectorRegisterBitWidth() /
+          DL->getTypeSizeInBits(
+              dyn_cast<StoreInst>(seedPack[0])->getOperand(0)->getType());
+      int MaxNumElementInVector = TTI_->getRegisterBitWidth(true);
+      unsigned int startPos = 0;
+      for (int currNumElement = MaxNumElementInVector; currNumElement>=MinNumElementInVector;currNumElement/=2){
+
+        dbg_executes(errs()<<"chunking "<<startPos<<" , "<<startPos+((seedPack.size()-startPos)/currNumElement)*currNumElement<<" , "<<seedPack.size(););
+        for (unsigned int chunkIdx=0;chunkIdx<(seedPack.size()-startPos)/currNumElement;chunkIdx++){
+          R.deleteTree();
+          std::vector<Value*> currSeedPack(seedPack.cbegin()+(startPos+chunkIdx*currNumElement),seedPack.cbegin()+(startPos+(chunkIdx+1)*currNumElement));
+          R.buildTree(currSeedPack);
+          R.clearExternalUses();
+          R.calcExternalUses();
+          R.vectorizeTree();
+        }
+        startPos += ((seedPack.size()-startPos)/currNumElement)*currNumElement;
+      }
 #endif
 
 #ifndef NAIVE_IMPL
@@ -1812,13 +1852,13 @@ bool runImpl(Function &F, ScalarEvolution *SE_, TargetTransformInfo *TTI_,
         dbg_executes(errs() << "numElement(" << numElementInVector
                             << ") finding best cut: \n";);
         std::vector<std::vector<Value *>> chunkSeeds;
-        for (int chunkIdx = 0; chunkIdx < seedPack.size() / numElementInVector;
-             chunkIdx++) // todo use another for loop to investigate different
-                         // offset
-        {
-          chunkSeeds.emplace_back(
-              seedPack.cbegin() + chunkIdx * (numElementInVector),
-              seedPack.cbegin() + (chunkIdx + 1) * (numElementInVector));
+        int startPos=0;
+        for (int currNumElement = numElementInVector; currNumElement>=MinNumElementInVector;currNumElement/=2){// todo use another for loop to investigate different offset
+          dbg_executes(errs()<<"chunking "<<startPos<<" , "<<startPos+((seedPack.size()-startPos)/currNumElement)*currNumElement<<" , "<<seedPack.size(););
+          for (unsigned int chunkIdx=0;chunkIdx<(seedPack.size()-startPos)/currNumElement;chunkIdx++){
+            chunkSeeds.emplace_back(seedPack.cbegin()+(startPos+chunkIdx*currNumElement),seedPack.cbegin()+(startPos+(chunkIdx+1)*currNumElement));
+          }
+          startPos += ((seedPack.size()-startPos)/currNumElement)*currNumElement;
         }
         if (!chunkSeeds.empty())
         {
@@ -1880,28 +1920,28 @@ bool runImpl(Function &F, ScalarEvolution *SE_, TargetTransformInfo *TTI_,
       if (BestCut.count() != 0)
       {
         std::vector<std::vector<Value *>> BestChunkSeeds;
-        for (int chunkIdx = 0;
-             chunkIdx < seedPack.size() / BestNumElementInVector; chunkIdx++)
-        {
-          BestChunkSeeds.emplace_back(
-              seedPack.cbegin() + chunkIdx * (BestNumElementInVector),
-              seedPack.cbegin() + (chunkIdx + 1) * (BestNumElementInVector));
+        int startPos = 0;
+        for (int currNumElement = BestNumElementInVector; currNumElement>=MinNumElementInVector;currNumElement/=2){
+
+          dbg_executes(errs()<<"chunking "<<startPos<<" , "<<startPos+((seedPack.size()-startPos)/currNumElement)*currNumElement<<" , "<<seedPack.size(););
+          for (unsigned int chunkIdx=0;chunkIdx<(seedPack.size()-startPos)/currNumElement;chunkIdx++){
+            BestChunkSeeds.emplace_back(seedPack.cbegin()+(startPos+chunkIdx*currNumElement),seedPack.cbegin()+(startPos+(chunkIdx+1)*currNumElement));
+            
+          }
+          startPos += ((seedPack.size()-startPos)/currNumElement)*currNumElement;
+          
         }
         R.deleteTree();
-        // std::vector<unsigned int>
-        // BestCutVector=convertSmallBitVectorToVector(BestCut);
-        // std::set<unsigned int>
-        // BestCutSet(BestCutVector.begin(),BestCutVector.end());
         R.buildTree(BestChunkSeeds);
         R.clearExternalUses();
         SmallBitVector cutWithoutDefactoNeedToGather(BestCut);
         SmallBitVector needToGatherNotSetYetInCuts =
-            R.collectNeedToGather(BestCut);
+        R.collectNeedToGather(BestCut);
         cutWithoutDefactoNeedToGather ^= needToGatherNotSetYetInCuts;
         R.calcExternalUses(cutWithoutDefactoNeedToGather);
         R.vectorizeTree(BestCut);
+        
       }
-      // R.vectorizeTree();
 #endif
 
       dbg_executes(errs() << "WARNING: IN Basic Block After Transformation\n"
