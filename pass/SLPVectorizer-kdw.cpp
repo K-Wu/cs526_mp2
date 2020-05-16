@@ -38,10 +38,10 @@
 #include <vector>
 #include <iterator>
 
-#define NAIVE_IMPL
+//#define NAIVE_IMPL
 
 using namespace llvm;
-#define DEBUGKWU
+#define DEBUGKWUx
 #ifdef DEBUGKWU
 #define dbg_executes(...) \
   {                       \
