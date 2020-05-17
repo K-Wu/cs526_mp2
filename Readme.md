@@ -4,16 +4,15 @@ Kun Wu \<netid: kunwu2, UIN: 676032253\>
 
 Dawei Sun \<netid: daweis2, UIN: \>
 ## Build
-This project uses another skeleton code from one online tutorial \[1\] than the one provided by CS 526 Spring 2020, in order to enable building this project as a shared library. It uses cmake as its build management system, and adopts the new PassManager. But after trial, we found the new pass manager cannot correctly invoke AA->alias(), in which case the latter always return MayAlias. This defeats the BlockScheduling algorithm. We still use this skeleton code but switched to the legacy pass manager. It succeessfully compiled.
+This project uses skeleton code from one online tutorial \[1\] other than the one provided by CS 526 Spring 2020, in order to enable building this project as a shared library. It uses cmake as its build management system, and adopts the new PassManager. But after trial, we found the new pass manager cannot correctly invoke AA->alias(), in which case the latter always return MayAlias. This defeats the BlockScheduling algorithm. We still use this skeleton code but switched to the legacy pass manager. It succeessfully compiled.
 
 ### Prerequisite
 cmake 3.1 is required. Please modify the ENV{CC} and ENV{CXX} in /CmakeLists.txt according to the gcc binaries location on your computer. A least version of gcc is mandated by llvm-8.0.1.
 
-### Build Command
-```
-mkdir build
-cd build && rm -rf * && cmake .. && make && cd ..
-```
+### Build Steps
+1. modify env.sh accordingly and execute `source env.sh`.
+2. execute `mkdir build`
+3. execute `cd build && rm -rf * && cmake .. && make && cd ..`
 
 ### Pass Invocation Example
 Be sure to use the following as `opt` option:
@@ -25,35 +24,7 @@ Be sure to use the following as `opt` option:
 opt < tests/simpletest.ll  -passes="slpvect-kdw" -load-pass-plugin=tests-ourpass/../build/pass/libSLPVectorizer-kdw.so -S >tests/Output/simpletest.ll.output 2>tests/Output/simpletest.ll.output2
 ```
 
-## Result of SLPVectorizer in LLVM 8.0.1
-```
-[kunwu2@sp20-cs526-10 cs526_mp2]$ bash tests-original/opt-commands-with-redirection.txt 
-tests-original/opt-commands-with-redirection.txt: line 57:  6401 Aborted                 (core dumped) opt -basicaa -slp-vectorizer -dce -S -mtriple=x86_64-unknown-linux-gnu < tests-original/X86/crash_gep.ll > tests-original/RefResults/X86/crash_gep.ll.output 2> tests-original/RefResults/X86/crash_gep.ll.output2
-[kunwu2@sp20-cs526-10 cs526_mp2]$
-```
-
-```
-[kunwu2@sp20-cs526-10 cs526_mp2]$ bash tests-original/opt-commands-with-redirection-avx2.txt 
-[kunwu2@sp20-cs526-10 cs526_mp2]$
-```
-
-## Tests
-See make-and-test.sh for test command.
-
-/tests/ contain four very simple test cases which tests whether the pass can correctly handle simple and complicated situations, such as nested structure, multi-dimensional array, array in structure, and (U1) load/store, etc. Eventually most scalar variables and all its dependency, i.e., getelementptr instructions to get that, should be eliminated after the nested scalar is promoted. 
-
-Some of the test cases use cases from External Test Cases as skeleton but have been modified accordingly to suit my test demands.
-
-```
-[kunwu2@sp20-cs526-10 cs526_mp2]$ lit -v tests/.
--- Testing: ??? tests, ??? threads --
-PASS: ???
-???
-Testing Time: ???s
-  Expected Passes    : ???
-```
-
-## External Correctness Test Cases
+## Correctness Test Cases
 tests in /tests-original/ and its derivation in /tests-curated/ and /tests-curated-refresults/ are from the llvm-project github repo \[13\], specifically at <https://github.com/llvm/llvm-project/tree/master/llvm/test/Transforms/SLPVectorizer>.
 
 ### A Curated Set of Tests
@@ -82,7 +53,37 @@ They are placed in tests-curated/. The reference results are in tests-curated-re
 21. X86/extractelement.ll
 22. X86/cast.ll
 
-## External Performance Benchmark
+```
+[kunwu2@sp20-cs526-10 cs526_mp2]$ lit -v tests-curated/.
+...
+********************
+Testing Time: 0.63s
+********************
+Failing Tests (18):
+    LIT LLVM kdw SLP test cases :: arith-sub.ll
+    LIT LLVM kdw SLP test cases :: broadcast.ll
+    LIT LLVM kdw SLP test cases :: cast.ll
+    LIT LLVM kdw SLP test cases :: commutativity.ll
+    LIT LLVM kdw SLP test cases :: different-vec-widths.ll
+    LIT LLVM kdw SLP test cases :: external_user.ll
+    LIT LLVM kdw SLP test cases :: external_user_jumbled_load.ll
+    LIT LLVM kdw SLP test cases :: extract.ll
+    LIT LLVM kdw SLP test cases :: extractelement.ll
+    LIT LLVM kdw SLP test cases :: jumbled-load-multiuse.ll
+    LIT LLVM kdw SLP test cases :: jumbled-load-shuffle-placement.ll
+    LIT LLVM kdw SLP test cases :: jumbled-load-used-in-phi.ll
+    LIT LLVM kdw SLP test cases :: load-merge.ll
+    LIT LLVM kdw SLP test cases :: long_chains.ll
+    LIT LLVM kdw SLP test cases :: multi_block.ll
+    LIT LLVM kdw SLP test cases :: multi_user.ll
+    LIT LLVM kdw SLP test cases :: phi.ll
+    LIT LLVM kdw SLP test cases :: phi3.ll
+
+  Expected Passes    : 4
+  Unexpected Failures: 18
+```
+
+## Performance Benchmark
 A set of performance benchmarks from openbenchmark \[19\] are set up in https://github.com/K-Wu/openbenchmark_llvm_vectorizer. They include vectorization-enabled single-core programs and multithreading programs, either enabled by openmp or pthread.
 
 Use the following command to retrieve the submodule:
@@ -108,31 +109,7 @@ Pass Arguments:  -targetlibinfo -domtree -loops -branch-prob -block-freq
 Pass Arguments:  -targetlibinfo -domtree -loops -branch-prob -block-freq
 ```
 
-
-### Results
-The implementation only passes ??? out of ??? tests in /tests-ourpass/*.ll. The most prominent issues come from 1)???, 2)???, such as ???, not supported, and 3)???. However, they are expected behavior of the implemented logic.
-
-```
-********************
-Failing Tests (???):
-    ???
-
-  Expected Passes    : ???
-  Unexpected Failures: ???
-  ```
-
-## Planned 
-
-## Next Steps
-According to the external test cases result, ??? is necessary to make our ??? pass more complete and closer to the official ???.
-
-1) add support to ???
-2) ???
-3) ???
-
-??? is not considered in the next steps as it ???.
-
-## Reference
+## Helpful Articles for This Pass Development
 \[1\] Writing LLVM Pass in 2018 <https://medium.com/@mshockwave/writing-llvm-pass-in-2018-part-i-531c700e85eb> 
 
 \[2\] MIT 6.172 Performance Engineering of Software Systems Notes <https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-172-performance-engineering-of-software-systems-fall-2018/lecture-slides/MIT6_172F18_lec9.pdf> 
