@@ -649,7 +649,7 @@ SmallBitVector BoUpSLP::collectNeedToGather(const SmallBitVector &cut)
   }
 
   dbg_executes(errs() << "\ncollectNeedToGather() ";);
-  dumpSmallBitVector(modifiedIndex);
+  dbg_executes(errs() << dumpSmallBitVector(modifiedIndex););
   dbg_executes(errs() << "\n";);
   return modifiedIndex;
 }
@@ -679,7 +679,7 @@ void BoUpSLP::completeCut(SmallBitVector &cut)
 void BoUpSLP::unsetNeedToGather(const SmallBitVector &nodesNeedToUnset)
 {
   dbg_executes(errs() << "unsetNeedToGather() ";);
-  dumpSmallBitVector(nodesNeedToUnset);
+  dbg_executes(errs() << dumpSmallBitVector(nodesNeedToUnset););
   dbg_executes(errs() << "\n";);
 
   for (auto idx : nodesNeedToUnset.set_bits())
@@ -724,7 +724,7 @@ void BoUpSLP::calcExternalUses(const SmallBitVector &cutWithoutDefactoNeedToGath
   assert(ExternalUses.empty() &&
          "ExternalUses non empty before calling calcExternalUses");
   dbg_executes(errs() << "calcExternalUses(SmallBitVector cut): ";);
-  dumpSmallBitVector(cutWithoutDefactoNeedToGather);
+  dbg_executes(errs() << dumpSmallBitVector(cutWithoutDefactoNeedToGather););
   dbg_executes(errs() << "\n";);
   for (auto idx_te : cutWithoutDefactoNeedToGather.set_bits())
   {
@@ -1441,7 +1441,7 @@ void BoUpSLP::vectorizeTree(const SmallBitVector &cut)
 int BoUpSLP::getTreeCost(const SmallBitVector &cut)
 {
   dbg_executes(errs() << "getTreeCost(cut) cut ";);
-  dumpSmallBitVector(cut);
+  dbg_executes(errs() << dumpSmallBitVector(cut););
   dbg_executes(errs() << "\n";);
   SmallBitVector nodesNeedToUnset = collectNeedToGather(cut);
   _setNeedToGather(nodesNeedToUnset);
@@ -1685,7 +1685,7 @@ BoUpSLP::getCuts(unsigned int allNeighbourThreshold)
   dbg_executes(errs() << "getCuts() returns: \n";);
   dbg_executes({
     for (unsigned int cutIdx = 0; cutIdx < results.size(); cutIdx++)
-      dumpSmallBitVector(results[cutIdx]);
+      errs() << dumpSmallBitVector(results[cutIdx]);
   });
   dbg_executes(errs() << "getCuts() exit: \n";);
   return results;
